@@ -22,7 +22,7 @@ Modular marketing science playbook for DTC/ecommerce. Load only the chunks relev
 
 ## Chunk Routing
 
-Read the chunk files from `references/` based on the task at hand:
+Read the chunk files from `${CLAUDE_PLUGIN_ROOT}/references/` based on the task at hand:
 
 | Task Type | Load These Files |
 |---|---|
@@ -41,7 +41,7 @@ Read the chunk files from `references/` based on the task at hand:
 ## How to Use
 
 1. Identify the task type from the table above
-2. Read ONLY the listed chunk files from `references/`
+2. Read ONLY the listed chunk files from `${CLAUDE_PLUGIN_ROOT}/references/`
 3. Apply the frameworks, benchmarks, and thresholds when analyzing data and forming recommendations
 4. Cite the playbook when making recommendations (e.g., "Per the three-layer framework, Layer 1 should use Reach/ThruPlay objectives...")
 
