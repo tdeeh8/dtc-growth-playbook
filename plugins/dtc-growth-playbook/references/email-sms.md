@@ -1,5 +1,9 @@
 # Email and SMS Strategy
 
+> **STUB — This chunk is awaiting full rewrite and is not yet complete.**
+> The framework and definitions below are directionally correct, but key benchmarks, current tactics, and diagnostic signals are missing or dated.
+> Do not rely on this chunk for audit judgments or strategic recommendations until the full rewrite is complete.
+
 ## Flows vs. Campaigns
 
 Flows generate 41% of total email revenue from 5.3% of sends. RPR ~18x higher than campaigns. Prioritize flow optimization before campaign volume.

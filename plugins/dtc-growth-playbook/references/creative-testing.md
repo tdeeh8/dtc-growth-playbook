@@ -1,5 +1,9 @@
 # Creative Testing Framework
 
+> **STUB — This chunk is awaiting full rewrite and is not yet complete.**
+> The framework and definitions below are directionally correct, but key benchmarks, current tactics, and diagnostic signals are missing or dated.
+> Do not rely on this chunk for audit judgments or strategic recommendations until the full rewrite is complete.
+
 Creative is responsible for ~56% of auction outcomes on Meta.
 
 ## Components

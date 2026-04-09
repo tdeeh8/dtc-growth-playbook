@@ -120,7 +120,7 @@ Last updated: 2026-04-09. Sources: DTC Pages (2026 conversion benchmarks), Ecomm
 **Required elements for high-ticket product pages:**
 - Above-the-fold social proof (testimonials, not buried at bottom)
 - Clear value proposition emphasizing outcomes over features
-- Guarantee/return policy visible on product page (77% of shoppers check return policy before purchase)
+- Guarantee/return policy visible on product page (77% of European consumers base initial ecommerce decisions on return policy — Signifyd 2024 European Consumer Survey)
 - Comparison content (high-ticket buyers comparison-shop across vendors)
 - Video testimonials (increase conversion rates by 80%)
 - Review widgets (boost conversions 380% on expensive products; products with 11-30 reviews convert 68% higher than zero-review)
@@ -228,3 +228,4 @@ Last updated: 2026-04-09. Sources: DTC Pages (2026 conversion benchmarks), Ecomm
 - Revvim Brand Search LTV 2026: https://www.revvim.com/2026/01/23/the-ltv-standard-for-branded-search-defense-in-google-ads/
 - Smarter eCommerce Q1 2026 Report: https://smarter-ecommerce.com/en/smec-market-observer/reports/Q1_2026/
 - ATTN Agency Customer Service Platforms: https://www.attnagency.com/blog/top-customer-service-platforms-for-scaling-dtc-brands
+- Signifyd 2024 European Consumer Survey (77% return policy stat): https://www.signifyd.com/blog/ecommerce-return-policy/
