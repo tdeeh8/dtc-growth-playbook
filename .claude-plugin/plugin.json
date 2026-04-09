@@ -1,0 +1,18 @@
+{
+  "name": "dtc-growth-playbook",
+  "version": "1.0.0",
+  "description": "DTC/eCommerce marketing science playbook — Andromeda campaign structure, three-layer TOF framework, creative testing, MAT testing, funnel benchmarks, email/SMS strategy, scaling, frequency management, and measurement. Auto-loads relevant chunks during audits and strategy work.",
+  "author": {
+    "name": "Tanner Hill"
+  },
+  "keywords": [
+    "dtc",
+    "ecommerce",
+    "marketing",
+    "meta-ads",
+    "andromeda",
+    "playbook",
+    "audit",
+    "growth"
+  ]
+}
