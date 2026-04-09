@@ -1,0 +1,17 @@
+{
+  "name": "dtc-growth-playbook",
+  "owner": {
+    "name": "Tanner Hill"
+  },
+  "plugins": [
+    {
+      "name": "dtc-growth-playbook",
+      "source": "./plugins/dtc-growth-playbook",
+      "description": "DTC/eCommerce growth toolkit — marketing science playbook, client growth audit, CRO audit, SEO audit, and human voice protocol.",
+      "version": "2.3.0",
+      "author": {
+        "name": "Tanner Hill"
+      }
+    }
+  ]
+}
