@@ -1,11 +1,11 @@
 ---
 name: cro-audit
-description: "CRO diagnostic audit across website, GA4, Meta Ads, and Google Ads with DOCX report. Triggers on: CRO audit, conversion rate audit, why is conversion rate low, diagnose conversions, funnel analysis, what's wrong with their funnel."
+description: "CRO diagnostic audit across website, GA4, Meta Ads, and Google Ads. Triggers on: CRO audit, conversion rate audit, why is conversion rate low, diagnose conversions, funnel analysis, what's wrong with their funnel."
 ---
 
 # CRO Diagnostic Audit
 
-Senior CRO and performance marketing expert. Diagnose root cause(s) of low conversion rate using structured evidence, then produce a client-ready DOCX report.
+Senior CRO and performance marketing expert. Diagnose root cause(s) of low conversion rate using structured evidence, then produce a markdown audit report.
 
 ## Before Starting: Load Playbook Context
 
@@ -61,29 +61,21 @@ Determine core issue type:
 
 Key signal: **Healthy CTR + terrible CVR = post-click (website) problem. Both low = traffic quality.**
 
-## Step 6: Generate DOCX Report
+## Step 6: Generate Audit Report
 
-Use `docx` npm package.
+Output a markdown file saved as `{Client_Name}_CRO_Audit.md`.
 
-**Report sections:**
-1. Title Page — "CRO DIAGNOSTIC AUDIT REPORT", client, URL, date, platforms, period
-2. Executive Summary — 3-5 sentences: what's wrong, root causes, biggest opportunity
-3. Key Findings — by platform (Website, GA4, Meta, Google), each with data and why it matters
-4. Root Cause Analysis — how traffic + site + offer interact
-5. Biggest Funnel Leaks — ranked table of drop-off points
-6. Prioritized Action Plan — High Impact (3-4), Medium (2-3), Lower/Long-term (2-3)
-7. Quick Wins (7 days) — table: Action, Effort, Expected Impact
-8. Testing Roadmap — 3-5 hypotheses with what to test and how to measure
-9. Additional Insights
+**7-section structure:**
 
-**DOCX critical rules:**
-- US Letter: 12240 × 15840 DXA. Margins: 1440. Arial throughout.
-- Tables: DUAL widths — `columnWidths` on Table AND `width` on each cell, both DXA. Full width = 9360.
-- `WidthType.DXA` only (never PERCENTAGE). `ShadingType.CLEAR` (not SOLID).
-- PageBreak inside Paragraph. No `\n` — use separate Paragraphs.
-- `Packer.toBuffer(doc).then(buffer => fs.writeFileSync("report.docx", buffer))`
+1. **Situation** — 3-5 sentences: what the business is, what was audited, date range, 1-2 sentence verdict on what's causing low conversion and biggest opportunity
+2. **Data Summary** — One table per platform. Columns: Metric | Value | Source | Verdict. Include full purchase funnel with drop-off rates.
+3. **Diagnosis** — Root cause type: traffic quality, website conversion, tracking, offer/market fit, or combination. Key signal: healthy CTR + terrible CVR = post-click problem. Connected analysis with INFERENCE labels.
+4. **Channel Verdicts** — One subsection per channel/platform. Verdict: Scale / Fix then Scale / Hold / Cut. **Flexible length** — short if healthy, detailed if broken. For website UX: detail specific conversion barriers (pages, issues, why they matter).
+5. **Action Plan** — Numbered, prioritized. Each gets `[7d]`, `[30d]`, or `[90d]`. Every action references a specific finding.
+6. **Open Questions** — Data gaps, assumptions, conflicts, things to investigate.
+7. **Appendix: Raw Metrics** — Compact tables by platform. Funnel data, campaign breakdowns, UX observations.
 
-Save as `{Client_Name}_CRO_Audit_Report.docx`. Use actual platform data only — never guess or use placeholders.
+Every number cites its source. Write as an operator. Apply human voice protocol.
 
 ## Requirements
 

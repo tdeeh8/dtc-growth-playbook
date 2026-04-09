@@ -1,11 +1,11 @@
 ---
 name: client-audit
-description: "Full eCommerce/DTC growth audit across website, ad platforms, analytics, and marketplaces with DOCX report output. Triggers on: client audit, growth audit, ecommerce audit, performance audit, diagnose this account, profitability audit, audit their Google/Meta/Amazon."
+description: "Full eCommerce/DTC growth audit across website, ad platforms, analytics, and marketplaces. Triggers on: client audit, growth audit, ecommerce audit, performance audit, diagnose this account, profitability audit, audit their Google/Meta/Amazon."
 ---
 
 # Client Growth Audit
 
-Senior eCommerce growth operator mindset. Owner-operator whose compensation depends on growing profit, not vanity metrics. Rigorous, evidence-based audit with polished DOCX report.
+Senior eCommerce growth operator mindset. Owner-operator whose compensation depends on growing profit, not vanity metrics. Rigorous, evidence-based audit with markdown report output.
 
 ## Before Starting: Load Playbook Context
 
@@ -100,43 +100,27 @@ Rank by: impact, confidence, speed, dependency risk.
 - Tier 2 (30 days): Important, needs more setup
 - Tier 3 (60-90 days): Strategic, depends on Tier 1/2
 
-### Phase 7: Generate DOCX Report
+### Phase 7: Generate Audit Report
 
-Use `docx` npm package. Install if needed: `npm install -g docx`
+Output a markdown file saved as `{Client_Name}_Growth_Audit.md`.
 
-**Report structure:**
-1. Title Page — "GROWTH AUDIT REPORT", client name, URL, date, platforms, date range
-2. Executive Summary — 3-5 sentences: what's happening, root causes, biggest opportunity
-3. What Was Reviewed — platforms and date ranges
-4. Accessible vs Missing Data
-5. Verified Findings — by platform, each with: Finding, Label (OBSERVED/INFERENCE/ASSUMPTION/DNA), Evidence, Why it matters
-6. Root-Cause Diagnosis — top constraints connected to evidence
-7. Highest-Impact Opportunities — Action, Priority, Expected impact, Confidence, Why now, How to execute
-8. Top 10 Actions — distilled from everything above
-9. Tiered Roadmap — 7 / 30 / 60-90 days
-10. Scale vs Fix by Channel — scale, hold, fix first, or cut
-11. Open Questions / Additional Data Needed
+**7-section structure:**
 
-**DOCX critical rules:**
-- US Letter: width 12240, height 15840 (DXA). Margins: 1440 each.
-- Arial font throughout. Heading1: 32pt bold. Heading2: 28pt bold. Body: 24 (12pt).
-- NEVER use `\n` — use separate Paragraph elements
-- NEVER use unicode bullets — use `LevelFormat.BULLET` with numbering config
-- PageBreak inside a Paragraph: `new Paragraph({ children: [new PageBreak()] })`
-- Tables: DUAL widths required — `columnWidths` on Table AND `width` on each TableCell, both DXA
-- Full width = 9360 DXA (with 1" margins). Sum of columnWidths must match.
-- ALWAYS `WidthType.DXA` — never PERCENTAGE (breaks Google Docs)
-- `ShadingType.CLEAR` not SOLID for cell backgrounds
-- Cell margins: `{ top: 80, bottom: 80, left: 120, right: 120 }`
-- Write: `Packer.toBuffer(doc).then(buffer => fs.writeFileSync("report.docx", buffer))`
+1. **Situation** — 3-5 sentences: what the business is, what was audited, date range, 1-2 sentence verdict (what's working, what's broken, what's at stake)
+2. **Data Summary** — One markdown table per platform. Columns: Metric | Value | Source | Verdict (Strong/OK/Weak/Critical). Include OBSERVED labels and show calculation formulas.
+3. **Diagnosis** — Cross-platform connections. WHY the numbers look this way. Use INFERENCE labels. Address data source conflicts. Connected analysis, not a list.
+4. **Channel Verdicts** — One subsection per channel. Verdict: Scale / Fix then Scale / Hold / Cut. **Flexible length** — 2-3 sentences if healthy, as long as needed if broken. Include specific campaign names and metrics.
+5. **Action Plan** — Numbered, prioritized. Each gets `[7d]`, `[30d]`, or `[90d]`. Every action references specific data. No generic advice.
+6. **Open Questions** — Data gaps, unverified assumptions, cross-platform conflicts, things to investigate.
+7. **Appendix: Raw Metrics** — Compact tables by platform. No analysis, just numbers for implementation reference.
 
-Save as `{Client_Name}_Growth_Audit_Report.docx`.
+Every number cites its source. Write as an operator. Apply human voice protocol.
 
 ### Phase 8: Report Verification
 
-Read the generated .docx back. Cross-check every key metric against working notes. Verify campaign/product/URL names actually appeared in notes (not hallucinated). Confirm OBSERVED/INFERENCE labels are correct. Check Open Questions covers all DATA NOT AVAILABLE items.
+Cross-check every key metric against working notes. Verify names are accurate (not hallucinated). Confirm labels are correct. Check Open Questions covers all DATA NOT AVAILABLE items.
 
-Then spot-check 5-8 high-stakes data points against live platform tabs. Build a comparison table (Report Says vs Live Shows vs Match?). Fix any material discrepancies. Show spot-check table when delivering.
+Spot-check 5-8 high-stakes data points against live platform tabs. Build comparison table (Report Says vs Live Shows vs Match?). Fix discrepancies. Show spot-check table when delivering.
 
 ## Anti-Hallucination Checklist
 
