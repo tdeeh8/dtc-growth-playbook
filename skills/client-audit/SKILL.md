@@ -304,7 +304,7 @@ Group into three tiers:
 
 ### Phase 7: Generate the DOCX Report
 
-Read the docx SKILL.md for technical reference on creating .docx files. Use the `docx` npm package to produce a professionally formatted report.
+Use the `docx` npm package to produce a professionally formatted report. Install if needed: `npm install -g docx`
 
 Use your working notes file as the primary source for the report content. This is where the incremental note-taking pays off — you shouldn't need to go back to the platforms to recall data.
 
@@ -332,14 +332,92 @@ Use your working notes file as the primary source for the report content. This i
 10. **Scale vs Fix Decision by Channel** — for each channel: should the client scale spend, hold, fix first, or cut?
 11. **Open Questions / Additional Data Needed** — what you couldn't answer and what data would help
 
-**Report formatting:**
-- US Letter page size (12240 x 15840 DXA)
-- Arial font throughout
-- Tables with both `columnWidths` and cell `width` in DXA
-- `ShadingType.CLEAR` (not SOLID) for table backgrounds
-- Headers and footers with page numbers
-- Page breaks between major sections
-- Professional table formatting for data-heavy sections
+**DOCX technical reference (self-contained — no external skill needed):**
+
+```javascript
+// Setup
+const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, ImageRun,
+        Header, Footer, AlignmentType, LevelFormat, HeadingLevel, BorderStyle,
+        WidthType, ShadingType, PageNumber, PageBreak } = require('docx');
+const fs = require('fs');
+
+// Page setup — ALWAYS use US Letter, not A4
+sections: [{
+  properties: {
+    page: {
+      size: { width: 12240, height: 15840 },  // US Letter in DXA
+      margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 }  // 1 inch
+    }
+  },
+  headers: {
+    default: new Header({ children: [new Paragraph({ children: [new TextRun("GROWTH AUDIT REPORT")] })] })
+  },
+  footers: {
+    default: new Footer({ children: [new Paragraph({
+      children: [new TextRun("Page "), new TextRun({ children: [PageNumber.CURRENT] })]
+    })] })
+  },
+  children: [/* content */]
+}]
+
+// Styles — Arial throughout
+styles: {
+  default: { document: { run: { font: "Arial", size: 24 } } },  // 12pt default
+  paragraphStyles: [
+    { id: "Heading1", name: "Heading 1", basedOn: "Normal", next: "Normal", quickFormat: true,
+      run: { size: 32, bold: true, font: "Arial" },
+      paragraph: { spacing: { before: 240, after: 240 }, outlineLevel: 0 } },
+    { id: "Heading2", name: "Heading 2", basedOn: "Normal", next: "Normal", quickFormat: true,
+      run: { size: 28, bold: true, font: "Arial" },
+      paragraph: { spacing: { before: 180, after: 180 }, outlineLevel: 1 } },
+  ]
+}
+```
+
+**Critical docx-js rules:**
+- NEVER use `\n` — use separate Paragraph elements
+- NEVER use unicode bullets (`•`) — use `LevelFormat.BULLET` with numbering config
+- PageBreak must be inside a Paragraph: `new Paragraph({ children: [new PageBreak()] })`
+- Tables need DUAL widths: `columnWidths` on the table AND `width` on each cell, both in DXA
+- Table width must equal sum of `columnWidths` (full width = 9360 DXA with 1" margins)
+- ALWAYS use `WidthType.DXA` — never `WidthType.PERCENTAGE` (breaks in Google Docs)
+- Use `ShadingType.CLEAR` (not SOLID) for table cell shading
+- Add cell margins for readability: `margins: { top: 80, bottom: 80, left: 120, right: 120 }`
+
+```javascript
+// Table example
+const border = { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" };
+const borders = { top: border, bottom: border, left: border, right: border };
+
+new Table({
+  width: { size: 9360, type: WidthType.DXA },
+  columnWidths: [4680, 4680],
+  rows: [new TableRow({
+    children: [new TableCell({
+      borders,
+      width: { size: 4680, type: WidthType.DXA },
+      shading: { fill: "D5E8F0", type: ShadingType.CLEAR },
+      margins: { top: 80, bottom: 80, left: 120, right: 120 },
+      children: [new Paragraph({ children: [new TextRun("Cell")] })]
+    })]
+  })]
+})
+
+// Bullets
+numbering: {
+  config: [{
+    reference: "bullets",
+    levels: [{ level: 0, format: LevelFormat.BULLET, text: "•", alignment: AlignmentType.LEFT,
+      style: { paragraph: { indent: { left: 720, hanging: 360 } } } }]
+  }]
+}
+// Use: new Paragraph({ numbering: { reference: "bullets", level: 0 }, children: [...] })
+
+// Write file
+Packer.toBuffer(doc).then(buffer => fs.writeFileSync("report.docx", buffer));
+```
+
+After creating, validate: `python scripts/office/validate.py report.docx` (if available)
 
 **Report quality rules:**
 - Use actual data from the platforms — never placeholder numbers

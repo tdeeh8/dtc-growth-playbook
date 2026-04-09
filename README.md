@@ -48,6 +48,18 @@ All playbook chunks live in `references/` at the plugin root. Both skills (and a
 
 Built from the Stroud Marketing Science Framework (30+ Zoom calls), Klaviyo 2026 benchmarks, Meta Andromeda documentation (October 2025 global rollout), and internal strategy sessions.
 
+## Requirements
+
+**For the playbook-reference skill and /playbook command:** No special setup needed. Works in any Cowork session.
+
+**For the client-audit skill and /audit command:**
+
+- **Claude in Chrome extension** — Required. The audit skill uses browser tools to inspect Shopify, Meta Ads, GA4, Amazon Seller Central, and other platforms in real time. Without Chrome connected, the evidence collection phases won't work.
+  - Enable in Cowork: Settings → Desktop app → Claude in Chrome
+  - The Chrome extension must be installed and connected before starting an audit
+- **Platform access** — You need to be logged into the platforms you want to audit (Shopify admin, Meta Ads Manager, GA4, Amazon Seller Central, etc.) in Chrome before starting
+- **Computer use** — Enable in Settings → Desktop app → Computer use (used for scrolling dashboards and interacting with platform UIs)
+
 ## Install
 
 ```
