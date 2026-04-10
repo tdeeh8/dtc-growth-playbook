@@ -1,3 +1,8 @@
+---
+description: Run a deep GA4 analytics audit producing standardized evidence JSON
+argument-hint: "[client name]"
+---
+
 # /audit-ga4
 
 Run a deep GA4 analytics audit for a client. Produces a standardized JSON evidence file for the audit-synthesizer.
@@ -24,6 +29,14 @@ Opens GA4 in the browser and systematically extracts:
 
 Output: `{Client}_ga4_evidence.json` saved to the client's evidence directory.
 
+## Smart Startup
+
+Before asking for any info, check for an existing manifest:
+
+1. Look for `{Client}_audit_manifest.md` in known evidence directories, or ask user for evidence path
+2. **If found:** Read manifest for department, AOV, platform URL, known issues. Pre-fill — don't re-ask. Tell user: "Found manifest. Using [AOV], [platform URL]. Starting audit."
+3. **If not found:** Standard setup (AskUserQuestion), or suggest: "Run `/audit {Client}` first for full setup."
+
 ## Before Running
 
 ### Required Context
@@ -38,16 +51,12 @@ When this command runs, the skill automatically loads:
 
 1. `ga4-audit-v2/SKILL.md` — full audit procedure
 2. `ga4-audit-v2/reference/nav-ga4.md` — GA4 navigation patterns (CRITICAL — read before touching GA4)
-3. `${CLAUDE_PLUGIN_ROOT}/references/benchmarks.md` — website/ecom conversion benchmarks
-4. `${CLAUDE_PLUGIN_ROOT}/references/measurement.md` — source-of-truth stack, GA4 limitations, reconciliation thresholds
+3. `references/benchmarks.md` — website/ecom conversion benchmarks
+4. `references/measurement.md` — source-of-truth stack, GA4 limitations, reconciliation thresholds
 
 ### Check for Manifest
 
-Look for an existing `{Client}_audit_manifest.md` in:
-- `{Agency}/reports/{Client-Name}/evidence/`
-- `{Own-Brand}/reports/evidence/`
-
-If found, read it for client context (AOV tier, business type, focus areas, which other audits are done). Use the same date range as other completed audits.
+Look for `{Client}_audit_manifest.md` in known evidence directories (from Smart Startup). If found, read it for client context (AOV tier, business type, focus areas, which other audits are done). Use the same date range as other completed audits.
 
 ## Procedure
 
@@ -69,7 +78,7 @@ Follow the 9-phase procedure in SKILL.md:
 
 **Filename:** `{Client}_ga4_evidence.json`
 **Location:** Client evidence directory
-**Schema:** Follows `${CLAUDE_PLUGIN_ROOT}/skills/audit-orchestrator/reference/evidence-schema.json`
+**Schema:** Follows `audit-orchestrator/reference/evidence-schema.json`
 
 Key sections:
 - `meta.platform`: `"ga4"`
@@ -95,3 +104,9 @@ If an audit manifest exists, update:
 - **Use Explore for funnels.** The Reports section doesn't have proper funnel analysis. You must use Explore → Funnel exploration.
 - **Check for data sampling.** Green shield = unsampled (good). Yellow shield = sampled (note in auditor_notes, narrow date range if possible).
 - **Record every number's source.** Every OBSERVED metric needs a source path: "GA4 > Reports > Acquisition > Traffic acquisition > Sessions column"
+
+## After This Audit
+
+- **Continue:** `/audit-resume {Client}` — see what's next
+- **Report now:** `/audit-synthesize {Client}` — works with 1+ evidence files
+- **Check progress:** `/audit {Client}`

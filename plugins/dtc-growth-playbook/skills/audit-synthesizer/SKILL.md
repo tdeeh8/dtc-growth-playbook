@@ -1,3 +1,8 @@
+---
+name: audit-synthesizer
+description: "Read all platform evidence JSON files and generate a unified cross-channel audit report. Detects attribution overlap, halo effects, cannibalization, budget imbalance, and funnel gaps. Applies MER/CM1/CM2/CM3 profitability framework. Triggers on: 'synthesize the audit', 'generate the audit report', 'cross-channel analysis', 'combine audit findings', 'run the synthesizer'."
+---
+
 # Audit Synthesizer
 
 Cross-channel synthesis engine for the Modular Audit System v2. Reads all evidence JSON files produced by platform audit skills, detects cross-channel patterns, runs profitability analysis, and generates a unified audit report.
@@ -21,16 +26,16 @@ This skill runs AFTER one or more platform audit skills have produced evidence J
 ## Context Loading
 
 **Always load these playbook chunks:**
-- `${CLAUDE_PLUGIN_ROOT}/references/benchmarks.md` — diagnostic thresholds, profitability math
-- `${CLAUDE_PLUGIN_ROOT}/references/channel-allocation.md` — channel roles, halo effects, budget strategy
-- `${CLAUDE_PLUGIN_ROOT}/references/measurement.md` — attribution, MER, reconciliation, tracking validation
+- `references/benchmarks.md` — diagnostic thresholds, profitability math
+- `references/channel-allocation.md` — channel roles, halo effects, budget strategy
+- `references/measurement.md` — attribution, MER, reconciliation, tracking validation
 
 **Conditionally load (for platforms that were audited):**
-- `${CLAUDE_PLUGIN_ROOT}/references/google-ads.md` — if Google Ads evidence exists
-- `${CLAUDE_PLUGIN_ROOT}/references/andromeda.md` — if Meta Ads evidence exists
-- `${CLAUDE_PLUGIN_ROOT}/references/email-sms.md` — if Klaviyo evidence exists
-- `${CLAUDE_PLUGIN_ROOT}/references/high-ticket.md` — if AOV $200+ (from manifest or Shopify evidence)
-- `${CLAUDE_PLUGIN_ROOT}/references/low-ticket.md` — if AOV <$100
+- `references/google-ads.md` — if Google Ads evidence exists
+- `references/andromeda.md` — if Meta Ads evidence exists
+- `references/email-sms.md` — if Klaviyo evidence exists
+- `references/high-ticket.md` — if AOV $200+ (from manifest or Shopify evidence)
+- `references/low-ticket.md` — if AOV <$100
 
 **Always load these reference files (this skill):**
 - `reference/report-template.md` — report structure
@@ -50,8 +55,7 @@ This skill runs AFTER one or more platform audit skills have produced evidence J
 
 1. Determine the client name from the user's request or the active manifest.
 2. Determine the evidence directory:
-   - {Agency} clients: `{Agency}/reports/{Client-Name}/evidence/`
-   - {Own Brand}: `{Own-Brand}/reports/evidence/`
+   - Disruptive clients: `{evidence_dir}/`
 3. List all `*_evidence.json` files in that directory.
 4. Read the audit manifest if it exists (`{Client}_audit_manifest.md`).
 5. Count evidence files. This determines the report mode:
@@ -115,7 +119,7 @@ Using the manifest (if available) and the evidence files found:
 **If high-severity tracking issues exist, add a prominent warning at the top of findings:**
 "⚠️ Tracking issues detected. Performance metrics below may be inflated or understated. Fix tracking before making budget decisions."
 
-Reference thresholds from `${CLAUDE_PLUGIN_ROOT}/references/measurement.md` → Tracking Validation → Purchase Count Reconciliation.
+Reference thresholds from `measurement.md` → Tracking Validation → Purchase Count Reconciliation.
 
 ---
 
@@ -123,7 +127,7 @@ Reference thresholds from `${CLAUDE_PLUGIN_ROOT}/references/measurement.md` → 
 
 For each platform with an evidence file, generate a findings section:
 
-1. **Headline metrics table** — pulled directly from `account_overview`. Show metric, value, and benchmark comparison (from `${CLAUDE_PLUGIN_ROOT}/references/benchmarks.md`). Use the three-tier system: Floor / Healthy / Strong.
+1. **Headline metrics table** — pulled directly from `account_overview`. Show metric, value, and benchmark comparison (from `benchmarks.md`). Use the three-tier system: Floor / Healthy / Strong.
 2. **Primary constraint** — from `diagnosis.primary_constraint`. This is the single biggest lever for improvement on this platform.
 3. **Key findings** — from `findings[]`. Group by theme if >5 findings. Each finding must show:
    - What was observed (with label: OBSERVED, CALCULATED, INFERENCE)
@@ -168,7 +172,7 @@ Load `reference/cross-channel-patterns.md` and systematically check each pattern
 - Rank channels by efficiency metric (platform ROAS or CPA vs. target).
 - Flag if the highest-ROI channel is budget-constrained while a lower-ROI channel is unconstrained.
 - Flag if branded/retargeting spend exceeds 30% of total while prospecting channels are limited.
-- Check channel allocation against `${CLAUDE_PLUGIN_ROOT}/references/channel-allocation.md` stage-appropriate splits.
+- Check channel allocation against `channel-allocation.md` stage-appropriate splits.
 
 ### 5e. Funnel Gaps
 - Map the full funnel: impression → click → site visit → product view → ATC → checkout → purchase.
@@ -211,16 +215,16 @@ Shopify is the financial source of truth. Use actual revenue, order count, and A
    - Calculate minimum ROAS: 1 / gross margin %
    - Calculate target ROAS: Minimum ROAS × 1.4
 5. **If COGS NOT available:**
-   - Use vertical-specific COGS estimates from `${CLAUDE_PLUGIN_ROOT}/references/benchmarks.md` profitability section.
+   - Use vertical-specific COGS estimates from `benchmarks.md` profitability section.
    - Label ALL margin calculations as ASSUMPTION.
    - Flag: "COGS not provided. Using industry estimate of {X}% for {vertical}. Actual profitability may differ significantly."
 6. **"Good ROAS but bad profit" check:**
    - If any platform shows ROAS > minimum ROAS but MER < minimum ROAS → flag attribution inflation.
    - If platform ROAS looks healthy but CM3 is negative → flag hidden cost problem.
-   - Check return rate impact, discount stacking, fulfillment cost allocation per `${CLAUDE_PLUGIN_ROOT}/references/benchmarks.md`.
+   - Check return rate impact, discount stacking, fulfillment cost allocation per `benchmarks.md`.
 7. **CAC payback calculation** (if repeat purchase data available from Shopify):
    - CAC Payback = Fully loaded CAC / monthly contribution margin per customer.
-   - Compare to vertical benchmarks from `${CLAUDE_PLUGIN_ROOT}/references/benchmarks.md`.
+   - Compare to vertical benchmarks from `benchmarks.md`.
 
 ### When Shopify evidence does NOT exist:
 1. Use platform-reported revenue as the best available proxy. Label as ASSUMPTION.
@@ -256,8 +260,7 @@ Aggregate opportunities from ALL evidence files plus cross-channel opportunities
 
 **Default output: Markdown (.md)**
 Save to: `{department}/reports/{Client-Name}/{Client}_audit_report_{date}.md`
-- {Agency} clients: `{Agency}/reports/{Client-Name}/`
-- {Own Brand}: `{Own-Brand}/reports/`
+- Disruptive clients: `{project_dir}/`
 
 **Use the structure defined in `reference/report-template.md`.** The report sections in order:
 
@@ -301,7 +304,7 @@ Load `reference/anti-hallucination.md` and run the full checklist:
 3. **Label audit:** Ensure every data point has one of the five labels. No unlabeled numbers.
 4. **Assumption inventory:** List all ASSUMPTION-labeled items. Each must explain what assumption was made and what data would resolve it.
 5. **Cross-check totals:** If multiple evidence files report the same metric differently (e.g., total spend), flag the discrepancy and note which source is used.
-6. **Benchmark accuracy:** Verify all benchmark comparisons reference the correct tier from `${CLAUDE_PLUGIN_ROOT}/references/benchmarks.md`. Check AOV tier is correct (high-ticket vs. low-ticket thresholds).
+6. **Benchmark accuracy:** Verify all benchmark comparisons reference the correct tier from `benchmarks.md`. Check AOV tier is correct (high-ticket vs. low-ticket thresholds).
 7. **Missing platform acknowledgment:** Verify the report explicitly states what analysis is NOT possible due to missing platforms.
 8. **Confidence calibration:** Review all confidence labels on opportunities. Downgrade any labeled HIGH that rely on ASSUMPTION data.
 

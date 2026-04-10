@@ -1,3 +1,8 @@
+---
+description: Synthesize platform audit evidence into a unified cross-channel report
+argument-hint: "[client name]"
+---
+
 # /audit-synthesize
 
 Synthesize platform audit evidence files into a unified audit report.
@@ -16,9 +21,16 @@ Reads all evidence JSON files for the specified client, detects cross-channel pa
 **Default output:** Markdown report saved to `reports/{Client-Name}/`.
 **With `--docx` flag:** Word document (reads docx SKILL.md for formatting).
 
+## Auto-Detection
+
+1. Find evidence directory (from manifest or standard path)
+2. Scan for `*_evidence.json` files
+3. Report: "Found N evidence files: [platforms]. Missing: [platforms per manifest]."
+4. Confirm with user before proceeding
+
 ## Prerequisites
 
-At least one `{Client}_{Platform}_evidence.json` file must exist in the client's evidence directory. Run platform audit skills first:
+At minimum, one evidence JSON file. Run `/audit {Client}` to check what's ready. Available platform audits:
 
 - `/audit-google-ads` → Google Ads evidence
 - `/audit-meta` → Meta Ads evidence
@@ -30,7 +42,7 @@ At least one `{Client}_{Platform}_evidence.json` file must exist in the client's
 
 ## Behavior
 
-1. **Locates evidence directory** based on client name and department ({Agency} or {Own-Brand}).
+1. **Locates evidence directory** from manifest or standard path (`reports/{Client-Name}/evidence/`).
 2. **Reads all evidence JSON files** in the directory.
 3. **Reads the audit manifest** (if it exists) to understand what was planned vs. completed vs. skipped.
 4. **Determines report mode:**
@@ -63,9 +75,9 @@ At least one `{Client}_{Platform}_evidence.json` file must exist in the client's
 ## Context Loading
 
 The skill automatically loads:
-- `${CLAUDE_PLUGIN_ROOT}/references/benchmarks.md`
-- `${CLAUDE_PLUGIN_ROOT}/references/channel-allocation.md`
-- `${CLAUDE_PLUGIN_ROOT}/references/measurement.md`
+- `references/benchmarks.md`
+- `references/channel-allocation.md`
+- `references/measurement.md`
 - Platform-specific playbook chunks for each audited platform
 - `protocols/human-voice.md` (for report writing)
 - All reference files in `audit-synthesizer/reference/`
@@ -73,16 +85,16 @@ The skill automatically loads:
 ## Examples
 
 ```
-/audit-synthesize Acme Co
-→ Reads all evidence files in {Agency}/reports/Acme-Co/evidence/
+/audit-synthesize Kodiak Leather
+→ Auto-detects evidence directory, reads all evidence files
 → Generates markdown report
 
-/audit-synthesize Acme Co --docx
+/audit-synthesize Kodiak Leather --docx
 → Same analysis, outputs as .docx
 
-/audit-synthesize {Own Brand}
-→ Reads evidence from {Own-Brand}/reports/evidence/
-→ Generates report (likely Amazon-focused)
+/audit-synthesize {Client}
+→ Works with any client — finds evidence via manifest or standard path
+→ Generates report scoped to whatever platforms have evidence
 ```
 
 ## After Running

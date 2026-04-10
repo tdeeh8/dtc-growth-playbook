@@ -1,309 +1,240 @@
 # Google Ads UI Navigation Patterns
 
-Reference for the google-ads-audit-v2 audit skill. Contains browser automation patterns, column customization steps, report extraction patterns, date range setting, and known UI gotchas for Google Ads.
+Reference for the google-ads-audit-v2 audit skill. Contains browser automation workarounds, known UI quirks, and reliable extraction patterns learned from live audits.
 
 ---
 
-## Getting Into Google Ads
+## Getting Into the Account
 
-1. Navigate to `https://ads.google.com` or `https://google.com/ads`
-2. If multiple ad accounts are available, select the correct one from the account dropdown (top-left)
-3. Verify the account ID matches what's expected
-4. You should land on the Campaigns view — this is the correct starting view
-5. Check your access level: can you see all campaigns? Can you access conversion settings? Note the role for evidence file
+1. Navigate to `https://ads.google.com`
+2. If you land on an MCC (multiple accounts listed), click into the correct client account
+3. Verify the account ID in the top-left matches what's expected
+4. You should land on the Overview page — don't pull data from here (it uses a default date range and shows curated metrics). Always navigate to Campaigns view first.
 
 ---
 
-## Date Range Setting
+## Date Picker — The JavaScript Workaround
 
-**The date picker** is in the top-right area of the Google Ads interface.
+**The problem:** Google Ads' date picker is finicky with browser automation. Clicking the date fields, typing dates, and clicking "Apply" often fails silently — the page appears to accept the dates but doesn't actually update the data. The date picker uses Material Design components (`material-button` elements) that don't always respond to standard click events.
+
+**The reliable workaround:**
+
+Use JavaScript to set the date range via URL parameters. Google Ads respects date parameters in the URL:
+
+```
+Add to the current URL: &startDate=YYYYMMDD&endDate=YYYYMMDD
+```
+
+For example, to set YTD for 2026:
+```
+&startDate=20260101&endDate=20260410
+```
 
 **Steps:**
-1. Click the date range selector (e.g., "Last 30 days" or "Apr 1 - Apr 30")
-2. Select a preset or click "Custom date range"
-3. Enter start and end dates manually
-4. Click "Apply"
-5. **Verify:** After setting, confirm the date range displayed matches your selection
+1. Navigate to the Campaigns page
+2. Note the current URL
+3. Append `&startDate=YYYYMMDD&endDate=YYYYMMDD` to the URL (or modify existing date params)
+4. Navigate to the modified URL
+5. Verify the date range updated by checking the date picker display
 
-**Default for audits:** Last 90 days (or audit manifest specified range)
+**Alternative method (if URL params don't stick):**
+Use JavaScript execution to interact with the date picker:
+```javascript
+// Click the date range selector to open it
+document.querySelector('[data-date-range]')?.click();
+// Or find the date display element and click it
+```
 
-**Gotcha — Date range persistence:**
-- The date range generally persists as you navigate between different views within Google Ads
-- BUT: Some report builders may reset to default (last 30 days)
-- Always verify the date range on each new page before extracting data
+Then manually type dates into the input fields and click the "Apply" button. The Apply button is a `material-button` element — you may need to use `javascript_tool` to click it:
+```javascript
+// Find and click the Apply button
+document.querySelector('material-button[debug-id="apply-button"]')?.click();
+```
 
-**Gotcha — Timezone:**
-- Google Ads displays data in the ad account's timezone setting (not your local timezone)
-- This matters for reconciliation with GA4 (which may use different timezone)
-- Note the account timezone if there's a discrepancy risk
+**After setting dates:** Always verify by checking what the date picker now displays. If it still shows a different range, the change didn't take. Retry with the URL parameter method.
 
-**Gotcha — Jan 2026 Attribution Window Change:**
-- If an account was active before Jan 2026, historical data viewed in Google Ads NOW uses the current attribution window (7-day click or 1-day click + 1-day view)
-- Historical data is NOT shown in the old window — it's been reprocessed
-- This makes YoY comparisons misleading
-- Always note the current attribution window when pulling historical data
+**Important:** Some Google Ads URL parameters are silently ignored on navigation. Date parameters generally work, but if you're being redirected, the params may be stripped. In that case, navigate first, then modify the URL in place.
 
 ---
 
-## Column Customization (MANDATORY Before Data Extraction)
+## Campaign Table (ag-Grid) Extraction
 
-**This is the single most important navigation step.** Default Google Ads columns are insufficient for an audit. You MUST customize columns to see real metrics.
+Google Ads uses ag-Grid for its data tables. Key patterns:
 
-### How to Customize Columns
+### Reading the Table
 
-1. Click the **"Columns"** button (above the data table, right side — usually labeled "Columns" with a dropdown arrow)
-2. Select **"Modify columns"** from the dropdown
-3. The column customization panel opens
+- Use `read_page` to capture the visible table content
+- The table often has more columns than fit on screen — **columns to the right may be cut off**
+- If you need off-screen columns (like Conv Value, ROAS, CPA), either:
+  - Scroll the table right and re-read
+  - Use `read_page` which typically captures the full DOM including off-screen content
+  - Navigate to a campaign's detail view to see all metrics
 
-### Required Column Set for Audit
+### The Totals Row
 
-Add these columns (search by name in the customization panel):
+- The totals row at the bottom of the campaigns table contains account-level aggregates
+- This is the most reliable source for account-level metrics
+- It includes: Cost, Conversions, Conv. value, All conv., All conv. value, Impressions, Clicks, CTR, Avg. CPC, ROAS (if column is visible)
+- If ROAS isn't shown in the totals row, calculate it: Conv. value / Cost
 
-**Spending & Results:**
-- Cost
-- Conversions
-- Cost per Conversion (CPA equivalent)
-- Conv. Value
-- Return on Ad Spend (ROAS)
+### Column Customization
 
-**Delivery:**
-- Impressions
-- Clicks
-- Interaction Rate (CTR)
-- Cost per Click (CPC)
-- Avg. CPM
+If key columns aren't visible:
+1. Click "Columns" button (above the table, right side)
+2. Search for the metric name
+3. Add it to the view
+4. The table will refresh with the new column
 
-**Quality & Performance (Critical for diagnosis):**
-- Avg. Quality Score (for Search ads)
-- Quality Score Distribution (shows %, %, % for scores 1-3, 4-6, 7-10)
-- First Page Bid Estimate
+Common columns to add if missing: Conv. value, ROAS, All conv., Cost/conv., Impression share, Search impr. share
 
-**Conversion Tracking:**
-- Primary Conversion Category
-- Conv. Value per Click
+### Sorting and Filtering
 
-**Important distinction for CTR:**
-- **Interaction Rate:** Count of interactions (clicks) / impressions. Use this one for Search audit.
-- **View-Through Conversion Rate (VTCR):** For Display/Video only. Not applicable to Search.
-- Make sure you're looking at Interaction Rate, not VTCR.
-
-### Saving Column Presets
-
-After customizing columns:
-1. Click **"Save this column set"**
-2. Name it something like "Audit - Full Metrics" or "Deep Audit"
-3. This saves time if you need to return to this view later
-
-### Column Order
-
-Google Ads displays columns left-to-right in the table. Arrange the most critical metrics first:
-1. Cost
-2. Conversions
-3. Cost per Conversion
-4. ROAS
-5. Impressions, Clicks, Interaction Rate
-6. Avg. Quality Score, Quality Score Distribution
-7. Conv. Value
+- Click column headers to sort
+- Use the filter icon to filter by campaign type, status, etc.
+- Filter by "Eligible" status to see only active campaigns
+- Filter by campaign type (Search, Shopping, Performance Max) for focused analysis
 
 ---
 
-## Reading the Data Table
+## Navigation Paths for Key Sections
 
-### Campaign View
+### Campaign-Level Data
 ```
-Campaigns tab → shows all campaigns with aggregate metrics
+Campaigns (left nav) → All campaigns → [table view]
 ```
-- Each row is one campaign
-- The **totals row** at the bottom aggregates all active campaigns
-- Use the totals row for account-level metrics
-- Sort by "Cost" (descending) to see highest-spend campaigns first
 
-### Ad Group View
+### Conversion Actions Inventory
 ```
-Click on a campaign name → shows all ad groups within that campaign
+Goals (left nav) → Conversions → Summary
 ```
-- Or: Click the "Ad groups" tab at the top to see ALL ad groups across campaigns
-- Each ad group shows targeting settings, budget (if set), delivery status, and performance metrics
-- This is where you review Quality Score by ad group
-- For Search, check: Are branded and non-branded ad groups in the same campaign? (Should be separate)
+Lists all conversion actions with: Name, Source, Category, Status, Optimization goal, Conv. count type, Include in "Conversions", All conv., All conv. value
 
-### Ads View
-```
-Click on an ad group name → shows all ads within that ad group
-```
-- Or: Click the "Ads & extensions" tab at the top to see ALL ads across all ad groups
-- This is where you review ad copy freshness and RSA (Responsive Search Ad) composition
-- Check: Are RSAs recent (created in the last 30 days), or are they old and stale?
+### Conversion Action Details
+Click on any conversion action name to see:
+- Settings (attribution model, counting method, click-through window, view-through window)
+- Recent conversion data
+- Tag status (active/inactive/unverified)
 
-### Keywords View
+### PMax Search Term Insights
 ```
-Click on an ad group name → scroll down to "Keywords" section
+Campaigns → [select PMax campaign] → Insights and reports → Search terms
 ```
-- Shows all keywords in the ad group with match type, bid, Quality Score, and performance
-- Use this to analyze match type split (Exact vs Broad vs Phrase) and identify negative keyword gaps
+Or at account level:
+```
+Insights and reports (left nav) → Search terms
+```
+Filter by campaign to isolate PMax search terms. Look for the "Categories" view which groups terms into branded, competitor, generic, etc.
 
-### Search Terms View (HIDDEN BY DEFAULT — SEE GOTCHA BELOW)
+### PMax Asset Group Performance
 ```
-From the Keywords tab, click "Search Terms" (top of the data table)
+Campaigns → [select PMax campaign] → Asset groups → [select asset group]
 ```
-- Shows actual search queries that triggered ads (not the keywords you bid on)
-- This is critical for PMax diagnosis: are search terms being triggered, or is PMax relying purely on audience matching?
-- Filter by "Impr." (impressions) > 10 to reduce noise
-- Look for high-spend irrelevant terms and add them to negative keywords
+Shows: Asset performance ratings (Low/Good/Best), ad strength, individual asset metrics
 
-### Reading Large Tables
-- Google Ads paginates at ~50 rows by default
-- Look for the pagination controls at the bottom
-- For large accounts, filter by status = "Enabled" first to reduce noise
-- Use horizontal scrolling to capture columns that don't fit on screen
+### Auction Insights
+```
+Campaigns → [select campaign] → Auction insights
+```
+Or at keyword level:
+```
+Keywords → [select keywords] → Auction insights
+```
+Shows: Impression share, Overlap rate, Position above rate, Top of page rate, Abs. top of page rate
+
+### Search Terms Report (for Search campaigns)
+```
+Keywords (left nav) → Search terms
+```
+Shows actual queries that triggered ads. Use date range filter. Look for irrelevant terms that need negative keywords.
+
+### Quality Score
+```
+Keywords (left nav) → Search keywords → Add "Quality Score" column if not visible
+```
+Also available: Quality Score (hist.), Expected CTR, Ad relevance, Landing page experience
+
+### Change History
+```
+Change history (left nav)
+```
+Useful for: understanding when campaigns were paused/enabled, when budgets changed, when bid strategies changed. Filter by change type.
 
 ---
 
-## Breakdown Extraction
+## Recommendations Page — Handle With Care
 
-Breakdowns add a secondary dimension to performance data. Essential for placement and device analysis.
+Google's Recommendations page (`Recommendations` in left nav) shows Google's suggested optimizations with an "Optimization Score."
 
-### How to Access Breakdowns
+**Use it for signal, not for action:**
+- It reveals what Google thinks is wrong (budget limits, bid strategy suggestions, keyword expansions)
+- It often recommends things that benefit Google's revenue more than the advertiser's
+- "Apply all" is almost always wrong
+- Useful audit signals: if Google recommends increasing budget on a campaign, and the campaign is profitable + budget-limited, that corroborates your finding
 
-1. Click the **"Columns"** dropdown and look for a "Breakdown" option, OR
-2. Click the **"Segment"** or **"Breakdown"** button (location varies by Google Ads UI version)
-3. Select a breakdown category
-
-### Key Breakdowns for Audit
-
-**By Network:**
-Shows performance on Google Search, Google Display Network, Google Shopping, YouTube, etc.
-
-**By Device:**
-Shows Mobile, Desktop, Tablet performance
-
-**By Top Search Terms (PMax only):**
-Shows which search queries triggered the PMax campaign. Critical for PMax diagnosis.
-
-**By Placement (Display/YouTube):**
-Shows which sites/placements received impressions
-
-### Breakdown Gotchas
-- Only one breakdown can be active at a time (you can't cross-tab network × device)
-- Breakdowns replace the totals row — you lose aggregate view while a breakdown is active
-- Remove the breakdown before applying a different one
-
----
-
-## Conversion Actions Inspection
-
-**Path:** Settings → Conversions
-
-Shows all conversion actions configured in the account.
-
-### What to Check
-
-- **Conversion Action List:** Which actions exist? What category? (Purchase, Lead, Signup, etc.)
-- **Status:** Is each action tracking or paused? Is it counting towards campaign optimization?
-- **Lookback Window:** What's the conversion lookback window? (30 days, 60 days, 90 days?)
-- **Attribution Model:** How are multi-touch conversions attributed? (Last click, data-driven, etc.)
-- **Duplicate Conversion Detection:** Does the account have MULTIPLE Purchase events? (High risk of double-counting)
-- **Click-through Conversion Delay:** Are conversions being counted significantly after the click? (May indicate tracking lag)
-- **Dead Actions:** Any conversion actions with zero conversions in the audit period?
-
-### Evidence JSON Mapping
-
-```json
-{
-  "title": "Duplicate Purchase event detected — two Purchase actions active",
-  "label": "OBSERVED",
-  "evidence": "Conversion Actions in Settings show two actions: 'Purchase' (counting) and 'Purchase_v2' (also counting). Both have substantial conversion volume in the audit period.",
-  "source": "Google Ads > Settings > Conversions",
-  "significance": "Risk of double-counting purchase conversions. Recommend deactivating one action and consolidating all conversion tracking into a single Purchase event."
-}
-```
-
----
-
-## Campaign Settings Inspection
-
-For assessing campaign-level configuration.
-
-**Path:** Click campaign name → Settings
-
-Key settings to check:
-- **Campaign Objective:** Sales, Leads, Website traffic, Product & Brands, App Promotion, Brand awareness & reach
-- **Campaign Type:** Search, Display, Shopping, Performance Max (PMax), YouTube, Discovery
-- **Networks:** Google Search, Google Display Network, YouTube (varies by campaign type)
-- **Budget Type:** Daily or Total (lifetime)
-- **Budget Amount:** Daily or lifetime spend limit
-- **Bid Strategy:** Manual CPC, Maximize Conversions, Target CPA, Target ROAS, Maximize Clicks
-- **Attribution Window:** 7-day, 30-day, 60-day, or 90-day click-through window
-- **Campaign URL Options:** Whether final URL expansion is enabled (for PMax)
-
----
-
-## Ad Group Settings Inspection
-
-**Path:** Click ad group name → Settings
-
-Key settings:
-- **Targeting:** Keywords + match types, Audiences (if any), Topics (Display), Placements (Display)
-- **Bid Strategy:** Inherited from campaign, or ad group-level override?
-- **Max CPC Bid:** For manual bidding campaigns
-- **Ad Rotation:** Optimize or rotate evenly?
-- **Audience Targeting:** Observation or targeting? (Recommend observation for Search)
-
----
-
-## PMax Search Terms Report (HIDDEN BY DEFAULT)
-
-**Critical Gotcha:** By default, Google Ads does NOT show the Search Terms report for PMax campaigns. You must unhide it.
-
-**Path:** Click PMax campaign → Click "Assets" tab or "Ad groups" tab → Look for "Search Terms" link in the data table
-
-If you don't see "Search Terms" link:
-1. Click "Segments" dropdown (above data table)
-2. Select "Search term" breakdown
-3. This shows search queries that triggered the PMax campaign
-
-**What to look for:**
-- Are search terms being populated? (If blank or very low volume, PMax is relying on audience/intent matching instead of search optimization)
-- Are the search terms relevant to the campaign? (If not, the campaign is too broad)
-- High-spend irrelevant terms → add to negative keywords
+**Extract the recommendation list** for working notes — it's a quick signal of what Google's algorithm considers suboptimal in the account.
 
 ---
 
 ## Known UI Gotchas
 
 ### Page Load Timing
-- Google Ads loads progressively — tables appear before data populates
-- Wait for data to fully load: look for actual numbers in the totals row (not loading spinners or dashes)
-- If you read too early, you'll get incomplete or zero data
+- Google Ads pages load progressively — the table structure appears before data populates
+- Wait for the data to fully load before reading (look for the totals row to have values, not dashes)
+- If you read too early, you'll get placeholder values or empty cells
 
-### "Limited by Budget" Status
-- If a campaign shows "Limited by budget" in the status column, the daily budget is capping delivery
-- This doesn't mean there's a problem, but it means the campaign could spend more if budget increased
-- Check bid strategy effectiveness separately — the budget cap may be the right level
+### Metric Format Discrepancies
+- Cost shows as local currency (usually USD) with commas: "$22,859.21"
+- ROAS may show as percentage (506%) or ratio (5.06) depending on column configuration
+- Conversions may show decimal values (83.36) due to fractional/modeled conversions
+- "All conversions" includes secondary conversion actions; "Conversions" includes only primary
 
-### Quality Score Interpretation
-- Quality Score ranges 1-10 (higher is better)
-- Google Ads shows aggregate distribution, not individual keyword scores
-- Quality Score is calculated PER ad group, not per keyword — you can't drill into individual keyword scores in the modern UI
-- Expected QS distribution: 40-50% in scores 7-10, 30-40% in scores 4-6, 10-20% in scores 1-3
+### "All Conversions" vs "Conversions"
+- **Conversions:** Only actions marked "Include in Conversions" = Yes (primary goals)
+- **All conversions:** Everything — primary + secondary + cross-device modeled + view-through
+- For ROAS/CPA analysis, use the "Conversions" column (matches what Smart Bidding optimizes toward)
+- For tracking health audit, use "All conversions" (captures everything that's being tracked)
 
-### Attribution Window Display
-- After Jan 2026 changes, available windows are: 1-day click, 7-day click, 1-day click + 1-day view
-- 7-day view and 28-day view options are gone
-- If an account was running before Jan 2026, historical data shown in Ads Manager NOW uses the current attribution window — not what was active when the ads ran
-- This makes historical comparisons misleading
+### Budget Status Labels
+- **Eligible:** Campaign is running normally
+- **Limited by budget:** Campaign ran out of daily budget on some days — Google has data on how much more could be spent
+- **Learning:** Bid strategy recently changed, gathering data (allow 15 days)
+- **Limited (other):** Could be targeting, ad disapprovals, or policy issues — click for details
 
-### Currency and Formatting
-- Spend shows in the ad account's currency (not necessarily USD)
-- Some accounts use periods for thousands separators (European format): 1.234,56 instead of 1,234.56
-- Note the currency and format in working notes to avoid parsing errors
+### Date Range Persistence
+- Setting a date range on the Campaigns page usually persists as you navigate to sub-pages
+- BUT: some pages (like Recommendations, some Insights views) reset to their own default range
+- Always verify the date range on each page before pulling numbers
+- The PMax Insights page often defaults to "Last 28 days" regardless of your campaign-level date range
 
-### PMax vs Search Campaign Reports Differ
-- Search campaign reports show: Keywords, Search Terms, Ad Groups, Ads
-- PMax campaign reports show: Assets, Asset Groups, Search Terms (if unhidden), Diagnostics
-- You can't access keyword-level data in PMax — it's fully automated
+### Multiple Tabs / Windows
+- If you have multiple Google Ads tabs open, they share the same session
+- Changing the date range in one tab may affect others
+- Stick to one tab per audit to avoid confusion
 
-### "Recommended" Actions in Diagnostics
-- Google Ads shows AI-generated recommendations in the Diagnostics card
-- Some recommendations are valuable (pause low-performing keywords), some are opportunistic (increase budget)
-- Recommendations are not auditor findings — use them as signals, not directives
+---
+
+## Data Extraction Tips
+
+### For Large Tables
+If a campaign table has many rows:
+- Sort by Cost (descending) to see highest-spend campaigns first
+- The top 5-10 campaigns by spend typically represent 80-90% of total spend
+- Don't miss paused campaigns with significant historical spend — sort by "All time" briefly to check
+
+### For PMax Search Terms
+- The search terms view for PMax shows "Search term categories" (grouped) and "Search terms" (individual)
+- Categories view is more useful for branded cannibalization detection — look for your brand name in categories
+- Individual search terms may be heavily anonymized ("other search terms" bucket)
+
+### Capturing Screenshots
+If you need to capture specific UI elements for evidence:
+- Use `read_page` for text-based data extraction (more reliable)
+- Screenshots are useful for: ad strength indicators, asset ratings, diagnostic cards, recommendation summaries
+- Always pair screenshots with text-extracted data — don't rely on screenshots alone for numbers
+
+### Exporting Data
+Google Ads allows CSV/Excel downloads from most table views:
+- Look for the download icon (↓) above the table
+- This is useful for large datasets that are hard to read page-by-page
+- Downloaded data respects the current date range and filters
+- Note: not all views support download (some Insights pages don't)

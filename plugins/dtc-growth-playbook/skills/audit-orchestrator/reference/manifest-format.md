@@ -9,11 +9,11 @@ The audit manifest is the human-readable tracker for a client audit. It lives al
 **Pattern:** `{Client}_audit_manifest.md`
 
 **Examples:**
-- `Acme-Co_audit_manifest.md`
-- `Sample-Brand_audit_manifest.md`
-- `{Own-Brand}_audit_manifest.md`
+- `Kodiak-Leather_audit_manifest.md`
+- `Example-Client_audit_manifest.md`
+- `{department}_audit_manifest.md`
 
-Use the PascalCase-With-Dashes client folder name as the prefix (per your naming rules).
+Use the PascalCase-With-Dashes client folder name as the prefix (per project naming conventions).
 
 ---
 
@@ -21,8 +21,8 @@ Use the PascalCase-With-Dashes client folder name as the prefix (per your naming
 
 | Department | Path |
 |---|---|
-| {Agency} client | `{Agency}/reports/{Client-Name}/evidence/` |
-| {Own Brand} | `{Own-Brand}/reports/evidence/` |
+| Disruptive client | `{evidence_dir}/` |
+| {client_name} | `{evidence_dir}/` |
 
 The manifest lives in the same `evidence/` directory as the JSON evidence files.
 
@@ -37,7 +37,7 @@ The manifest lives in the same `evidence/` directory as the JSON evidence files.
 **Last Updated:** YYYY-MM-DD
 **Audit Type:** Full / Platform-specific
 **AOV Tier:** Over $200 / $100-200 / Under $100
-**Department:** {Agency} / {Own-Brand}
+**Department:** {department} / {department}
 
 ## Platforms
 
@@ -93,7 +93,7 @@ The manifest lives in the same `evidence/` directory as the JSON evidence files.
 
 When a platform audit completes, this column gets the filename of the JSON evidence file:
 - Pattern: `{Client}_{platform}_evidence.json`
-- Example: `Acme-Co_google-ads_evidence.json`
+- Example: `Kodiak-Leather_google-ads_evidence.json`
 
 Platform keys must match the `meta.platform` enum in `evidence-schema.json`:
 `google-ads`, `meta-ads`, `ga4`, `klaviyo`, `shopify`, `amazon-ads`, `website-cro`
@@ -129,7 +129,7 @@ The orchestrator suggests this order based on data dependencies:
 1. **Shopify** — Financial source of truth. Revenue, AOV, orders, refunds. Every other platform's numbers get compared against this.
 2. **Google Ads** — Usually the largest ad spend. PMax, Search, Shopping.
 3. **Meta Ads** — Second largest ad platform. TOF/MOF/BOF structure, creative performance.
-4. **Amazon Ads** — If applicable ({Own Brand}, or {Agency} clients selling on Amazon).
+4. **Amazon Ads** — If applicable ({client_name}, or Disruptive clients selling on Amazon).
 5. **GA4** — Cross-platform traffic view. Attribution comparison vs ad platforms.
 6. **Klaviyo** — Email/SMS. Revenue attribution, flow health, list health.
 7. **Website/CRO** — Last because it benefits from knowing traffic quality and conversion data from other platforms first.

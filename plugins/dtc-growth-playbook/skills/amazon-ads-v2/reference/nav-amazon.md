@@ -234,7 +234,7 @@ Custom React components that don't respond to standard URL parameters or form in
 This refers to the Amazon Store (brand storefront page), NOT the seller account itself. The seller can be fully active and selling while the Store page is deactivated. Don't flag this as a critical issue unless the storefront is part of the advertising strategy (SB campaigns linking to Store).
 
 ### Gotcha 9: Seller Central Grid is NOT a Standard Table
-Business Reports uses a custom React grid with **full row+column virtualization**. `document.querySelectorAll('table tbody tr')` returns 0 results. Must use CSV download or multi-pass DOM extraction. See the Seller Central Grid Extraction section above for detailed methods.
+Business Reports uses a custom React grid with full row+column virtualization. `document.querySelectorAll('table tbody tr')` returns 0 results. Must use CSV download or multi-pass DOM extraction. See the Seller Central Grid Extraction section above for detailed methods.
 
 ### Gotcha 10: ASIN Link Text Renders as Empty String
 In Seller Central grids, ASIN values are `<a>` elements whose `textContent` and `innerText` return empty strings even when the link is visible. **Workarounds:**

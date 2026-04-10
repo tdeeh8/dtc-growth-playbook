@@ -1,333 +1,262 @@
 # Search Campaign Audit Checklist
 
-Reference for the google-ads-audit-v2 audit skill. Systematic checklist for Search campaign health assessment, covering Quality Score, keywords, match types, ad copy, landing pages, bid strategy, and conversion tracking.
+Reference for the google-ads-audit-v2 audit skill. Structured checklist for Search campaign-specific audit items.
 
 ---
 
-## 1. Quality Score Assessment
+## 1. Quality Score Distribution
 
-**What it is:** Google's quality metric for keywords, rated 1-10. Directly impacts CPC and ad rank.
+**Where to find it:** Keywords (left nav) → Search keywords → add "Quality Score" column (and optionally "Quality Score (hist.)", "Expected CTR", "Ad relevance", "Landing page experience")
 
-**How to Extract:** Customize columns to include "Avg. Quality Score" and "Quality Score Distribution"
+**What to record:**
 
-**Thresholds (from benchmarks.md):**
+| QS Range | Count | % of Keywords | Action |
+|---|---|---|---|
+| 9-10 | | | Strong — protect these |
+| 7-8 | | | Healthy — monitor |
+| 5-6 | | | Review — optimize ad copy + LP |
+| 1-4 | | | Fix or pause — dragging account quality |
 
-| Rating | Score | Action |
-|---|---|---|
-| Excellent | 8-10 | Reduce bids — Google is rewarding quality with lower CPCs |
-| Healthy | 6-7 | Monitor. Typical range. |
-| Below Average | 4-5 | Review keyword relevance, landing page, ad copy |
-| Poor | 1-3 | Fix or pause. These keywords are costing 2-3x more per click. |
+**Benchmarks (from google-ads.md):**
+- Below 5 = ad relevance, landing page experience, or expected CTR problem
+- Below 7 = performance drag — higher CPCs and worse ad positions
+- Target: 70%+ of keywords at QS 7+
 
-**How to Diagnose Low Quality Scores:**
+**Breakdown by component (if visible):**
+- **Expected CTR:** "Below average" → ad copy doesn't match intent. Rewrite headlines to match keyword themes.
+- **Ad relevance:** "Below average" → keyword-to-ad alignment is poor. Create tighter ad groups with more specific ad copy.
+- **Landing page experience:** "Below average" → LP doesn't match search intent, slow load, poor mobile experience. This is often a website problem, not an ads problem — flag for cross-channel.
 
-Quality Score has 3 sub-components (viewable at keyword level):
-1. **Ad Relevance:** How closely ads match the keyword intent
-2. **Landing Page Experience:** How relevant the landing page is to the keyword and ad
-3. **Click-Through Rate (CTR):** Historical CTR of the keyword vs. benchmarks
-
-**Fix Strategy by Component:**
-- Low Ad Relevance → Rewrite ad copy or split into new ad group with more specific ads
-- Poor Landing Page → Redirect to more relevant page or improve content on current page
-- Low CTR → Improve ad copy (headlines, CTA), test new angles, or pause if irrelevant search term
-
-**Evidence JSON Mapping:**
-```json
-{
-  "title": "Quality Score distribution critically poor — 45% of keywords rated 1-3",
-  "label": "CALCULATED",
-  "evidence": "Ad group quality score distribution: 15% (scores 1-3), 35% (scores 4-6), 50% (scores 7-10). Benchmark for healthy account is 20%, 35%, 45%. This distribution indicates systematic issues with relevance, landing page, or ad copy.",
-  "source": "Google Ads > Campaign > Ad Group > Customize Columns: Quality Score Distribution",
-  "significance": "Low Quality Score keywords are incurring 2-3x CPCs. Recommendation: (1) Pause bottom 20% of keywords by volume, (2) Test landing page redesign for non-brand ad groups, (3) Refresh ad copy with benefit-focused headlines."
-}
-```
+**Evidence labeling:** Record actual QS distribution as OBSERVED. Diagnosis of causes is INFERENCE.
 
 ---
 
-## 2. Negative Keyword Audit
+## 2. Negative Keywords
 
-**What to Check:** Are negative keywords preventing irrelevant traffic?
+**Where to find it:** Keywords (left nav) → Negative keywords (tab at top). Also check shared negative keyword lists at account level.
 
-**How to Extract:**
+**What to check:**
 
-1. Open the campaign or ad group
-2. Click "Keywords" tab
-3. Look for "Negative keywords" section (may be collapsed)
-4. Count negative keywords, review categories
+### Existing Negatives
+- Are any negative keyword lists applied? How many negatives total?
+- Are negatives at campaign level, ad group level, or account level?
+- Are there shared negative keyword lists? What do they contain?
+- Zero negatives → flag as HIGH priority finding (unless the account is brand new)
 
-**Assessment:**
+### Missing Negatives (from Search Terms Report)
+- Pull the Search Terms report: Keywords → Search terms
+- Sort by Cost (descending) to find expensive non-converting queries
+- Look for obvious irrelevant terms that should be negated:
+  - Competitor brand names (unless competitor conquesting is intentional)
+  - Informational queries ("how to", "what is", "free", "DIY")
+  - Job-related terms ("jobs", "careers", "salary")
+  - Wrong product categories
+  - Geographic mismatches
 
-| Check | Healthy | Flag if |
-|---|---|---|
-| Negative keyword count | 20+ per campaign | <10 (likely missing irrelevant terms) |
-| Negative keyword freshness | Updated in last 30 days | Unchanged for 90+ days (may have new irrelevant terms) |
-| Negative categories | Competitors, job boards, educational, free, alternatives | No strategy evident (seems random) |
-| Match type mix | Phrase + Broad negative mix | All exact or all broad (overly restrictive or loose) |
+### Specific Negatives to Recommend
+- Document the top 5-10 terms that should be negated immediately
+- Estimate wasted spend on these terms (sum their cost with no conversions)
+- Include in opportunities with expected impact = wasted spend recovery
 
-**Common High-Impact Negatives to Audit:**
-
-| Category | Examples | When to Add |
-|---|---|---|
-| Competitors | -"competitor brand", -"competing product" | If competitor traffic is irrelevant to your offering |
-| Jobs/career intent | -"hiring", -"jobs", -"careers" | If product is not a job or recruiting service |
-| DIY/tutorials | -"how to", -"DIY", -"tutorial" | If you're selling products, not educational content |
-| Free/cheap intent | -"free", -"discount codes", -"coupons" | If you can't compete on price or offer |
-| Alternatives/comparisons | -"vs", -"alternative", -"comparison" | If comparison traffic doesn't convert |
-| Irrelevant categories | -"used", -"rental", -"subscription" | If you don't offer these variants |
-
-**Evidence JSON Mapping:**
-```json
-{
-  "title": "Negative keyword strategy underdeveloped — only 8 negatives across 40-keyword campaign",
-  "label": "OBSERVED",
-  "evidence": "Campaign has 40+ active keywords but only 8 negatives configured (all exact match, all competitor brands). Search Terms report shows 30%+ of impressions on non-brand, non-product queries (e.g., 'how to [product]', 'free [product]', 'used [product]').",
-  "source": "Google Ads > Campaign > Negative keywords + Search Terms breakdown",
-  "significance": "Underdeveloped negative list is allowing irrelevant traffic and wasting budget. Recommendation: add 15-20 phrase-match negatives covering: DIY/tutorial intent, free/cheap modifiers, educational/comparison intent, used/rental variants. Expected improvement: 15-20% reduction in wasted spend."
-}
-```
+**Evidence JSON mapping:**
+- Finding: "Missing negative keywords causing wasted spend"
+- Evidence: "Top non-converting search terms: [list with spend]. Estimated wasted spend: $X"
+- Opportunity: "Add negative keywords for [terms]. Priority: HIGH. Expected impact: $X/month savings"
 
 ---
 
-## 3. Match Type Split & Strategy
+## 3. Match Type Distribution
 
-**What it is:** Keywords can be Exact, Phrase, or Broad match. Each trades specificity for reach.
+**Where to find it:** Keywords → Search keywords. Check the "Match type" column.
 
-**How to Extract:** Customize columns to include "Match Type" in the Keywords tab.
+**What to record:**
 
-**Thresholds & Strategy:**
-
-| Match Type | Best For | Volume | CPA | Risk |
+| Match Type | Keyword Count | % of Spend | Avg CPA | Notes |
 |---|---|---|---|---|
-| Exact Match [keyword] | Branded, high-intent | Lower | Lower CPA | Limited reach |
-| Phrase Match "keyword" | Product category | Medium | Medium CPA | Some irrelevant traffic |
-| Broad Match keyword | Awareness, prospecting | Higher | Higher CPA | High irrelevant traffic |
+| Exact | | | | Highest control, usually best CPA |
+| Phrase | | | | Middle ground — often worst CPA (23% higher than broad+smart) |
+| Broad | | | | Best with smart bidding + 50+ conv/month |
 
-**Diagnostic Questions:**
+**Current best practice (from google-ads.md):**
+- Broad match + smart bidding is the new default — works when: 50+ monthly conversions, accurate tracking, realistic ROAS target
+- Phrase match now delivers 23% higher CPA than exact or broad+smart bidding (10,000+ accounts, Groas)
+- Exact match is still valuable as a safety net for highest-value keywords
 
-1. **Is the account over-reliant on broad match?** (>60% keywords broad match)
-   - Broad match works ONLY if you have strong negative keyword strategy
-   - If negatives are weak, broad match = wasted budget
-   - Recommendation: migrate to phrase match, build negatives, test ROAS
+**What to flag:**
+- Heavy phrase match usage → recommend testing broad + smart bidding migration (if volume supports it)
+- All broad match with no smart bidding → dangerous — broad without smart bidding = uncontrolled spend
+- No exact match keywords at all → consider adding exact match for highest-converting terms as controls
 
-2. **Is exact match under-used?** (<20% exact match)
-   - Exact match typically has lowest CPA and highest quality
-   - Good opportunity for bid increases
-   - Recommendation: increase bids on exact match +10-15%
-
-3. **Is phrase match misconfigured?** (Phrase keywords with very high CPA)
-   - Phrase match should be in the middle (price and performance)
-   - If phrase CPA is near broad match CPA, the keywords may be too generic
-   - Recommendation: split phrase keywords into more specific sub-groups
-
-**Evidence JSON Mapping:**
-```json
-{
-  "title": "Match type distribution heavily skewed to broad match — high risk of wasted spend",
-  "label": "CALCULATED",
-  "evidence": "Keywords split: 75% Broad match, 15% Phrase match, 10% Exact match. Broad match keywords average CPA $45, Exact match average CPA $28. Negative keyword count only 5 (insufficient for broad match control). Broad match is responsible for 50% of spend but only 35% of conversions.",
-  "source": "Google Ads > Campaign > Keywords > Match Type column",
-  "significance": "Broad match without strong negatives is a known inefficiency pattern. Recommendation: (1) Reduce broad match allocation to 30%, (2) Build 20+ phrase match keywords from top performing search terms, (3) Expand exact match +50%. Expected improvement: 20-25% CPA reduction."
-}
-```
+**Conversion volume check before recommending broad:**
+- Below 30 conversions/month → too low for smart bidding. Recommend Manual CPC or Maximize Clicks.
+- 30-50/month → can test Maximize Conversions (no target)
+- 50-100/month → Target CPA or Target ROAS viable
+- 100+/month → full smart bidding with broad match appropriate
 
 ---
 
-## 4. Branded vs Non-Branded Segmentation
+## 4. Branded vs. Non-Branded Segmentation
 
-**What to Check:** Are branded keywords (brand name + modifiers) separated from non-branded (product category, benefit)?
+**What to check:**
+- Is there a separate branded Search campaign?
+- Is branded traffic mixed into non-branded campaigns?
+- What's the branded impression share?
 
-**How to Assess:**
+**Branded Search Campaign Health:**
 
-In the Keywords tab, manually categorize each keyword:
-- **Branded:** Contains brand name (e.g., "[Brand] [product]", "[Brand] reviews", "[Brand] vs [competitor]")
-- **Non-branded:** Product category or benefit (e.g., "[product type]", "[benefit] [category]", "buy [product]")
-
-**Why it Matters:**
-
-Branded and non-branded keywords have very different:
-- **CTR:** Branded keywords typically 5-10% CTR. Non-branded 1-3% CTR.
-- **CPA:** Branded typically 50-70% lower CPA than non-branded (high intent, demand already exists)
-- **Quality Score:** Branded typically higher QS (strong CTR, brand familiarity)
-- **Bid Strategy:** Branded can often run on Manual CPC. Non-branded needs Tgt CPA or Tgt ROAS.
-
-**Red Flag:** Branded and non-branded keywords in the same ad group with the same bid
-- Different keywords need different bids
-- Branded converts better, should have different bid strategy
-- Recommendation: split into separate ad groups or campaigns
-
-**Evidence JSON Mapping:**
-```json
-{
-  "title": "Branded and non-branded keywords mixed in same ad group with identical bids",
-  "label": "OBSERVED",
-  "evidence": "Ad Group 'Core Products' contains: branded keywords ('[Brand] [product]', '[Brand] reviews', '[Brand] buy') with 8.2% avg CTR, CPA $22 — and non-branded keywords ('[product type]', 'buy [product]', '[product] for [use case]') with 2.1% avg CTR, CPA $68. Same bid applied to all ($1.50 max CPC).",
-  "source": "Google Ads > Campaign > Ad Group > Keywords tab + performance metrics",
-  "significance": "Branded and non-branded keywords require different bid strategies. Applying same bid to both means non-branded keywords are under-bid (losing high-intent traffic) or over-bid (wasting budget on lower-intent traffic). Recommendation: split into separate ad groups. Expected improvement: 15-20% conversion lift on non-branded, 10-15% CPA reduction on branded."
-}
-```
-
----
-
-## 5. Ad Copy Quality & RSA Analysis
-
-**What to Check:** Are Responsive Search Ads (RSAs) fresh, diverse, and benefit-focused?
-
-**How to Assess:**
-
-1. Open the Ads tab within an ad group
-2. Review each active RSA:
-   - **Headline freshness:** When were the headlines created? (Older than 6 months = potentially stale)
-   - **Headline uniqueness:** Are the 3 headlines substantively different, or slight variations of the same message?
-   - **Description variety:** Do descriptions emphasize different benefits, or repeat the same value prop?
-   - **CTA clarity:** Is there a clear call-to-action (Shop Now, Learn More, Get Offer)?
-   - **Keyword alignment:** Do ad copy messages align with the keywords being targeted?
-
-**Healthy RSA Example:**
-
-```
-Headline 1: "Buy [Product] Online - Fast Shipping"
-Headline 2: "[Product] for [Use Case] - Save 30%"
-Headline 3: "Premium [Product] Quality - 5-Star Reviews"
-
-Description 1: "Free shipping on orders over $50. Shop bestsellers today."
-Description 2: "Trusted by 100K+ customers. Expert advice available."
-```
-
-(Each headline/desc emphasizes a different benefit: speed, discount, trust, reviews, free shipping, advice)
-
-**Poor RSA Example:**
-
-```
-Headline 1: "[Product] Online"
-Headline 2: "[Product] For Sale"
-Headline 3: "Buy [Product]"
-
-Description 1: "Visit our store for [product]."
-Description 2: "Shop [product] at great prices."
-```
-
-(All headlines are nearly identical. Descriptions repeat same message. No distinct benefits.)
-
-**Flags:**
-
-| Pattern | Severity | Fix |
+| Metric | Target | Flag If |
 |---|---|---|
-| All headlines use same opening phrase (e.g., all start with "Buy") | High | Rewrite at least 2 headlines with different openings (benefit, use case, social proof) |
-| Descriptions all emphasize the same benefit | Medium | Add descriptions emphasizing: shipping speed, price/discount, reviews, expert support, guarantee |
-| No social proof messaging (reviews, customer count, awards) | Medium | Add 1 headline and 1 description emphasizing social proof |
-| RSAs older than 6 months with no recent updates | Low-Medium | Refresh at least 2 headlines with current offers or timely benefits |
+| Impression Share | 85-95% | Below 70% (competitors conquesting) |
+| CTR | 15-25% | Below 10% (ad copy or competitor problem) |
+| CVR | 15-25% | Below 8% (landing page problem) |
+| CPC | Low (usually $0.50-2.00 for branded) | Above $3 (heavy competition or poor QS) |
+
+**Budget allocation question:**
+- How much of total Search spend goes to branded campaigns?
+- If branded is >30% of total Google spend, flag for cross-channel review (is the brand investing too much in capturing demand it already owns?)
+- Reference: Framework plan notes "Branded search may be over-invested at 19% of total budget" as a cross-channel signal
+
+**Cross-channel signal:** If branded search volume is high, flag for the synthesizer to check whether Meta or email is driving that demand. Branded search revenue is often not truly incremental.
+
+---
+
+## 5. Ad Copy Quality (RSA Assessment)
+
+**Where to find it:** Ads & assets (left nav) → Ads → filter by campaign
+
+**For each active RSA (Responsive Search Ad):**
+- Ad strength: Poor / Average / Good / Excellent
+- Asset-level ratings: check which headlines and descriptions are rated "Low"
+- Pin status: are any assets pinned to positions? (Pinning reduces Google's optimization flexibility)
+
+**What to flag:**
+- Any ad with "Poor" or "Average" ad strength → recommend rewriting
+- More than 30% of assets rated "Low" → underperforming creative
+- All headlines pinned → defeats RSA purpose, equivalent to old expanded text ads
+- No RSAs at all (only legacy ETAs) → ETAs were sunset June 2022, these are grandfathered and may underperform
+
+**AI Max for Search check (if applicable):**
+- Is "Text Customization" enabled? (auto-generates headlines/descriptions per query)
+- Is "Final URL Expansion" enabled? (AI selects landing page)
+- Is "Search Term Matching" enabled? (keywordless targeting)
+- Results: +18% unique search categories, +19% conversions when enabled (Groas data)
+- If disabled but account has 50+ monthly conversions and accurate tracking → recommend testing
 
 ---
 
 ## 6. Landing Page Alignment
 
-**What to Check:** Does the landing page match the keyword and ad copy?
+**For top-spend ad groups, check:**
+- Does the final URL match the keyword theme?
+- Are ads pointing to product pages, category pages, or homepage?
+- Homepage as landing page for non-branded search → almost always wrong (flag HIGH)
 
-**How to Assess:**
+**Quick LP assessment (without opening the site):**
+- Check the final URL in the ad settings
+- If all keywords in an ad group point to different products but all go to the same LP → mismatch
+- If keywords are specific ("men's leather wallet") but LP is generic ("/shop/all") → poor alignment
 
-For a sample of keywords, review the landing page:
-1. Click the keyword
-2. Visit the Final URL (click the landing page link)
-3. Check alignment:
-   - **Headline match:** Does the page headline echo the keyword/ad copy?
-   - **Content relevance:** Is the product/benefit featured prominently on the page?
-   - **CTA visibility:** Is a conversion CTA (Shop, Sign Up, etc.) visible above the fold?
-   - **Loading speed:** Does the page load in <3 seconds?
-   - **Mobile experience:** Is the page responsive and readable on mobile?
+**Evidence labeling:** LP alignment assessment is OBSERVED (you can see the final URLs) but LP quality judgment is INFERENCE (unless you actually visit the page, which is the site-audit skill's job).
 
-**Quality Score Impact:**
-
-Landing Page Experience (QS sub-component) is heavily influenced by:
-- Content relevance (does it match keyword intent?)
-- CTA clarity (is next step obvious?)
-- Loading speed (Core Web Vitals matter)
-- Mobile-friendliness
-- Transparency (are privacy/return policies accessible?)
-
-**Common Issues:**
-
-| Issue | Impact | Fix |
-|---|---|---|
-| All keywords point to homepage | High | Redirect to product-specific landing pages (5-10% QS improvement expected) |
-| Landing page is slow (>5s load time) | High | Optimize images, enable compression, use CDN (QS improvement + 2-3% CTR lift) |
-| Mobile page is unreadable (text too small, CTAs hard to click) | High | Redesign for mobile (10-15% mobile conversion lift) |
-| CTA is buried below fold | Medium | Move primary CTA above fold (5-10% conversion lift) |
-| Page content doesn't match keyword | Medium | Redirect to relevant product page or add content clarifying product fit (3-5% QS improvement) |
+**Cross-channel signal:** If landing page misalignment is widespread, flag for the site-audit/CRO skill. This is a conversion rate problem, not an ads problem.
 
 ---
 
-## 7. Geographic Targeting & Performance
+## 7. Geographic Targeting
 
-**What to Check:** Are campaigns geographically targeted appropriately?
+**Where to find it:** Campaign settings → Locations
 
-**How to Extract:**
+**What to check:**
+- Target locations: are they appropriate for the business?
+- Location options: "Presence" (people IN the location) vs. "Presence or interest" (people IN or SEARCHING ABOUT the location)
+- **Default is "Presence or interest"** — this means ads show to people outside your target area who search for something related to it. For ecommerce shipping within the US only, "Presence" is usually better.
+- Excluded locations: are any exclusions in place?
 
-1. Campaign Settings → Locations
-2. Note which countries, states, or cities are targeted
-3. If multiple geos: segment performance by location (breakdown by location)
-
-**Assessment:**
-
-| Check | Healthy | Flag if |
-|---|---|---|
-| Single-country targeting (unless multi-national) | Yes | Multiple countries with different languages/currencies (consolidate or separate) |
-| City/state-level targeting (for local business) | Yes | Targeting too broad (entire country) for local business |
-| Performance by location | Even distribution across regions | One location driving 60%+ (may indicate seasonality or local demand imbalance) |
+**What to flag:**
+- "Presence or interest" targeting for an ecommerce business with limited shipping → potential wasted spend on international/out-of-area clicks
+- No geographic targeting at all (targeting all countries) → flag HIGH unless the business is truly global
+- Geographic targeting that doesn't match the business's shipping capabilities
 
 ---
 
 ## 8. Bid Strategy Assessment
 
-**Search Campaign Bid Strategy Maturity Progression:**
+**For each Search campaign, record:**
 
-| Stage | Strategy | When to Use | Risks |
-|---|---|---|---|
-| Early | Manual CPC | Starting out, low conversion volume (<20/mo) | Requires constant manual adjustments |
-| Growth | Tgt CPA | 20-50 conversions/mo, consistent conversion patterns | Needs historical data; may be volatile early |
-| Mature | Tgt ROAS | 50+ conversions/mo, predictable ROAS | Can't execute if conversion volume drops |
-| Advanced | Maximize Conversions | High conversion volume (100+/mo), unlimited budget | May spend beyond ROI target |
+| Campaign | Bid Strategy | Target | Monthly Conversions | Assessment |
+|---|---|---|---|---|
+| | | | | |
 
-**What to Check:**
+**Assessment criteria (from google-ads.md):**
 
-1. **Is the bid strategy appropriate for conversion volume?**
-   - <20 conv/mo → Manual CPC (automation needs data)
-   - 20-50 conv/mo → Consider Tgt CPA (but watch for volatility)
-   - 50+ conv/mo → Tgt CPA or Tgt ROAS (algorithm has signal)
-   - 100+ conv/mo → Can support Maximize Conversions
+| Monthly Conversions | Recommended Strategy |
+|---|---|
+| Below 30 | Manual CPC or Maximize Clicks |
+| 30-50 | Maximize Conversions (no target) |
+| 50-100 | Target CPA or Target ROAS |
+| 100+ | Target ROAS with exploration |
 
-2. **Is the CPA or ROAS target realistic?**
-   - Tgt CPA set higher than recent actual CPA → algorithm is conservative, room to spend more
-   - Tgt CPA set lower than recent actual CPA → algorithm may not spend enough (reduce target)
-   - Tgt ROAS set lower than recent ROAS → can raise (increase profitability)
-
-3. **Are bid adjustments aligned with performance?**
-   - High-performing device (e.g., mobile with 20% better ROAS) → increase bid +10-20%
-   - Low-performing location → decrease bid -20-30% or exclude
-
-**Evidence JSON Mapping:**
-```json
-{
-  "title": "Bid strategy misaligned with conversion volume — Manual CPC on low-volume campaign",
-  "label": "OBSERVED",
-  "evidence": "Campaign has averaged 12 conversions/month over the last 90 days. Bid strategy is Manual CPC ($1.50 max CPC). Campaign has sufficient historical data to shift to Tgt CPA, which would improve efficiency.",
-  "source": "Google Ads > Campaign Settings > Bid strategy",
-  "significance": "Manual CPC requires constant adjustment and doesn't leverage historical conversion patterns. Recommendation: shift to Tgt CPA = $45 (recent average CPA). Expected improvement: 20-30% higher conversion volume with same spend."
-}
-```
+**What to flag:**
+- Target ROAS/CPA with <30 conversions/month → strategy can't learn, recommend downgrading
+- Manual CPC with 100+ conversions/month → leaving efficiency on the table, recommend upgrading
+- Target set unrealistically high → recalculate from profitability math (benchmarks.md)
+- Recent strategy change within last 15 days → still in learning, don't judge performance yet
 
 ---
 
-## Data Collection Summary
+## 9. Search Term Report Review
 
-At the end of the Search assessment, you should have:
+**Where to find it:** Keywords → Search terms
 
-1. **Quality Score analysis:** Distribution (% in 1-3, 4-6, 7-10), problem areas identified
-2. **Negative keyword inventory:** Count, categories, freshness, strategy
-3. **Match type breakdown:** % Exact, % Phrase, % Broad, performance comparison
-4. **Branded vs non-branded split:** Are they segmented? Performance difference?
-5. **RSA quality assessment:** Headline/description freshness, diversity, benefit coverage
-6. **Landing page audit:** Sample of 5-10 keywords with landing page relevance assessment
-7. **Geographic targeting:** Countries/regions targeted, performance distribution
-8. **Bid strategy:** Current strategy, conversion volume, target realism, bid adjustments
+**What to pull:**
+- Top 20 search terms by cost (for each major campaign)
+- Non-converting terms with >$50 spend
+- Terms that converted at a CPA above the target
 
-This feeds into the `raw_metrics.search_campaigns` section and multiple `findings` entries in the evidence JSON.
+**What to flag:**
+- Irrelevant terms with significant spend → negative keyword candidates
+- Competitor terms appearing → is this intentional?
+- Very broad/generic terms ("shoes", "bags") with poor CVR → add as negatives or reduce bids
+- High-performing terms not in the keyword list → add as exact match keywords
+
+**Evidence JSON mapping:**
+- Add notable search terms to `raw_metrics.search_term_categories`
+- Flag wasted spend in findings
+- Create opportunity for negative keyword additions with estimated savings
+
+---
+
+## 10. Campaign Settings Audit
+
+**Quick scan of settings for each Search campaign:**
+
+| Setting | Check | Flag If |
+|---|---|---|
+| Networks | "Search partners" and "Display Network" | Display Network enabled on a Search campaign → almost always wrong, disable it |
+| Ad rotation | "Optimize" vs "Rotate indefinitely" | "Rotate indefinitely" with RSAs → defeats purpose |
+| Ad schedule | Any schedule applied? | Not necessary for most ecommerce, but check if one exists and if it makes sense |
+| Device adjustments | Any bid adjustments by device? | Large negative on mobile (-50%+) may be outdated — mobile performance has improved |
+| Audience targeting | "Observation" vs "Targeting" | "Targeting" limits reach to listed audiences — usually wrong for Search (use "Observation" to collect data) |
+
+**The "Display Network" trap:**
+- Google defaults Search campaigns to also show on the Display Network
+- Display clicks on Search campaigns are almost always low-quality and waste budget
+- If Display Network is enabled on Search campaigns → flag as HIGH, recommend disabling
+
+---
+
+## Evidence JSON Mapping Summary
+
+| Search Finding | Evidence Section | Priority |
+|---|---|---|
+| QS distribution below 7 | findings[] | MEDIUM |
+| Missing negative keywords / wasted spend | findings[] + opportunities[] | HIGH |
+| Phrase match CPA penalty | findings[] | MEDIUM |
+| Branded IS below 70% | findings[] | HIGH |
+| No branded/non-branded separation | findings[] | MEDIUM |
+| Ad copy rated Poor/Average | findings[] | MEDIUM |
+| Homepage as non-branded LP | findings[] | HIGH |
+| Geographic targeting misconfiguration | findings[] | MEDIUM-HIGH |
+| Wrong bid strategy for volume | findings[] + opportunities[] | HIGH |
+| Display Network on Search campaigns | findings[] | HIGH |
+| Search terms with wasted spend | raw_metrics + opportunities[] | HIGH |

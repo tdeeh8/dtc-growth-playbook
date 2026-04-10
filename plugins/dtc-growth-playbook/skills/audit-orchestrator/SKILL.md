@@ -1,8 +1,13 @@
+---
+name: audit-orchestrator
+description: "Create and manage multi-platform audit manifests. Use when starting a full client audit, checking audit progress, or planning which platforms to audit. Triggers on: 'full audit', 'audit this client', 'start an audit', 'what audits do I need to run', 'audit status', 'which platforms are done'."
+---
+
 # Audit Orchestrator — SKILL.md
 
 > **Trigger phrases:** "full audit", "audit this client", "start an audit for [client]", "what audits do I need to run", "audit status", "where are we on the audit", "set up an audit"
 >
-> **Slash command:** `/audit-start`
+> **Slash commands:** `/audit`, `/audit-resume`
 >
 > **What this skill does:** Creates and tracks audit manifests. It is a planner and progress tracker ONLY — it never opens platforms, extracts data, or diagnoses anything.
 
@@ -27,10 +32,9 @@ This skill does NOT activate for:
 Before doing anything, check if a manifest already exists for this client.
 
 **How to check:**
-- Determine the client name and department ({Agency} or {Own Brand})
-- Look for `{Client}_audit_manifest.md` in the evidence directory:
-  - {Agency}: `{Agency}/reports/{Client-Name}/evidence/`
-  - {Own Brand}: `{Own-Brand}/reports/evidence/`
+- Determine the client name
+- Look for `{Client}_audit_manifest.md` in the evidence directory
+- Check common locations: `reports/{Client-Name}/evidence/`, or search for `{Client}_audit_manifest.md` in the workspace
 
 **If manifest EXISTS → Go to Step 4 (Progress Check)**
 **If manifest DOES NOT EXIST → Go to Step 2 (Gather Info)**
@@ -42,8 +46,8 @@ Before doing anything, check if a manifest already exists for this client.
 Use AskUserQuestion to collect the following. Ask in a single question with multiple-choice where possible, free-text where needed.
 
 **Required:**
-- **Client name** — Used for folder naming and manifest. Confirm the PascalCase-With-Dashes version (e.g., "Acme Co" → `Acme-Co`).
-- **Department** — {Agency} or {Own-Brand}? (If {Own Brand}, this is always Tanner's own brand — no need to ask, just confirm.)
+- **Client name** — Used for folder naming and manifest. Confirm the PascalCase-With-Dashes version (e.g., "Kodiak Leather" → `Kodiak-Leather`).
+- **Output path** — Where should evidence files be saved? Default: `reports/{Client-Name}/evidence/`. Store chosen path in the manifest.
 - **Platforms accessible** — Which of these does the user have access to? Check all that apply:
   - Shopify (admin access?)
   - Google Ads (MCC or direct?)
@@ -62,7 +66,7 @@ Use AskUserQuestion to collect the following. Ask in a single question with mult
 - Business type / vertical
 - Key products or categories
 
-If the user provides a client name with their initial message (e.g., "start an audit for Acme Co"), pre-fill what you can and only ask for missing info.
+If the user provides a client name with their initial message (e.g., "start an audit for Kodiak Leather"), pre-fill what you can and only ask for missing info.
 
 ---
 
@@ -72,17 +76,16 @@ Once you have the info:
 
 ### 3a. Create the evidence directory
 
-Determine the correct path per your file routing rules:
-- {Agency} client: `{Agency}/reports/{Client-Name}/evidence/`
-- {Own Brand}: `{Own-Brand}/reports/evidence/`
+Use the output path the user specified (or the default `reports/{Client-Name}/evidence/`).
+Store this path in the manifest so all platform skills and the synthesizer can find it.
 
-If the client folder doesn't exist yet ({Agency} clients), create it.
+If the directory doesn't exist yet, create it.
 
 ### 3b. Create the manifest
 
 Read the manifest format spec at:
 ```
-${CLAUDE_PLUGIN_ROOT}/references/manifest-format.md
+skills/audit-orchestrator/reference/manifest-format.md
 ```
 
 Create `{Client}_audit_manifest.md` in the evidence directory using the template. Fill in:
@@ -112,7 +115,8 @@ Tell the user:
 - They can run them in any order, but the suggested order is optimal
 - If context runs out mid-audit, they can pick up where they left off
 - When all platforms are done (or skipped), run `/audit-synthesize` for the cross-channel report
-- They can re-run `/audit-start {client}` anytime to check progress
+- Use `/audit-resume {Client}` to pick up between sessions — it reads the manifest and suggests (or auto-runs) the next platform
+- They can re-run `/audit {Client}` anytime to check progress
 
 ---
 
@@ -153,20 +157,19 @@ If some are DONE and the user seems ready to synthesize early:
 - Never make diagnostic claims about the client's account
 - Never generate reports
 
-### File routing (per your config)
-- {Agency} clients: `{Agency}/reports/{Client-Name}/evidence/`
-- {Own Brand}: `{Own-Brand}/reports/evidence/`
+### File routing
+- Default evidence path: `reports/{Client-Name}/evidence/`
+- The user may specify a custom output path — always store it in the manifest
 - Use PascalCase-With-Dashes for client folder names
 
 ### Ambiguity handling
 - If the user says "audit" without specifying a client, ask which client
-- If the user says "Amazon" in an audit context, it means Amazon Ads platform audit (not "is this {Own Brand} or {Agency}")
-- If department is unclear, ask: "Is this a {Agency} client or {Own Brand}?"
+- If the user says "Amazon" in an audit context, it means Amazon Ads platform audit
 
 ### Evidence schema
 The JSON schema that all platform skills validate against is at:
 ```
-${CLAUDE_PLUGIN_ROOT}/skills/audit-orchestrator/reference/evidence-schema.json
+skills/audit-orchestrator/reference/evidence-schema.json
 ```
 The orchestrator doesn't need to use it directly, but it's referenced here so platform skill builders know where the contract lives.
 

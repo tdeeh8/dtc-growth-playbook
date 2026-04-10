@@ -1,3 +1,8 @@
+---
+description: Run a deep Amazon Ads + Seller Central audit producing standardized evidence JSON
+argument-hint: "[client name]"
+---
+
 # /audit-amazon — Amazon Ads + Seller Central Deep Audit
 
 Run a deep Amazon Advertising and Seller Central audit as part of the modular audit system v2. Produces a standardized evidence JSON file for the audit-synthesizer.
@@ -6,8 +11,8 @@ Run a deep Amazon Advertising and Seller Central audit as part of the modular au
 
 ```
 /audit-amazon                     → Start audit, will ask for inputs
-/audit-amazon {Own Brand}            → Start audit for {Own Brand}
-/audit-amazon {Client Name}       → Start audit for a {Agency} client
+/audit-amazon {client_name}            → Start audit for {client_name}
+/audit-amazon {Client Name}       → Start audit for specified client
 ```
 
 ## What This Command Does
@@ -24,6 +29,14 @@ Run a deep Amazon Advertising and Seller Central audit as part of the modular au
 - Produce XLSX action plans (the synthesizer handles deliverables)
 - Cross-channel analysis (the synthesizer does that with all evidence files)
 
+## Smart Startup
+
+Before asking for any info, check for an existing manifest:
+
+1. Look for `{Client}_audit_manifest.md` in known evidence directories, or ask user for evidence path
+2. **If found:** Read manifest for department, AOV, platform URL, known issues. Pre-fill — don't re-ask. Tell user: "Found manifest. Using [AOV], [platform URL]. Starting audit."
+3. **If not found:** Standard setup (AskUserQuestion), or suggest: "Run `/audit {Client}` first for full setup."
+
 ## Prerequisites
 
 - Amazon Ads Campaign Manager accessible in browser
@@ -34,7 +47,7 @@ Run a deep Amazon Advertising and Seller Central audit as part of the modular au
 ## Invocation
 
 When this command is triggered, load and follow the full instructions in:
-`skills/amazon-ads-v2/SKILL.md`
+`.claude/skills/amazon-ads-v2/SKILL.md`
 
 The SKILL.md contains the complete phase-by-phase audit process, evidence JSON schema, anti-hallucination framework, and all reference file loading instructions.
 
@@ -55,9 +68,11 @@ The SKILL.md contains the complete phase-by-phase audit process, evidence JSON s
 ## Output
 
 **Evidence file:** `{Client}_amazon-ads_evidence.json`
-**Location:** `{dept}/reports/{Client-Name}/evidence/` ({Agency}) or `{dept}/reports/evidence/` ({Own Brand})
-**Working notes:** `{Account_Name}_amazon_audit_notes.md` in the same reports directory
+**Location:** Evidence directory from manifest or `reports/{Client-Name}/evidence/`
+**Working notes:** `{Account_Name}_amazon_audit_notes.md` in the evidence directory
 
 ## After This Audit
 
-Run `/audit-synthesize {Client Name}` to generate the final report from all collected evidence files. The synthesizer works with 1 to N evidence files — a single Amazon audit will produce an Amazon-focused report.
+- **Continue:** `/audit-resume {Client}` — see what's next
+- **Report now:** `/audit-synthesize {Client}` — works with 1+ evidence files
+- **Check progress:** `/audit {Client}`

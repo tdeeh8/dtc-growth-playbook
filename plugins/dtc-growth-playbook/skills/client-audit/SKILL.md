@@ -31,7 +31,7 @@ If the user provides links and a client name in their first message and the dept
 
 **This is mandatory. Do not skip, even after context compaction or session handoff.**
 
-Read `protocols/playbook/index.md` first. Then load ONLY the chunks and reference files specified below for your audit type.
+Read `references/index.md` first. Then load ONLY the chunks and reference files specified below for your audit type.
 
 ### Playbook Chunk Loading
 

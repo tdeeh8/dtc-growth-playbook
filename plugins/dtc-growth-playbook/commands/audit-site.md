@@ -1,3 +1,8 @@
+---
+description: Run a website CRO and conversion path audit using browser tools
+argument-hint: "[client URL]"
+---
+
 # /audit-site — Website CRO & Conversion Path Audit
 
 Run a structured website CRO audit using browser tools. Navigates the actual client site, takes screenshots, evaluates conversion elements page by page, and outputs a standardized JSON evidence file.
@@ -6,7 +11,7 @@ Run a structured website CRO audit using browser tools. Navigates the actual cli
 
 ```
 /audit-site [client name] [website URL]
-/audit-site Acme Co https://acme-co.com
+/audit-site Kodiak Leather https://kodiak-leather.com
 /audit-site                  (will prompt for details)
 ```
 
@@ -26,6 +31,14 @@ Run a structured website CRO audit using browser tools. Navigates the actual cli
 - Does not generate a report (the audit-synthesizer does that via `/audit-synthesize`)
 - Does not audit GA4, Meta Ads, Google Ads, or any other platform (those are separate `/audit-*` commands)
 - Does not complete a purchase on the site
+
+## Smart Startup
+
+Before asking for any info, check for an existing manifest:
+
+1. Look for `{Client}_audit_manifest.md` in known evidence directories, or ask user for evidence path
+2. **If found:** Read manifest for department, AOV, platform URL, known issues. Pre-fill — don't re-ask. Tell user: "Found manifest. Using [AOV], [platform URL]. Starting audit."
+3. **If not found:** Standard setup (AskUserQuestion), or suggest: "Run `/audit {Client}` first for full setup."
 
 ## Prerequisites
 
@@ -49,9 +62,7 @@ The command needs these details (will ask if not provided):
 
 **Evidence file:** `{Client}_website-cro_evidence.json`
 
-Saved to the client's evidence directory:
-- {Agency} clients: `{Agency}/reports/{Client-Name}/evidence/`
-- {Own Brand}: `{Own-Brand}/reports/evidence/`
+Saved to: evidence directory from manifest or `reports/{Client-Name}/evidence/`
 
 The evidence file conforms to the v2 audit evidence schema and contains:
 - Page-by-page conversion element assessment (findings)
@@ -60,25 +71,13 @@ The evidence file conforms to the v2 audit evidence schema and contains:
 - Prioritized CRO opportunities with evidence
 - Open questions needing GA4/Shopify data to answer
 
-## Integration with Audit System
+## After This Audit
 
-This is one module in the v2 modular audit system:
-
-```
-/audit-start          → Creates manifest, plans audit sequence
-/audit-shopify        → Financial source of truth
-/audit-google-ads     → Google Ads deep dive
-/audit-meta           → Meta Ads deep dive
-/audit-ga4            → GA4 analytics deep dive
-/audit-klaviyo        → Email/SMS deep dive
-/audit-site           → THIS COMMAND (website CRO)
-/audit-amazon         → Amazon Ads deep dive
-/audit-synthesize     → Cross-channel synthesis + report generation
-```
-
-Can run standalone (without `/audit-start`) or as part of a full multi-platform audit. When run as part of the system, reads the audit manifest for client context and updates it upon completion.
+- **Continue:** `/audit-resume {Client}` — see what's next
+- **Report now:** `/audit-synthesize {Client}` — works with 1+ evidence files
+- **Check progress:** `/audit {Client}`
 
 ## Activation
 
 When this command is invoked, read and follow the full instructions in:
-`skills/site-audit-v2/SKILL.md`
+`.claude/skills/site-audit-v2/SKILL.md`

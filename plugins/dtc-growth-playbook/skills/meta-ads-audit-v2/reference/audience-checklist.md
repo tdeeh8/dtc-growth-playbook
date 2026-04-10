@@ -1,6 +1,6 @@
 # Audience Structure Audit Checklist
 
-Reference for the meta-ads-audit-v2 audit skill. Systematic checklist for evaluating Meta audience targeting strategy, funnel segmentation, overlap detection, exclusion hygiene, and Advantage+ audience behavior. Draws from `protocols/playbook/andromeda.md` (targeting hierarchy, Advantage+ behavior) and `protocols/playbook/scaling-frequency.md` (audience saturation signals).
+Reference for the meta-ads-audit-v2 audit skill. Systematic checklist for evaluating Meta audience targeting strategy, funnel segmentation, overlap detection, exclusion hygiene, and Advantage+ audience behavior. Draws from `references/andromeda.md` (targeting hierarchy, Advantage+ behavior) and `references/scaling-frequency.md` (audience saturation signals).
 
 **Principle:** In the Andromeda era, audience targeting is secondary to creative quality. But bad audience structure still wastes money — overlapping audiences cause self-competition, missing exclusions burn budget on already-converted users, and misconfigured Advantage+ defaults to retargeting instead of prospecting.
 

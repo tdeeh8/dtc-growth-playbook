@@ -1,198 +1,294 @@
-# /audit-google-ads
+---
+name: google-ads-audit-v2
+description: "Run a deep Google Ads platform audit — campaign structure, PMax analysis, search term quality, conversion tracking health, bid strategy assessment — then write a standardized evidence JSON file for cross-channel synthesis. Triggers on: 'audit their Google Ads', 'Google Ads audit', 'audit Google campaigns', 'PMax audit', 'search campaign audit', 'Google tracking audit'."
+---
 
-Run a deep Google Ads account audit for a client. Part of the modular audit system v2.
+# Google Ads Audit Skill (v2)
 
-## Usage
+**Output:** `{Client}_google-ads_evidence.json` | **Scratchpad:** `{Client}_google-ads_audit_notes.md`
+**Slash command:** `/audit-google-ads`
 
-```
-/audit-google-ads                → prompts for client name + details
-/audit-google-ads Acme Co → starts audit for Acme Co
-/audit-google-ads Acme quick   → surface-level audit (structure + tracking only)
-```
-
-## What This Does
-
-Opens Google Ads in the browser, extracts campaign and ad data systematically, assesses campaign structure (Search vs PMax), evaluates Quality Score distribution, analyzes conversion tracking health, reviews audience and targeting strategy, detects bid strategy misconfigurations, identifies conversion tracking issues (duplicates, dead actions, CAPI health), checks Jan 2026 attribution window impact, and writes a structured JSON evidence file for the audit-synthesizer.
-
-**Output:** `{Client}_google-ads_evidence.json` — NOT a report. The synthesizer generates reports.
-
-## Instructions
-
-1. Load the skill and all required reference files
-2. Read the full playbook sections specified below before opening the browser
-3. Load the audit manifest from the client folder — check what's already done
-4. Follow the 9-phase audit procedure exactly as specified
-5. Use the reference files to extract data from the UI and populate the evidence JSON
-6. Write the evidence JSON file matching the schema
-7. Update the manifest when complete
-
-## Phase Checklist
-
-### Phase 1: Access & Account Overview
-- Get into Google Ads, select the correct account
-- Take account-level screenshot for evidence
-- Extract key metrics: total spend, total conversions, blended CPA, blended ROAS
-- Inventory all active campaigns by type (Search, PMax, Shopping, Display, etc.)
-- Check for Multi-Account Structure (MAS) or Tag Manager usage
-- Record timezone, currency, conversion tracking setup type (Pixel, CAPI, both)
-
-### Phase 2: Campaign Structure Assessment
-- Classify campaigns: branded vs non-branded, product categories, high-intent vs awareness
-- Calculate budget allocation across campaign types
-- Flag: Single campaign per product (scaling lock), over-consolidation (targeting dilution), isolated test campaigns
-- For Search: check if branded/non-branded are segmented (required for bid strategy analysis)
-- For PMax: check if there's a single mega-campaign (inflexible) or multi-PMax structure (better for testing)
-- Record in working notes table: Campaign name, type, status, budget, recent spend, conversions, CPA, ROAS
-
-### Phase 3: Search Campaign Health
-- Open each Search campaign
-- Use the reference/nav-google.md patterns to extract: Quality Score distribution, negative keyword count, match type split (Exact vs Broad vs Phrase)
-- For each ad group: record count, avg Quality Score, ad copy freshness (when was the last RSA added?)
-- Check: Are branded and non-branded ad groups in the same campaign? (Flag if yes — should be separate)
-- Review search term reports: Are there high-spend irrelevant terms? Missing negatives?
-- Bid strategy check: Manual CPC, Tgt CPA, Tgt ROAS, or Maximize Conversions? Is the strategy appropriate for campaign maturity?
-
-### Phase 4: PMax Campaign Assessment
-- Open each PMax campaign
-- Use reference/pmax-checklist.md to assess:
-  - Asset group count and quality (required vs optional assets present?)
-  - Search term performance (are search terms being triggered? or is it purely audience/intent matching?)
-  - Budget-limited detection (daily budget causing delivery cap?)
-  - Audience signal health (logged-in, recent purchase, etc.)
-  - URL expansion status (how many auto-generated headlines/descriptions active?)
-  - Performance diagnostic card: any warnings or paused recommendations?
-- Legacy Smart Shopping detection: if campaign was migrated from Smart Shopping, check for manual URL optimization override (should be removed for Andromeda optimization)
-- Record: Campaign name, asset groups count, feed health (if applicable), ROAS, CPA, conversion volume
-
-### Phase 5: Conversion Tracking & Attribution
-- Open Events/Conversions in Google Ads settings
-- Use reference/tracking-checklist.md to assess:
-  - Conversion action inventory: which actions exist, what are they tracking?
-  - Duplicate purchase event detection: does the account have multiple Purchase events? (High risk of double-counting)
-  - Dead conversion actions (created but never tracked): any actions with zero conversions in the audit period?
-  - Enhanced Conversions status: is it enabled? What's the match rate?
-  - Consent Mode v2: what's the implementation status?
-  - Proxy event optimization: are there backup/proxy events if the primary event fails?
-  - Shopify Checkout Extensibility impact: if applicable, are post-purchase pixels still firing? (Shopify CXE may block them)
-  - Attribution window: current window setting. If account was active before Jan 2026, note that historical window data is no longer available
-  - Event Match Quality (EMQ): check CAPI connection in Events Manager. EMQ score 8+/10 is healthy
-  - Conversion value accuracy: are values being passed correctly? Sample a few conversions
-- Record in working notes: Conversion action name, type, status, count (audit period), last 30d trend, EMQ (if CAPI)
-
-### Phase 6: Cross-Platform Reconciliation
-- Pull GA4 data for the same period: sessions, users, transactions, revenue
-- Pull Google Ads data: clicks, conversions, conversion value
-- Reconcile: Google Ads conversions vs GA4 transactions (expected ~70-80% capture in Ads due to attribution window differences)
-- Check for major discrepancies: >20% gap = investigate tracking issue
-- Note timezone differences between GA4 and Google Ads (may explain 1-2% daily variance)
-- Record reconciliation: Ads conversions vs GA4 purchases, capture rate %, notes on discrepancies
-
-### Phase 7: Audience & Targeting Quality
-- Inventory all audience types in use: Affinity, In-Market, Detailed Demographics, Custom Intent, Lookalike, Customer Match
-- For each: size, performance (if available), age/freshness of seed data
-- Check: Are broad match keywords paired with audience exclusions? (Mitigates broad match risk)
-- Search campaigns: are they using Audience Segments for "observation" or "targeting"? (Recommend observation for Search)
-- PMax campaigns: check logged-in audience signals and recent purchase signals health
-- Record: Audience name, type, size, ROAS/CPA (if performance data available), source/seed
-
-### Phase 8: Bid Strategy Assessment
-- Summarize bid strategy by campaign type and maturity:
-  - Search: Manual CPC → Tgt CPA → Tgt ROAS (maturity progression)
-  - PMax: Typically Maximize Conversions or Tgt ROAS
-  - Shopping: Usually Minimize cost-per-sale (Tgt CPA equivalent)
-- For each strategy type: check if the threshold (CPA target, ROAS target) is realistic given recent performance
-- Flag: Tgt CPA higher than actual recent CPA = algorithm has room to spend more (may improve volume)
-- Flag: Tgt ROAS lower than recent ROAS = algorithm is conservative (opportunity to raise target)
-- Check: Bid adjustments at device, location, time-of-day, audience level. Are they aligned with performance?
-- Record: Campaign, bid strategy, targets, recent actual performance, adjustment observations
-
-### Phase 9: Write Evidence JSON
-- Conform to ${CLAUDE_PLUGIN_ROOT}/skills/audit-orchestrator/reference/evidence-schema.json
-- Structure:
-  - `account_id`, `account_name`, `audit_date`, `auditor_notes`
-  - `raw_metrics`: `account_overview` (spend, conversions, CPA, ROAS), `campaign_structure`, `search_campaigns`, `pmax_campaigns`, `conversion_tracking`, `audiences_targeting`
-  - `findings`: array of evidence objects (see schema), each with `title`, `label` (OBSERVED/CALCULATED/INFERENCE), `evidence`, `source`, `significance`
-  - `open_questions`: data needed but not available from Ads
-  - `audit_status`: completion checklist
+This skill writes evidence, NOT a report. The audit-synthesizer consumes evidence files to generate reports.
 
 ---
 
-## Working Notes Template
+## Before You Start
 
-Maintain a working notes file throughout the audit to track raw data extraction:
+> **Shared setup:** Read `audit-shared/reference/audit-lifecycle.md` and follow all steps (playbook loading, manifest check, evidence directory setup).
 
+**Google Ads-specific setup:**
+
+1. **Platform playbook chunks** (load before opening browser):
+   - `references/google-ads.md` — methodology, PMax, feed optimization
+   - `references/measurement.md` — tracking validation, purchase reconciliation, CAPI/EMQ
+
+2. **Reference files** — load `reference/nav-google.md` at start. Other refs are phase-gated:
+   - `reference/tracking-checklist.md` → load at Phase 3
+   - `reference/pmax-checklist.md` → load at Phase 4
+   - `reference/search-checklist.md` → load at Phase 5
+
+3. **Default date range:** YTD (Jan 1 → today) unless manifest specifies otherwise.
+
+4. **If no manifest exists**, also ask for: Google Ads account URL or Account ID.
+
+---
+
+## Audit Phases
+
+Execute in order. Maintain working notes per `audit-lifecycle.md` template, using phase names below.
+
+### Phase 1: Access & Inventory
+
+Open Google Ads → navigate to correct account (check MCC) → **set date range immediately** (see `nav-google.md` for date picker JS workaround).
+
+**Capture from Campaigns view:**
+- Campaign count: active vs. paused, types present (Search, Shopping, PMax, Display, Demand Gen, Video, App)
+- Status flags: eligible, budget-limited, learning
+- Account totals row: Spend, Conv Value, ROAS, Conversions, CPA, Clicks, Impressions, CTR
+- Per-campaign: same metrics + daily budget + bid strategy
+
+**Working notes for Phase 1:**
 ```
-# Google Ads Audit - {Client Name}
-**Audit Period:** {start} to {end}
-**Account ID:** {id}
-**Auditor:** Claude
-**Date Created:** {today}
+## Account Inventory
+- Account ID: XXX-XXX-XXXX
+- Date range: YYYY-MM-DD to YYYY-MM-DD
+- Total campaigns: X active, Y paused
+- Campaign types: [list]
 
-## Account Overview
-- Total Spend (audit period): $X
-- Total Conversions: X
-- Blended CPA: $X
-- Blended ROAS: Xx
-- Timezone: UTC / {TZ}
-- Currency: USD / {currency}
-- Conversion Tracking: Pixel / CAPI / Both
+## Account Totals (from Campaigns > Totals row)
+Spend | Conv Value | ROAS | Conversions | CPA | Clicks | Impressions | CTR
 
-## Campaign Inventory
-| Campaign | Type | Status | Budget | Spend | Conv | CPA | ROAS |
-|---|---|---|---|---|---|---|---|
-| ... | Search/PMax/Shopping | Active | $ | $ | X | $ | x |
+## Campaign Breakdown
+| Campaign | Type | Status | Spend | Revenue | ROAS | Conv | CPA | Budget | Bid Strategy |
+```
 
-## Search Campaign Health
-| Campaign | Ad Groups | Avg QS | Match Types | Branded? | Notes |
-|---|---|---|---|---|---|
+**Nav tips:** Use `read_page` for ag-Grid tables; columns may be off-screen right. See `nav-google.md`.
 
-## PMax Campaigns
-| Campaign | Asset Groups | Search Terms? | Diagnostics | Budget-Limited? | ROAS | CPA |
-|---|---|---|---|---|---|---|
+### Phase 2: Campaign Data Extraction
 
-## Conversion Tracking
-| Action | Type | Count | EMQ | Status | Notes |
-|---|---|---|---|---|---|
+For each **active** campaign, record type-specific metrics:
 
-## GA4 Reconciliation
-- GA4 sessions (period): X
-- GA4 transactions: X
-- Ads conversions: X
-- Capture rate: X%
-- Notes: ...
+| Type | Key Metrics |
+|---|---|
+| PMax | Budget, bid strategy+target, conv value, ROAS, conv, CPA, status, cost |
+| Search | Budget, bid strategy, top keywords, match types, QS, impr, clicks, CTR, conv, CPA, ROAS |
+| Shopping | Budget, bid strategy, impr, clicks, CTR, conv, CPA, ROAS, impr share |
+| Display/DG | Budget, impr, clicks, CTR, conv, CPA, cost |
 
-## Audiences
-| Audience | Type | Size | ROAS | Source |
-|---|---|---|---|---|
-| ... | ... | X | x | ... |
+**Paused campaigns** with significant spend: record name, type, spend, ROAS. Flag profitable paused as anomalies.
 
-## Bid Strategy Summary
-| Campaign Type | Strategy | Target | Recent Actual | Status |
-|---|---|---|---|---|
-| Search | Tgt CPA | $X | $X | {on/below/above target} |
+**Key signals to tag:** `budget_limited`, `above_target_roas`, `below_target_roas`, `learning`, `low_volume` (<30 conv), `legacy_smart_shopping_upgrade`, `paused_profitable`, `high_branded_share` (branded >10% of PMax search)
 
-## Open Questions
-- ...
+### Phase 3: Conversion Tracking Health
+
+> **Load now:** `reference/tracking-checklist.md` + `references/measurement.md`
+
+**Goal:** Verify the numbers are trustworthy. Follow the full tracking checklist. Key checks:
+
+1. **Conversion actions inventory** — Goals > Conversions > Summary: name, source, category, count type, attribution window, primary/secondary status, Include in Conversions toggle, counts + values
+2. **Duplicate detection** — Multiple purchase events (Google Shopping App + GA4 + custom tag) all in primary goals?
+3. **Dead actions** — UA-era actions? Zero conversions 90+ days?
+4. **Enhanced Conversions** — Settings > Conversion Tracking: enabled?
+5. **Consent Mode v2** — Check if EEA/UK traffic relevant
+6. **Conversion modeling** — Requires 700+ clicks/7 days per country
+7. **Attribution windows** — Appropriate for AOV tier? High-ticket needs 30-90d, low-ticket can use 7d
+
+**Severity:** `critical` = duplicate purchases in primary goals | `high` = dead UA actions counting, EC disabled | `medium` = suboptimal windows | `low` = minor misconfig
+
+### Phase 4: PMax Deep Dive
+
+> **Skip if no PMax campaigns.** **Load now:** `reference/pmax-checklist.md`
+
+Follow the PMax checklist. Key checks:
+1. Legacy Smart Shopping upgrade? (history, naming)
+2. Asset group quality — image/video/headline/description counts, ad strength, "Low" rated?
+3. Search term categories — Insights > Search Terms: branded vs non-branded. Branded >10% → flag cannibalization
+4. Budget-limited + exceeding ROAS target? → high-priority opportunity
+5. Audience signals — customer match? website visitors? or generic interests only?
+6. URL expansion — on/off? Page feeds configured?
+7. Channel breakdown — Display/YouTube >30% with weak creative? Flag it
+8. Conv volume per asset group: <5/mo → merge, <20/mo → suboptimal
+
+### Phase 5: Search Campaign Quality
+
+> **Skip if no Search campaigns.** **Load now:** `reference/search-checklist.md`
+
+Follow the Search checklist. Key checks:
+1. Quality Score distribution — % at QS 7+, 5-6, below 5
+2. Negative keywords — adequate? Check search terms for obvious gaps
+3. Match type distribution — heavy phrase match? Note 23% CPA penalty vs broad+smart bidding
+4. Branded vs non-branded — separate campaign? Branded impression share?
+5. RSA asset ratings — how many "Low" headlines/descriptions?
+6. Landing page alignment — relevant pages or generic homepage?
+7. Geographic/audience targeting — issues? Exclusions in place?
+8. Search term review — flag irrelevant queries for negation
+
+### Phase 6: Competitive Landscape
+
+Navigate to top campaign > Auction Insights:
+- Top 5-10 competitors by impression share
+- Branded campaigns: who's conquesting? Non-branded: available IS?
+- Overlap rate + position above rate for key competitors
+
+→ Feeds `raw_metrics.auction_insights`
+
+### Phase 7: Platform Diagnosis
+
+Synthesize Phases 1-6 into:
+
+**1. Primary constraint** (single biggest issue). Common patterns: budget-limited profitable campaigns, tracking inflation/deflation, PMax branded cannibalization, low volume starving smart bidding, poor feed quality, wrong bid strategy for volume.
+
+**2. Secondary constraints** — ranked by impact.
+
+**3. Opportunities** — each with: priority (CRITICAL/HIGH/MEDIUM/LOW), expected impact, confidence + reasoning, supporting evidence.
+
+**4. Cross-channel signals** for synthesizer:
+- Branded search trends → Meta TOF correlation?
+- High ROAS but low revenue → Meta driving demand?
+- Tracking discrepancies → GA4/Shopify reconciliation needed?
+- Budget allocation → channel-allocation analysis needed?
+
+**5. Open questions** — COGS/margins, GA4 data, Shopify reconciliation, client business context (seasonality, promos, inventory).
+
+### Phase 8: Write Evidence JSON
+
+> **Schema:** Read `audit-shared/reference/evidence-schema-quick.md` for structure.
+> **Labeling:** Read `audit-shared/reference/evidence-rules.md` for the 5-label system.
+
+**Google Ads source format:** `"Google Ads > [Page] > [Section] > [Metric]"`
+
+**Section-by-section guidance:**
+- `account_overview` — every number needs value (number), formatted (string), label, source
+- `campaigns` — include key_signals tags from Phase 2
+- `tracking_health` — flags array (severity + evidence) from Phase 3, plus conversion_actions inventory
+- `findings` — discrete observations with title, label, evidence, significance
+- `anomalies` — unexpected patterns (profitable paused campaigns, sudden metric shifts)
+- `diagnosis` — primary_constraint + secondary_constraints, each with evidence_refs
+- `opportunities` — prioritized actions with expected_impact, confidence, confidence_reasoning
+- `cross_channel_signals` — signal + check_in platforms + what_to_look_for
+- `open_questions` — question + data_needed + what was attempted
+
+**Google Ads `raw_metrics` keys:** `campaign_details`, `conversion_action_details`, `auction_insights`, `search_term_categories`
+
+**File location:**
+- Location per audit manifest: `{evidence_dir}/{Client}_{platform}_evidence.json`
+
+**Google Ads-specific validation:**
+- Campaign spend sum ≈ account total (±rounding) — flag discrepancies
+- Timestamp all observations — Google Ads shows real-time data; date range must be explicit
+- Don't diagnose tracking issues you didn't verify — use INFERENCE, not OBSERVED
+
+**JSON structure (platform = "google-ads"):**
+```json
+{
+  "meta": {
+    "client": "", "platform": "google-ads", "audit_date": "",
+    "date_range": { "start": "", "end": "" },
+    "access_level": "full", "depth": "deep", "auditor_notes": ""
+  },
+  "account_overview": [],
+  "campaigns": [],
+  "tracking_health": { "flags": [], "conversion_actions": [] },
+  "findings": [],
+  "anomalies": [],
+  "diagnosis": {
+    "primary_constraint": { "title": "", "description": "", "evidence_refs": [] },
+    "secondary_constraints": []
+  },
+  "opportunities": [],
+  "cross_channel_signals": [],
+  "open_questions": [],
+  "raw_metrics": {
+    "campaign_details": [],
+    "conversion_action_details": [],
+    "auction_insights": [],
+    "search_term_categories": []
+  }
+}
+```
+
+### Phase 9: Closeout
+
+> Follow `audit-lifecycle.md` closeout: save evidence JSON, update manifest (status → DONE), save working notes.
+
+---
+
+## Benchmarks
+
+> **Full thresholds:** `references/benchmarks.md` + `references/google-ads.md`
+
+**Always calculate client-specific targets first:**
+- Break-even CPA = AOV × gross margin %
+- Target CPA = Break-even CPA × 0.65
+- Minimum ROAS = 1 / gross margin %
+- Target ROAS = Minimum ROAS × 1.4
+
+If margins unknown → vertical estimates from benchmarks.md, label ASSUMPTION.
+
+**Critical thresholds (quick ref):**
+- Search: CTR <2% floor, CVR <1.5% floor, CPC >$3.50 = high
+- Shopping: ROAS <3x floor, CTR <0.4% floor
+- PMax: ROAS <2.5x floor; budget-dependent ($50K+/mo avg 5.2x, <$2K/mo avg 2.8x)
+- Branded IS: <70% floor
+
+**AOV tier adjustments** — loaded via conditional playbook chunks (see lifecycle setup):
+- $200+: lower CVR (1-2%), 30-90d windows, proxy events, tROAS over tCPA
+- <$100: higher CVR (2-4%), 7d windows OK, consolidate for volume, free shipping critical
+
+---
+
+## Working Notes — Google Ads Phase Names
+
+Use the `audit-lifecycle.md` template. Replace `[Add sections matching your skill's phase structure]` with:
+
+```markdown
+## Phase 1: Account Inventory
+[campaign count, types, account totals, campaign breakdown table]
+
+## Phase 2: Campaign Data
+[detailed per-campaign metrics by type]
+
+## Phase 3: Tracking Health
+[conversion action inventory, duplicate detection, flags with severity]
+
+## Phase 4: PMax Deep Dive
+[asset groups, search term categories, branded split, channel breakdown]
+
+## Phase 5: Search Quality
+[Quality Score distribution, match types, negatives, search term review]
+
+## Phase 6: Competitive Landscape
+[auction insights — competitors, IS, overlap, position above]
+
+## Phase 7: Diagnosis
+[primary constraint reasoning, opportunities draft, cross-channel signals]
 ```
 
 ---
 
-## Requires
+## Edge Cases
 
-- Browser access (Claude in Chrome) to Google Ads
-- Google Ads account access with Editor access (minimum)
-- GA4 access for cross-platform reconciliation
-- Playbook chunks: `${CLAUDE_PLUGIN_ROOT}/references/benchmarks.md`, `${CLAUDE_PLUGIN_ROOT}/references/andromeda.md`, `${CLAUDE_PLUGIN_ROOT}/references/pmax-strategy.md`, `${CLAUDE_PLUGIN_ROOT}/references/search-strategy.md`
-- Reference files: nav-google.md, search-checklist.md, pmax-checklist.md, tracking-checklist.md (all in this skill folder)
-- Audit manifest (client folder) to track completion status
-- Evidence JSON schema: ${CLAUDE_PLUGIN_ROOT}/skills/audit-orchestrator/reference/evidence-schema.json
+**Incomplete data:** Document what was attempted in working notes. Label `DATA_NOT_AVAILABLE` in evidence. Note in `open_questions`. Continue with available data — don't halt.
 
-## Key Gotchas
+**Very large accounts (20+ campaigns):** Focus detailed analysis on active campaigns consuming >5% of total spend. Group small campaigns as "long tail" with aggregate metrics. Still check all for tracking issues and status anomalies.
 
-- **Column customization is mandatory.** Google Ads default columns hide critical metrics (Quality Score, match type distribution, bid adjustments). Customize columns BEFORE extracting data.
-- **Jan 2026 attribution window change.** If account was active before Jan 2026, historical data viewed in Google Ads NOW shows the current attribution window (7-day click or 1-day click + 1-day view). YoY comparisons are misleading. Always note the attribution window on every metric pulled from Ads.
-- **PMax Search Terms report is hidden by default.** Use the reference/nav-google.md pattern to unhide it. If search terms are blank or very low volume, PMax is defaulting to audience/intent matching instead of search optimization.
-- **Quality Score is ad group level, not keyword level.** You can't drill into individual keyword Quality Scores in the modern UI. You must use the ad group report and estimate keyword QS from the distribution.
-- **GA4 conversion window differs from Google Ads attribution window.** GA4 defaults to last-click, 30-day window (for web). Google Ads may use 7-day click + 1-day view. Reconciliation will show ~70-80% capture due to window differences, not tracking failure.
-- **CAPI deduplication requires event_id on both Browser and Server events.** If your account has CAPI connected but Purchase events fire twice (duplicate), check that event_id is being passed on both sides.
-- **PMax campaigns can't be edited for granular audience or targeting details.** You diagnose PMax health through creative performance, search term behavior, and the diagnostics card, not through targeting settings.
+**New/small accounts (<30 days or <$5K spend):** Note limited data in `meta.auditor_notes`. Adjust depth to "standard" or "surface". Focus on structure and tracking rather than performance benchmarking. Flag that benchmarks require more data.
+
+**MCC accounts:** Confirm correct client account (check account ID). Some features like conversion actions may be set at MCC level. Note if conversion actions are inherited vs. account-level.
+
+---
+
+## Completion Checklist
+
+- [ ] Date range set correctly and maintained
+- [ ] All active campaigns have metrics
+- [ ] Conversion tracking assessed
+- [ ] PMax deep dive done (if applicable)
+- [ ] Search quality checked (if applicable)
+- [ ] Auction insights captured
+- [ ] Evidence JSON has all required fields
+- [ ] Every OBSERVED has source, every CALCULATED shows formula
+- [ ] No invented numbers without ASSUMPTION label
+- [ ] Cross-channel signals + open questions populated
+- [ ] Working notes + evidence JSON saved
+- [ ] Manifest updated (if exists)

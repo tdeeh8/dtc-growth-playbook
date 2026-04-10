@@ -1,3 +1,8 @@
+---
+description: Run a deep Meta Ads platform audit producing standardized evidence JSON
+argument-hint: "[client name]"
+---
+
 # /audit-meta
 
 Run a deep Meta Ads platform audit for a client. Part of the modular audit system v2.
@@ -6,8 +11,8 @@ Run a deep Meta Ads platform audit for a client. Part of the modular audit syste
 
 ```
 /audit-meta                        → prompts for client name + details
-/audit-meta Acme Co         → starts audit for Acme Co
-/audit-meta Acme Co quick   → surface-level audit (structure + tracking only)
+/audit-meta Kodiak Leather         → starts audit for Kodiak Leather
+/audit-meta Kodiak Leather quick   → surface-level audit (structure + tracking only)
 ```
 
 ## What This Does
@@ -15,6 +20,14 @@ Run a deep Meta Ads platform audit for a client. Part of the modular audit syste
 Opens Meta Ads Manager in the browser, customizes columns for real metrics, extracts all campaign data, assesses campaign structure (TOF/MOF/BOF), analyzes creative performance and fatigue, evaluates audience quality and overlap, checks CAPI/pixel health, assesses Jan 2026 attribution impact, analyzes frequency/reach dynamics, and writes a structured JSON evidence file for the audit-synthesizer.
 
 **Output:** `{Client}_meta-ads_evidence.json` — NOT a report. The synthesizer generates reports.
+
+## Smart Startup
+
+Before asking for any info, check for an existing manifest:
+
+1. Look for `{Client}_audit_manifest.md` in known evidence directories, or ask user for evidence path
+2. **If found:** Read manifest for department, AOV, platform URL, known issues. Pre-fill — don't re-ask. Tell user: "Found manifest. Using [AOV], [platform URL]. Starting audit."
+3. **If not found:** Standard setup (AskUserQuestion), or suggest: "Run `/audit {Client}` first for full setup."
 
 ## Instructions
 
@@ -48,3 +61,9 @@ Opens Meta Ads Manager in the browser, customizes columns for real metrics, extr
 - **ASC hides targeting details.** You can't see detailed audience composition in Advantage+ Shopping campaigns. Evaluate through creative performance, frequency, and the existing customer budget cap.
 - **CAPI dedup failures.** Missing event_id causes 80% of dedup issues. Check event_id on both Pixel and CAPI sides.
 - **Shopify Data Sharing may have reverted.** Jan 2026 auto-upgrade broke some configs. If Meta ROAS dropped suddenly, check "Always On" setting.
+
+## After This Audit
+
+- **Continue:** `/audit-resume {Client}` — see what's next
+- **Report now:** `/audit-synthesize {Client}` — works with 1+ evidence files
+- **Check progress:** `/audit {Client}`

@@ -1,3 +1,8 @@
+---
+description: Run a deep Klaviyo email/SMS audit producing standardized evidence JSON
+argument-hint: "[client name]"
+---
+
 # /audit-klaviyo
 
 Run a deep Klaviyo email/SMS platform audit for a client. Part of the modular audit system v2.
@@ -6,8 +11,8 @@ Run a deep Klaviyo email/SMS platform audit for a client. Part of the modular au
 
 ```
 /audit-klaviyo                         → prompts for client name + details
-/audit-klaviyo Acme Co          → starts audit for Acme Co
-/audit-klaviyo Acme Co quick    → surface-level audit (structure + list health only)
+/audit-klaviyo Kodiak Leather          → starts audit for Kodiak Leather
+/audit-klaviyo Kodiak Leather quick    → surface-level audit (structure + list health only)
 ```
 
 ## What This Does
@@ -15,6 +20,14 @@ Run a deep Klaviyo email/SMS platform audit for a client. Part of the modular au
 Connects to Klaviyo via MCP tools (preferred) or browser (fallback), extracts flow performance, campaign performance, list health, segmentation quality, SMS program status, and revenue attribution data — then writes a structured JSON evidence file for the audit-synthesizer.
 
 **Output:** `{Client}_klaviyo_evidence.json` — NOT a report. The synthesizer generates reports.
+
+## Smart Startup
+
+Before asking for any info, check for an existing manifest:
+
+1. Look for `{Client}_audit_manifest.md` in known evidence directories, or ask user for evidence path
+2. **If found:** Read manifest for department, AOV, platform URL, known issues. Pre-fill — don't re-ask. Tell user: "Found manifest. Using [AOV], [platform URL]. Starting audit."
+3. **If not found:** Standard setup (AskUserQuestion), or suggest: "Run `/audit {Client}` first for full setup."
 
 ## Instructions
 
@@ -50,3 +63,9 @@ Detection: attempt `klaviyo_get_account_details` at start. Success = MCP path. F
 - Playbook chunks: `benchmarks.md`
 - Conditional (if they exist): `email-sms.md`, `list-building.md`, `post-purchase.md`
 - For cross-channel: total store revenue (from Shopify evidence or user-provided)
+
+## After This Audit
+
+- **Continue:** `/audit-resume {Client}` — see what's next
+- **Report now:** `/audit-synthesize {Client}` — works with 1+ evidence files
+- **Check progress:** `/audit {Client}`

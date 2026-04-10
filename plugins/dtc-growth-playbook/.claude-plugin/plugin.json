@@ -1,7 +1,7 @@
 {
   "name": "dtc-growth-playbook",
-  "version": "3.0.0",
-  "description": "DTC/eCommerce growth toolkit — modular audit system v2 (independent platform audits with structured evidence handoff + cross-channel synthesis), marketing science playbook (Andromeda, TOF framework, creative testing, benchmarks), CRO diagnostic, SEO audit, and human voice protocol.",
+  "version": "4.0.0",
+  "description": "DTC/eCommerce growth toolkit — optimized modular audit system v2 (shared reference files, phase-gated context loading, 8 independent platform audits with structured evidence JSON + cross-channel synthesis), marketing science playbook (Andromeda, TOF framework, creative testing, benchmarks), CRO diagnostic, SEO audit, and human voice protocol.",
   "author": {
     "name": "Tanner Hill"
   },
@@ -26,6 +26,8 @@
     "ga4",
     "klaviyo",
     "shopify",
-    "bigcommerce"
+    "bigcommerce",
+    "audit-shared",
+    "evidence-json"
   ]
 }

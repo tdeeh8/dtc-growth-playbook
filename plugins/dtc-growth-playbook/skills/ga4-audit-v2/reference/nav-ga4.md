@@ -272,6 +272,18 @@ Real-time reports (Reports → Realtime) show what's happening NOW. This data is
 
 When navigating between major sections (Reports → Explore → Admin → back to Reports), the date range may silently reset to 7 days. Always glance at the date range indicator before extracting data from a new view.
 
+### Trap 8: GA4 Under-Reports Revenue (By Design)
+
+GA4 typically captures only 70-80% of actual revenue. Ad blockers, consent mode, redirect chains, and cross-device loss all reduce GA4's visibility. GA4 will ALWAYS under-report vs Shopify. A 10-15% gap is normal. A 30%+ gap is a tracking problem — investigate cross-domain setup, consent mode configuration, and event firing.
+
+### Trap 9: Data-Driven Attribution Requires Volume
+
+Data-Driven Attribution requires 400+ monthly conversions. Below that threshold, GA4 silently falls back to last-click. Check which model is actually active before interpreting source/medium data. GA4 does NOT warn you about this fallback.
+
+### Trap 10: Cross-Domain Tracking Breaks Silently
+
+If the client uses a third-party checkout (e.g., checkout.shopify.com subdomain), cross-domain tracking must be configured. Look for `_gl=` parameter in URLs during checkout. Missing = attribution is broken between site and checkout. A significant chunk of conversions will show as "direct / (none)" because the referral chain broke.
+
 ---
 
 ## Quick Reference: Where to Find Each Audit Phase Data

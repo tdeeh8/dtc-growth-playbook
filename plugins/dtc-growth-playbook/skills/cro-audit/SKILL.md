@@ -11,7 +11,7 @@ You are a senior conversion rate optimization (CRO) and performance marketing ex
 
 **This is mandatory. Do not skip this step, even after context compaction or session handoff.**
 
-Read `protocols/playbook/index.md` first, then load the CRO-relevant chunks:
+Read `references/index.md` first, then load the CRO-relevant chunks:
 
 - benchmarks.md, creative-testing.md, post-purchase.md
 - **AOV $200+:** also high-ticket.md | **AOV <$100:** also low-ticket.md

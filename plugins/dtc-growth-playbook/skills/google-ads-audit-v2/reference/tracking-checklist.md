@@ -1,6 +1,6 @@
 # Conversion Tracking Audit Checklist
 
-Reference for the google-ads-audit-v2 audit skill. Systematic checklist for Google Ads conversion tracking health assessment. Draws heavily from `protocols/playbook/measurement.md` (Tracking Validation section).
+Reference for the google-ads-audit-v2 audit skill. Systematic checklist for Google Ads conversion tracking health assessment. Draws heavily from `references/measurement.md` (Tracking Validation section).
 
 **Principle:** Every diagnosis downstream is wrong if the input data is wrong. This checklist runs BEFORE performance analysis.
 
@@ -26,7 +26,7 @@ Reference for the google-ads-audit-v2 audit skill. Systematic checklist for Goog
 
 ## 2. Duplicate Purchase Event Detection
 
-**This is the most common and most impactful tracking problem.** The Acme Co audit found exactly this: Google Shopping App Purchase AND GA4 purchase both active as primary conversion actions, inflating all reported conversion and ROAS numbers.
+**This is the most common and most impactful tracking problem.** The Kodiak Leather audit found exactly this: Google Shopping App Purchase AND GA4 purchase both active as primary conversion actions, inflating all reported conversion and ROAS numbers.
 
 **Common duplicate patterns:**
 

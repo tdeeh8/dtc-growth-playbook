@@ -1,348 +1,238 @@
-# PMax Campaign Audit Checklist
+# Performance Max Audit Checklist
 
-Reference for the google-ads-audit-v2 audit skill. Systematic checklist for Performance Max campaign assessment, including asset group quality, search term performance, budget health, audience signals, and diagnostics.
+Reference for the google-ads-audit-v2 audit skill. Structured checklist for PMax-specific audit items.
 
 ---
 
 ## 1. Legacy Smart Shopping Detection
 
-**What to Check:** Is this campaign a migration from Smart Shopping (pre-2022)?
+**Why it matters:** Campaigns auto-upgraded from Smart Shopping to PMax (2022-2023) often retain suboptimal settings, audience signals, and asset configurations from the migration. They need a fresh review.
 
-**How to Identify:**
-- If the campaign was created before mid-2022, it was likely Smart Shopping
-- Smart Shopping has been deprecated and campaigns auto-migrated to PMax
-- Check in Settings: is "Shopping Ads (Performance Max)" listed as the campaign type?
+**How to detect:**
+- Campaign name contains "Smart Shopping", "SSC", or "[upgraded]"
+- Campaign creation date is 2022-2023 with no asset group restructuring since
+- Only one asset group with no audience signals configured (Smart Shopping didn't use them)
+- Check Change History: filter for "Campaign type" changes — look for Smart Shopping → PMax conversion
 
-**Why it matters:** Legacy Smart Shopping campaigns often have manual URL optimization overrides that should be removed. In PMax (Andromeda era), you want the algorithm to auto-generate headlines and descriptions. Manual overrides restrict the optimization.
-
-**What to Record:**
-- Campaign name, creation date, migration status (if applicable)
-- Whether final URL expansion is enabled or manually constrained
-- If constrained: note the constraints (may be appropriate for brand protection, but limits performance)
-
-**Evidence JSON Mapping:**
-```json
-{
-  "title": "Legacy Smart Shopping campaign with manual URL optimization constraints",
-  "label": "OBSERVED",
-  "evidence": "Campaign created in 2021, migrated from Smart Shopping. Settings show final URL expansion disabled for multiple ad groups. This restricts Andromeda's ability to auto-generate variations.",
-  "source": "Google Ads > [Campaign] > Settings > Final URL options",
-  "significance": "Removing manual URL constraints could improve PMax delivery flexibility. Recommend enabling auto-generation unless there are brand protection requirements."
-}
-```
+**What to flag:**
+- `legacy_smart_shopping_upgrade` signal tag on the campaign
+- Note in findings whether the campaign has been optimized post-migration or is running on autopilot
+- If it has only 1 asset group with default settings, recommend restructuring
 
 ---
 
-## 2. Asset Group Health Assessment
+## 2. Asset Group Quality Audit
 
-**What to Check:** Is the primary asset group complete and well-formed?
+**For each active asset group, record:**
 
-### Required Assets (use as baseline)
-
-| Asset Type | Required | Recommended | Impact if Missing |
-|---|---|---|---|
-| Headlines (text) | 3+ | 5+ | Limits auto-generated ad variations |
-| Descriptions (text) | 2+ | 4+ | Reduces message diversity |
-| Images (landscape 4:3) | 3+ | 5+ | Limits creative delivery, may default to stock |
-| Images (square 1:1) | 3+ | 5+ | Limits mobile and feed placements |
-| Images (portrait 9:16) | 0 | 2+ | Enables Stories/Reels placements |
-| Logo | 1+ | 1+ | Needed for brand identity |
-| Final URL | 1 | 1 | Required, can't be missing |
-| Business Name | 1 | 1 | Required |
-| Videos | 0 | 1+ | Optional but improves performance |
-
-**How to Assess:**
-
-1. Open the PMax campaign
-2. Click "Asset groups" tab
-3. Click the primary asset group to view its composition
-4. Count assets in each type
-5. Note any "Missing" or "Incomplete" warnings
-
-### Quality Assessment
-
-| Check | Rating | Action if Failed |
+| Check | Requirement | Finding |
 |---|---|---|
-| Headlines are unique (not copy/paste) | Pass/Fail | Rewrite at least 2 headlines to test different messaging angles |
-| Descriptions are unique | Pass/Fail | Add 1-2 distinct descriptions emphasizing different benefits |
-| Images are distinct (not slight color/crop variations) | Pass/Fail | Replace similar images with genuinely different creative concepts |
-| Image quality is professional (not blurry, cut off, or low-res) | Pass/Fail | Replace low-quality assets |
-| Logo is clear and readable at small size | Pass/Fail | Replace with higher contrast or simplified logo |
-| Final URL is valid and landing page loads | Pass/Fail | Fix URL, test in browser |
+| Image count | 15-20 (min 15, max 20) | |
+| Video count | 1-5 (min 1, max 5) — custom, not auto-generated | |
+| Headline count | 5-15 (min 5, max 15) | |
+| Description count | 2-5 (min 2, max 5) | |
+| Ad strength | Poor / Average / Good / Excellent | |
+| "Low" rated assets | Count — target <15% of total | |
+| "Best" rated assets | Count — protect these, do not remove | |
 
-**Evidence JSON Mapping:**
-```json
-{
-  "title": "Primary asset group missing video assets and portrait images — limits placement diversity",
-  "label": "OBSERVED",
-  "evidence": "Asset group has 5 headlines, 4 descriptions, 3 landscape images, 3 square images, logo, but zero portrait images and zero videos. Google Ads shows warnings for Stories/Reels placement availability.",
-  "source": "Google Ads > [PMax Campaign] > Asset groups > [Primary]",
-  "significance": "Missing video and portrait assets reduces eligible placements. Andromeda can only deliver to Feed and standard placements. Adding video + portrait images could improve reach by 20-30% to high-intent mobile users."
-}
-```
+**Benchmark application:**
+- 15+ unique images → 20% higher CVR than <5 images (source: google-ads.md)
+- Custom video → 3x more conversions on YouTube vs auto-generated (source: google-ads.md)
+- "Excellent" ad strength → 12% more conversions vs "Good"; 35% more vs "Poor" (source: google-ads.md)
+
+**Asset group consolidation check:**
+- Each group needs 20+ conversions/month to optimize effectively
+- Below 5 conversions/month → **must merge** — the algorithm can't learn
+- Below 20 conversions/month → **should merge** unless there's a strong strategic reason to keep separate
+- Check conversion count per group: Campaigns → [PMax campaign] → Asset groups → look at "Conversions" column
+
+**Cross-asset group duplication:**
+- Are the same assets duplicated across multiple groups with only different audience signals?
+- This is a common mistake — different audiences need different messaging, not the same creative
+- Flag if identical asset sets appear in multiple groups
+
+**Asset refresh cadence assessment:**
+- Check Change History for asset group modifications
+- If no assets have been added/replaced in 60+ days, flag as stale
+- Recommended: replace 2-3 underperforming assets bi-weekly, major refresh monthly
 
 ---
 
-## 3. Search Term Performance (PMax Diagnosis)
+## 3. Search Term Categories — Branded Cannibalization
 
-**What to Check:** Is the PMax campaign actually triggering on search, or defaulting to audience matching?
+**This is one of the highest-impact PMax findings.** 91.45% of accounts have keyword overlap between Search and PMax (Optmyzr, 503 accounts). At campaign level, 67% of PMax campaigns overlap with Search (Adalysis).
 
-**Critical Gotcha:** Search Terms report is HIDDEN BY DEFAULT. See nav-google.md for unhiding steps.
+**How to check:**
 
-### How to Extract Search Terms
+1. Navigate to: Campaigns → [PMax campaign] → Insights and reports → Search terms
+2. Switch to the "Categories" view (not individual search terms)
+3. Look for your client's brand name in the categories
+4. Calculate branded share: branded category impressions / total PMax search impressions
 
-1. Open the PMax campaign
-2. Click "Search Terms" link in the data table (if visible)
-3. If not visible: Click "Segments" dropdown → select "Search term" breakdown
-4. The table populates with search queries that triggered the campaign
-5. Filter by "Impressions > 10" to reduce noise
+**Thresholds:**
+- **Below 5%:** Acceptable — PMax is primarily prospecting
+- **5-10%:** Monitor — some branded leakage but not critical
+- **Above 10%:** PMax is cannibalizing branded search. Flag as finding. Priority: HIGH.
 
-### What to Assess
+**What to flag if cannibalization detected:**
+- The branded % share with evidence
+- Whether a separate branded Search campaign exists
+- Whether account-level brand exclusions are configured
+- Calculate the "true prospecting ROAS" by mentally excluding branded conversions from PMax performance
+- Recommendation: add brand name + brand variations as account-level negative keywords for PMax
 
-| Signal | Meaning | Action |
-|---|---|---|
-| Search terms present and diverse (100+ distinct queries) | Algorithm is finding varied search intent | Continue monitoring. This is healthy. |
-| Search terms are relevant to product/category | Algorithm understanding is correct | Good. |
-| Search terms are branded (brand name + modifiers) | Campaign is capturing branded volume | Expected for many PMax campaigns. Check if non-branded search exists too. |
-| Search terms are product-specific (product name + reviews, price, etc.) | Algorithm finding high-intent users | Excellent performance signal. |
-| **Search terms are completely absent or <20 distinct queries** | **PMax is NOT using search signals — defaulting to audience matching** | **Diagnosis: audience signals are strong, but search optimization is bypassed. Opportunity: add search-focused keywords or create separate Search campaign.** |
-| Search terms include irrelevant categories (unrelated products, competitors) | Targeting too broad or negative keywords missing | Add negative keywords for irrelevant categories |
-| Search terms show very low quality (typos, off-topic, spam-like) | Low-quality traffic | Tighten negative keywords. Consider adding quality-filtering keywords. |
-
-### Evidence JSON Mapping
-
-```json
-{
-  "title": "PMax campaign not triggering on search — relying entirely on audience matching",
-  "label": "OBSERVED",
-  "evidence": "Search Terms report shows zero search queries across a 7-day sample with 500K+ impressions. Campaign is 100% driven by audience signals (in-market, similar to past purchasers) with no search optimization.",
-  "source": "Google Ads > [PMax Campaign] > Segments: Search term",
-  "significance": "Without search signals, the campaign misses high-intent queries (e.g., '[product category] near me', '[product] reviews'). Recommend: add relevant search-focused keywords to the asset group or create a separate Search campaign for high-intent volume. Expected lift: 15-25% additional conversions."
-}
-```
+**Account-level brand exclusions:**
+- Navigate to: Settings → Account settings → Brand restrictions (or search for "brand exclusions" in account settings)
+- Check if brand exclusions are active for PMax campaigns
+- If not, recommend adding: brand name, brand + product, brand misspellings, brand + navigational terms
 
 ---
 
 ## 4. Budget-Limited Detection
 
-**What to Check:** Is the campaign's daily budget capping delivery?
+**Why this matters most:** A budget-limited campaign that exceeds its ROAS target is the highest-confidence opportunity in any Google Ads audit. The algorithm is already profitable and is being artificially constrained.
 
-**How to Detect:**
+**How to detect:**
+- Campaign status column shows "Limited by budget" (or "Eligible (Limited by budget)")
+- Google's Recommendations page may show a specific budget increase recommendation with estimated impact
 
-1. Check campaign status: does it say "Limited by budget"?
-2. Look at daily spend vs. daily budget:
-   - If spend is consistently at or above 95% of daily budget → likely budget-limited
-   - If spend fluctuates 60-90% of daily budget → normal, not capped
-3. Check impressions trend: is impression volume flat despite rising bids/budget elsewhere? → may indicate budget cap
+**What to record for each budget-limited campaign:**
+- Current daily budget
+- Actual ROAS vs. target ROAS (if tROAS bidding)
+- Google's recommended budget increase (from Recommendations)
+- Google's estimated impact of the increase
+- How many days the campaign was budget-limited (if visible)
 
-### Flags
+**Severity assessment:**
+- Budget-limited + ROAS above target by 20%+ → **CRITICAL** opportunity — almost certainly leaving profitable revenue on the table
+- Budget-limited + ROAS at target → **HIGH** — should increase, but monitor closely
+- Budget-limited + ROAS below target → **LOW** — budget constraint may be appropriate; fix ROAS first
 
-| Signal | Severity | Implication |
+**Evidence JSON mapping:**
+- Add `budget_limited` to campaign `key_signals`
+- If also above target, add `above_target_roas`
+- Create an opportunity entry with priority, expected impact (use Google's estimate as a floor), confidence reasoning
+
+---
+
+## 5. Audience Signals Audit
+
+**For each asset group, check what audience signals are configured:**
+
+| Signal Type | Quality | Notes |
 |---|---|---|
-| Daily spend = 98-100% of budget, every day | High | Campaign is capped. Could spend more if budget increased. |
-| Impressions flat despite bid/budget increases elsewhere | Medium | Budget may be the constraint. Test 10-20% budget increase and monitor impression lift. |
-| "Limited by budget" status in Settings | High | Explicit Google Ads flag. Same as above. |
+| Customer match lists (first-party data) | Best | Upload email lists, phone numbers |
+| Website visitors (30-90 day retargeting) | Good | Standard retargeting signal |
+| Past converters | Good | High-intent signal for lookalike expansion |
+| In-market segments (Google's intent data) | Medium | Google's behavioral targeting |
+| Custom intent (keyword-based audiences) | Medium | Based on search behavior |
+| Affinity / Interest audiences | Low | Too broad — weak signal |
+| Demographics only | Poor | Not useful as a PMax signal |
+| No signals configured | Flag | Algorithm starts cold — slower learning |
 
-**Important:** Budget-limited status is NOT inherently bad. It means the campaign is delivering to the best opportunities within the budget. Increasing budget is only worth testing if you can also improve the bid strategy or creative.
+**Remember:** PMax audience signals are hints, not hard targeting. Google's AI shows ads beyond these audiences. But the signals dramatically affect the learning phase — good signals mean faster optimization.
+
+**What to flag:**
+- Asset groups with no audience signals → recommend adding customer match + website visitors
+- All groups using only generic interest audiences → recommend upgrading to first-party data
+- All signals dumped into one group → recommend segmenting signals by persona/product theme
 
 ---
 
-## 5. Audience Signal Health
+## 6. URL Expansion Status
 
-**What to Check:** Are logged-in and conversion-based audience signals healthy?
+**Check:** Is URL expansion enabled or disabled?
 
-**Where to Find This:**
+**Default:** ON (Google sends traffic to whatever page it thinks is best)
 
-Settings → Audiences (if configured)
+**When OFF is better:**
+- Marketplace sellers (don't want traffic going to non-product pages)
+- Multi-domain businesses
+- When tight landing page control is needed (specific LP tests running)
+- When non-converting pages exist (blog posts, about pages getting ad traffic)
 
-### What to Assess
+**When ON is fine:**
+- Well-optimized ecommerce site where all product pages convert well
+- Page feeds configured to curate eligible URLs
 
-| Signal Type | Ideal Health | Flag if |
+**If ON, check:** Are page feeds configured? If not, Google may send paid traffic to blog posts, privacy policy, or other non-converting pages. Flag as a medium-priority finding.
+
+---
+
+## 7. Channel Breakdown
+
+**Where to find it:** Some PMax reporting shows a channel-level breakdown (Search, Shopping, YouTube, Display, Gmail, Maps, Discover). Availability varies — check:
+- Insights tab within the PMax campaign
+- Third-party tools (if client has them)
+- "Where ads showed" report: Campaigns → [PMax] → Insights and reports → Where ads showed
+
+**What to look for:**
+
+| Channel | Expected Share | Flag If |
 |---|---|---|
-| Logged-in users signal | Enabling Andromeda to match intent for signed-in users | Not enabled, or "No eligible conversions" warning |
-| Similar to past purchasers | Strong historical data for lookalike matching | List size <100 or >2 years old |
-| Recent purchase signal | Fast feedback loop for new converters | >7 days old or no recent conversions in list |
-| Similar to cart abandoners | Relevant for retargeting and re-engagement | Not configured or list is stale |
-| Video viewers | Engagement signal for prospecting | List size <1,000 viewers |
-| Website visitors | Audience for retargeting | List age >90 days or declining |
+| Shopping/Search | 60-85% | Below 50% — PMax is over-diversifying away from high-intent |
+| YouTube | 5-20% | Above 30% without strong video creative — likely wasting spend |
+| Display | 5-15% | Above 20% — low-intent impressions diluting ROAS |
+| Gmail | 1-5% | Above 10% — unusual, check creative quality |
+| Maps/Discover | 1-5% | Usually fine unless spend is disproportionate |
 
-**Evidence JSON Mapping:**
-```json
-{
-  "title": "Logged-in users signal not enabled — missing high-intent matching opportunity",
-  "label": "OBSERVED",
-  "evidence": "Campaign Settings show Audiences section with no logged-in user signal configured. Google Ads documentation indicates this signal improves intent matching for 40%+ of daily active users.",
-  "source": "Google Ads > [PMax Campaign] > Settings > Audiences",
-  "significance": "Enabling logged-in user signal could improve ROAS by 10-20%. Recommend enabling in Settings if this is a conversion-focused campaign."
-}
-```
+**Key diagnosis:** If Shopping+Search is below 50% of PMax spend and ROAS is below target, the campaign is likely over-spending on awareness channels (YouTube, Display) without strong creative. The fix is better video/image assets, not more budget.
 
 ---
 
-## 6. URL Expansion & Auto-Generated Content Status
+## 8. PMax Diagnostics Card
 
-**What to Check:** Is the algorithm allowed to auto-generate headlines and descriptions?
+**Where to find it:** Within the PMax campaign view, look for an "Insights" or "Diagnostics" section. Google surfaces:
+- Budget limitation signals
+- Learning status
+- Asset coverage gaps (missing asset types)
+- Conversion tracking issues
+- Audience signal recommendations
 
-**Where to Find This:**
+**Extract and record** any diagnostic flags Google surfaces. These corroborate your own findings and can be cited as additional evidence.
 
-Campaign Settings → Final URL options
+---
 
-### What to Look For
+## 9. Paused PMax Campaigns
 
-| Setting | Status | Meaning |
+**Don't skip these.** Check for paused PMax campaigns that had positive historical performance:
+
+- Pull the campaign list with all statuses (not just Eligible)
+- For each paused PMax campaign: record historical spend, ROAS, conversions
+- If a paused campaign had ROAS above target → flag as anomaly
+- Common reasons for pausing profitable PMax: consolidation into fewer campaigns, seasonal pause, accidental pause, client request
+
+**In the evidence file:** Add to `anomalies` array with the campaign name, historical metrics, and OBSERVED label.
+
+---
+
+## 10. Feed Quality Quick Check (If Shopping/PMax)
+
+This is a quick check — a full feed audit is its own skill. But during a PMax audit, check:
+
+1. **Product count:** How many products are active in the Merchant Center feed?
+2. **Disapprovals:** Are any products disapproved? What percentage?
+3. **Warnings:** Are there Merchant Center warnings visible in the PMax campaign?
+
+**Navigate to:** If you can access Merchant Center (linked account), check Products → Diagnostics for disapproval counts. If not, note as DATA_NOT_AVAILABLE and flag in open_questions.
+
+**Key thresholds:**
+- Disapprovals above 10% of catalog → flag as HIGH severity
+- Approaching 28-day warning period → flag as CRITICAL (account suspension risk)
+- Feed disapprovals directly suppress PMax/Shopping reach — revenue is lost every day
+
+---
+
+## Evidence JSON Mapping Summary
+
+| PMax Finding | Evidence Section | Key Fields |
 |---|---|---|
-| Final URL expansion | Enabled | Algorithm can create variations (recommended) |
-| Final URL expansion | Disabled with constraints | Manual override restricting variations (may be for brand safety) |
-| Headline pinning | Light or none | Algorithm has freedom (good) |
-| Headline pinning | Heavy (2+ pinned) | Manual override restricting messages (limits performance) |
-| Description pinning | None | Algorithm has freedom (good) |
-| Description pinning | Multiple pinned | Manual override restricting messages (limits performance) |
-
-**Guidance:**
-
-- For performance, enable auto-generation and remove manual constraints
-- For brand safety, light pinning (1 headline, 1 description) is acceptable
-- Heavy pinning (multiple manual overrides) = Andromeda can't optimize properly
-
----
-
-## 7. Channel Breakdown & Performance
-
-**What to Check:** How is performance distributed across channels (Search, Display, YouTube, Shopping)?
-
-**How to Extract:**
-
-1. Open the PMax campaign
-2. Click "Segments" → "Network"
-3. The table populates with performance by channel
-
-### What to Assess
-
-| Channel | Typical ROAS | Typical CPA | Typical Volume |
-|---|---|---|---|
-| Google Search | Highest ROAS, lowest CPA | Base benchmark | 40-60% of spend |
-| Google Display | Medium ROAS, higher CPA | ~20-40% higher than Search | 15-25% of spend |
-| Google Shopping | High ROAS (shopping-optimized) | Similar to Search | 5-20% of spend (if feed connected) |
-| YouTube | Lower ROAS, higher CPA | ~30-50% higher than Search | 10-20% of spend |
-
-**Flags:**
-
-| Pattern | Severity | Implication |
-|---|---|---|
-| One channel dominates (e.g., 80% to Display) | Medium | Algorithm may be biased toward cheaper placements. Check bid strategy and consider manual channel bid adjustments. |
-| Search channel extremely low volume (<20%) | High | Search optimization may be disabled. Check search terms report (see Section 3). |
-| YouTube ROAS significantly lower than Search (2x+ worse) | Medium | Audience may not be engaged on video. Consider lowering YouTube bid adjustment or pausing YouTube. |
-| Shopping channel producing high ROAS but low volume | Medium | Feed may be under-optimized or product feed is incomplete. Review feed quality. |
-
----
-
-## 8. Diagnostics Card & Performance Recommendations
-
-**What to Check:** Google Ads shows AI-generated diagnostics. Which are actionable?
-
-**Where to Find This:**
-
-Campaign view → "Diagnostics" card (right sidebar, below performance summary)
-
-### What the Diagnostics Card Shows
-
-- **Health score** (0-100): Overall campaign health. 70+ is healthy.
-- **Recommendations:** AI suggestions for optimization (pause keywords, increase budget, adjust bids)
-- **Issues & warnings:** Any tracking problems, disapprovals, or policy violations
-
-### How to Interpret
-
-| Recommendation | Actionable? | Note |
-|---|---|---|
-| "Increase budget by X%" | Caution | Only if: (1) budget-limited status confirmed, (2) ROAS is sustainable above budget cap, (3) you have creative refresh capacity. |
-| "Pause low-performing keywords" (for PMax) | N/A | Not applicable to PMax — keywords are not manually managed. |
-| "Increase bids on high-performing search terms" | Maybe | Only if search terms are actually driving conversions. Check search terms report first (Section 3). |
-| "Add negative keywords" | Yes | Always actionable if irrelevant search terms identified. |
-| "Improve asset quality" | Yes | Actionable if asset group quality assessment (Section 2) identifies missing or low-quality assets. |
-| "Enable new features" (e.g., Responsive Search Ads) | Caution | For PMax, RSAs are already used. May be suggesting other features — evaluate case-by-case. |
-
-### Evidence JSON Mapping
-
-```json
-{
-  "title": "Diagnostics card shows 'Low quality asset group' warning — asset refresh needed",
-  "label": "OBSERVED",
-  "evidence": "Campaign Diagnostics card displays warning: 'Asset group below recommended quality. Add more images and videos.' Current asset group has 3 images, 4 headlines, 2 descriptions, no videos.",
-  "source": "Google Ads > [PMax Campaign] > Diagnostics card",
-  "significance": "Google's diagnostic is valid. Asset group is under-diversified. Recommendation: add 2-3 more images (different styles/angles) and 1 product demo video. Expected lift: 10-15% impressions and quality matching."
-}
-```
-
----
-
-## 9. Paused Campaigns & Historical Context
-
-**What to Check:** Are there paused PMax campaigns that could be reactivated or deleted?
-
-**How to Identify:**
-
-1. Filter campaign list by Status = "Paused"
-2. Check pause date and reason (if available in campaign notes)
-3. Check last-30-day performance before pause (if visible in history)
-
-**What to Record:**
-
-| Paused Campaign | Pause Date | Last Performance | Reason | Recommendation |
-|---|---|---|---|---|
-| ... | ... | ROAS X, CPA $X | Notes | Archive / Delete / Test Reactivate |
-
-**Flags:**
-
-- Paused >6 months ago with no clear reason → likely can be deleted
-- Paused due to underperformance but no structural fix applied → reactivate only if new creative ready
-- Paused due to budget constraints but account budget increased → consider re-enabling if ROAS was acceptable
-
----
-
-## 10. Feed Quality Check (if Shopping data included)
-
-**What to Check:** Is the product feed (Merchant Center) connected and healthy?
-
-**Where to Find This:**
-
-Google Merchant Center → [Feed] → Issues & Diagnostics
-
-### What to Assess
-
-| Check | Healthy | Flag if |
-|---|---|---|
-| Feed submission status | Green (no issues) | Red (errors blocking feed) or Yellow (warnings) |
-| Item count | Increasing or stable | Declining (products disappearing) |
-| Disapprovals | <5% of items | >10% items disapproved (policy violations) |
-| Missing required fields | None | Price, availability, product type, images missing for >5% |
-| Image quality | High-res, clear product | Blurry, cut-off, or placeholder images common |
-
-**Evidence JSON Mapping:**
-```json
-{
-  "title": "Merchant Center feed has 12% item disapprovals — limiting Shopping performance",
-  "label": "OBSERVED",
-  "evidence": "Merchant Center diagnostics show 847 items disapproved out of 7,100 total (12% disapproval rate). Primary issues: 'Images do not follow product policies' (400 items), 'Price format invalid' (280 items), 'Missing required field: description' (167 items).",
-  "source": "Google Merchant Center > [Feed] > Issues",
-  "significance": "Feed quality issues are limiting PMax Shopping channel performance. Recommend: (1) Fix price format in feed template, (2) Add descriptions to products, (3) Audit image compliance (Google is strict on policy). Expected improvement: 20-30% increase in Shopping impressions."
-}
-```
-
----
-
-## Data Collection Summary
-
-At the end of the PMax assessment, you should have:
-
-1. **Campaign metadata:** Name, creation date, budget, status, last updated
-2. **Asset group inventory:** Number of asset groups, primary group asset counts (headlines, descriptions, images, video, logo)
-3. **Asset quality assessment:** Pass/fail on uniqueness, clarity, professional quality
-4. **Search terms analysis:** Count of distinct search queries, relevance assessment, volume by search type
-5. **Budget health:** Budget-limited status, spend vs. budget ratio, daily trend
-6. **Audience signals:** Logged-in user, past purchaser, video viewer, website visitor signals (enabled/disabled, list size, freshness)
-7. **URL expansion & pinning:** Auto-generation status, manual override count, brand safety constraints noted
-8. **Channel breakdown:** Search %, Display %, YouTube %, Shopping % (if applicable)
-9. **Diagnostics assessment:** Health score, 2-3 key recommendations, warnings
-10. **Feed quality (if applicable):** Disapproval rate, issue categories, required field completeness
-
-This feeds into the `raw_metrics.pmax_campaigns` section and multiple `findings` entries in the evidence JSON.
+| Legacy Smart Shopping upgrade | campaigns[].key_signals | `legacy_smart_shopping_upgrade` |
+| Asset quality issues | findings[] | title, evidence (asset counts), severity |
+| Branded cannibalization | findings[] + campaigns[].key_signals | `high_branded_share`, branded % |
+| Budget-limited + profitable | opportunities[] + campaigns[].key_signals | `budget_limited`, `above_target_roas` |
+| Weak audience signals | findings[] | signal types present vs. recommended |
+| URL expansion on without page feeds | findings[] | Medium severity |
+| Channel mix skewed to Display/YouTube | findings[] | Channel breakdown data |
+| Paused profitable campaigns | anomalies[] | Historical metrics, OBSERVED |
+| Feed disapprovals | tracking_health.flags[] | Severity based on % |

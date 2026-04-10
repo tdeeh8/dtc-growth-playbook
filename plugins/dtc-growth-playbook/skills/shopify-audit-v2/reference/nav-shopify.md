@@ -8,7 +8,7 @@ Reference guide for navigating Shopify admin UI during audits. Covers date picke
 
 **URL pattern:** `https://{store-name}.myshopify.com/admin`
 
-If you have the storefront URL (e.g., `https://acme-co.com`), the admin URL is typically the Shopify subdomain: `https://acme-co.myshopify.com/admin`. The user may need to provide the exact admin URL or confirm you're logged in.
+If you have the storefront URL (e.g., `https://kodiak-leather.com`), the admin URL is typically the Shopify subdomain: `https://kodiak-leather.myshopify.com/admin`. The user may need to provide the exact admin URL or confirm you're logged in.
 
 **Access levels:**
 - **Store owner:** Full access to everything including billing, staff management

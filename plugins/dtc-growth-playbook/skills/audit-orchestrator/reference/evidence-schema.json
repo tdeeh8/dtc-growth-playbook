@@ -17,7 +17,7 @@
       "properties": {
         "client": {
           "type": "string",
-          "description": "Client display name, e.g. 'Acme Co.'"
+          "description": "Client display name, e.g. 'Kodiak Leather Co.'"
         },
         "platform": {
           "type": "string",

@@ -1,3 +1,8 @@
+---
+description: Run a BigCommerce admin audit — financial source of truth for the modular audit system
+argument-hint: "[client name]"
+---
+
 # /audit-bigcommerce
 
 Run a BigCommerce Control Panel audit — the financial source of truth for the modular audit system v2.
@@ -6,7 +11,7 @@ Run a BigCommerce Control Panel audit — the financial source of truth for the 
 
 ## When This Command Runs
 
-The user invokes `/audit-bigcommerce` optionally followed by a client name (e.g., `/audit-bigcommerce Sample Brand`).
+The user invokes `/audit-bigcommerce` optionally followed by a client name (e.g., `/audit-bigcommerce Example Client`).
 
 ---
 
@@ -14,18 +19,16 @@ The user invokes `/audit-bigcommerce` optionally followed by a client name (e.g.
 
 1. **Read the SKILL.md:** Load `.claude/skills/bigcommerce-audit-v2/SKILL.md` for the full audit procedure.
 2. **Read the navigation reference:** Load `.claude/skills/bigcommerce-audit-v2/reference/nav-bigcommerce.md` for BigCommerce Control Panel UI patterns.
-3. **Read the evidence schema:** Load `${CLAUDE_PLUGIN_ROOT}/skills/audit-orchestrator/reference/evidence-schema.json` for the output contract.
+3. **Read the evidence schema:** Load `.claude/skills/audit-orchestrator/reference/evidence-schema.json` for the output contract.
 
 ---
 
 ## Gather Context
 
 **If a client name was provided:**
-- Look for an existing audit manifest:
-  - `{Agency}/reports/{Client-Name}/evidence/{Client}_audit_manifest.md`
-  - `{Own-Brand}/reports/evidence/{OwnBrand}_audit_manifest.md`
-- If found: read it, extract client context, AOV tier, date range, known spend, focus areas.
-- If not found: proceed as standalone audit — ask user for details.
+- Look for `{Client}_audit_manifest.md` in known evidence directories, or ask user for evidence path
+- **If found:** Read manifest for department, AOV, platform URL, known issues. Pre-fill — don't re-ask. Tell user: "Found manifest. Using [AOV], [platform URL]. Starting audit."
+- **If not found:** Standard setup — ask user for details, or suggest: "Run `/audit {Client}` first for full setup."
 
 **If no client name was provided:**
 - Ask: "Which client? And do you have the BigCommerce admin URL?"
@@ -42,12 +45,12 @@ The user invokes `/audit-bigcommerce` optionally followed by a client name (e.g.
 ## Load Playbook
 
 Always:
-- `${CLAUDE_PLUGIN_ROOT}/references/benchmarks.md` (profitability math, CM1/CM2/CM3, website/ecom benchmarks)
-- `${CLAUDE_PLUGIN_ROOT}/references/measurement.md` (ecommerce platform = financial source of truth, MER, blended metrics)
+- `references/benchmarks.md` (profitability math, CM1/CM2/CM3, website/ecom benchmarks)
+- `references/measurement.md` (ecommerce platform = financial source of truth, MER, blended metrics)
 
 Conditional:
-- AOV $200+ → `${CLAUDE_PLUGIN_ROOT}/references/high-ticket.md`
-- AOV <$100 → `${CLAUDE_PLUGIN_ROOT}/references/low-ticket.md`
+- AOV $200+ → `references/high-ticket.md`
+- AOV <$100 → `references/low-ticket.md`
 
 ---
 
@@ -75,9 +78,7 @@ Maintain working notes throughout: `{Client}_bigcommerce_audit_notes.md` in the 
 | `{Client}_bigcommerce_audit_notes.md` | Evidence directory | Working scratchpad / audit trail |
 | `{Client}_audit_manifest.md` | Evidence directory | Updated status (if exists) |
 
-Evidence directory paths:
-- {Agency} clients: `{Agency}/reports/{Client-Name}/evidence/`
-- {Own Brand}: `{Own-Brand}/reports/evidence/`
+Evidence directory: from manifest or `reports/{Client-Name}/evidence/`
 
 ---
 
@@ -99,6 +100,14 @@ to validate platform-reported revenue and build the profitability framework.
 
 Next suggested step: [whatever platform audit is next per manifest, or /audit-synthesize if this is the last one]
 ```
+
+---
+
+## After This Audit
+
+- **Continue:** `/audit-resume {Client}` — see what's next
+- **Report now:** `/audit-synthesize {Client}` — works with 1+ evidence files
+- **Check progress:** `/audit {Client}`
 
 ---
 
