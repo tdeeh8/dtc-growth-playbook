@@ -76,7 +76,7 @@ Load these from the `reference/` folder inside this skill directory:
 | reference/quick-check.md | ✅ | — | — | — |
 | reference/audit-process.md | — | ✅ | ✅ | ✅ |
 | reference/report-template.md | — | ✅ | ✅ | ✅ |
-| reference/anti-hallucination.md | — | ✅ | ✅ | — |
+| reference/anti-hallucination.md | — | ✅ | ✅ | ✅ |
 
 **Platform navigation (load only for platforms being audited):**
 
