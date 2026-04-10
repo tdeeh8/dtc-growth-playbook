@@ -39,28 +39,31 @@ Read `protocols/playbook/index.md` first. Then load ONLY the chunks and referenc
 - benchmarks.md
 
 **Load by AOV (every audit type except quick check):**
-- AOV over $200 → high-ticket.md
 - AOV under $100 → low-ticket.md
+- AOV $100-200 → low-ticket.md (midmarket — low-ticket tactics apply more than high-ticket; skip high-ticket's lead gen and curriculum nurture sections)
+- AOV over $200 → high-ticket.md
 
 **Load by depth:**
 
 | Chunk | Quick Check | Standard | Deep | Profitability |
 |---|---|---|---|---|
 | benchmarks.md | ✅ | ✅ | ✅ | ✅ |
-| measurement.md | — | ✅ | ✅ | ✅ |
-| channel-allocation.md | — | ✅ | ✅ | — |
+| measurement.md | — | ✅ | ✅ | ✅ (for MER calculation + conversion validation) |
+| channel-allocation.md | — | ✅ | ✅ | ✅ (for channel-level CM3 comparison) |
 | high-ticket OR low-ticket | — | ✅ | ✅ | ✅ |
 
 **Load by platform (Standard + Deep only):**
 
-| Chunk | Meta | Google | Amazon | Klaviyo |
-|---|---|---|---|---|
-| tof-strategy.md | ✅ | — | — | — |
-| andromeda.md | ✅ | — | — | — |
-| scaling-frequency.md | ✅ | — | — | — |
-| google-ads.md | — | ✅ | — | — |
-| email-sms.md | — | — | — | ✅ |
-| list-building.md | — | — | — | ✅ |
+| Chunk | Meta | Google | Klaviyo |
+|---|---|---|---|
+| tof-strategy.md | ✅ | — | — |
+| andromeda.md | ✅ | — | — |
+| scaling-frequency.md | ✅ | — | — |
+| google-ads.md | — | ✅ | — |
+| email-sms.md | — | — | ✅ |
+| list-building.md | — | — | ✅ |
+
+**Amazon note:** There is no Amazon-specific playbook chunk in this skill. For Amazon audits within a multi-channel audit, use benchmarks.md for threshold comparisons (Amazon Ads section has SP ACOS, CPC, CVR, TACoS benchmarks) and nav-amazon.md for platform navigation. For deep Amazon-only audits, recommend the dedicated `/amazon-ads-audit` skill instead — it has its own specialized process for keyword efficiency, organic rankings, and profitability analysis.
 
 **Quick check override:** For quick checks, load ONLY benchmarks.md plus the single platform-specific chunk relevant to the question (e.g., if asking about Meta ROAS, load andromeda.md — not the full Meta stack).
 
