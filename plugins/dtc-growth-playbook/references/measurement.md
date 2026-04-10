@@ -206,10 +206,10 @@ Pull purchase counts from all sources for the same 7-day period and compare:
 
 #### Step 4: Known Tracking Failure Modes
 
-**Shopify Checkout Extensibility (deadline August 28, 2025):**
-- Shopify discontinued checkout.liquid customizations and script tags on Thank You / Order Status pages
+**Shopify Checkout Extensibility (migrated August 28, 2025):**
+- Shopify discontinued checkout.liquid customizations and script tags on Thank You / Order Status pages as of August 2025
 - New sandbox environment blocks most third-party tracking scripts in checkout
-- Fix: Migrate to Shopify Custom Pixels or Customer Events API before deadline
+- If tracking broke around Aug-Sep 2025: likely caused by this migration. Fix: implement Shopify Custom Pixels or Customer Events API
 - Post-purchase upsell apps may only track initial purchase value — verify upsell revenue is captured
 
 **iOS/Safari ITP (inherent limitation, not misconfiguration):**
