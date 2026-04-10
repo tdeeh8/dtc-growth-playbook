@@ -18,12 +18,13 @@ Read this index first. Load ONLY the chunks specified for the current task. Each
 | MAT Testing | mat-testing.md | 2026-04-09 | Current | VP identification, message testing structure, event selection, statistical rigor, creative analytics tools, cross-channel validation |
 | Email & SMS | email-sms.md | 2026-04-09 | Current | Klaviyo audit, flow analysis, nurture series, email frequency, SMS benchmarks, predictive CLV, suppression, BFCM frequency, segment-based cadence |
 | Scaling & Frequency | scaling-frequency.md | 2026-04-09 | Current | Frequency ceiling, audience saturation, narrow delivery, scaling sequence, ASC budget rules, geo expansion, seasonal scaling |
-| Measurement | measurement.md | 2026-04-09 | Current | Attribution, MER/blended metrics, incrementality testing, MMM, CAPI, cross-platform reconciliation, Meta Jan 2026 changes |
+| Measurement | measurement.md | 2026-04-09 | Current | Attribution, MER/blended metrics, incrementality testing, MMM, CAPI, cross-platform reconciliation, Meta Jan 2026 changes, tracking validation (pixel/CAPI verification, purchase count reconciliation, duplicate event detection, failure modes, tracking health monitoring) |
 | Channel Allocation | channel-allocation.md | 2026-04-09 | Current | Budget splits by brand stage, channel roles, seasonal planning, reallocation triggers, halo effects, new channel criteria |
 | List Building | list-building.md | 2026-04-09 | Current | Email capture, pop-ups, quiz funnels, SMS capture, first-party data, list hygiene, CLV segmentation |
 | Post-Purchase | post-purchase.md | 2026-04-09 | Current | Retention flows, cross-sell/upsell, review timing, replenishment, loyalty programs, referrals, returns/exchanges, subscriptions, package inserts, UGC, post-purchase surveys |
 | High-Ticket | high-ticket.md | 2026-04-09 | Current | AOV $200+ strategy, proxy event optimization, lead gen, BNPL/financing, curriculum-style nurture, retargeting windows, landing page depth, Google/YouTube, trust signals, CVR benchmarks by AOV tier |
 | Low-Ticket | low-ticket.md | 2026-04-09 | Current | AOV under $100 strategy, impulse funnel, checkout friction, Meta creative fatigue/hooks, AOV optimization, free shipping thresholds, offer structures, email frequency, subscription/repeat, LTV unit economics |
+| Google Ads & PMax | google-ads.md | 2026-04-09 | Current | Google Ads audit, PMax methodology, Shopping feed, Smart Bidding, branded cannibalization, asset groups, Google × Meta interaction, AI Max |
 
 ## Canonical Ownership
 
@@ -39,18 +40,25 @@ When the same concept appears in multiple chunks, this is the source of truth:
 | Profitability math (break-even CPA, ROAS formulas) | benchmarks.md | all other chunks |
 | Platform metric thresholds (Floor/Healthy/Strong) | benchmarks.md | all other chunks |
 | Email/SMS flow architecture & benchmarks | email-sms.md | list-building.md, benchmarks.md |
-| Budget allocation across channels | channel-allocation.md | tof-strategy.md |
+| Budget allocation across channels | channel-allocation.md | tof-strategy.md, google-ads.md |
 | Scaling rules & frequency ceilings | scaling-frequency.md | andromeda.md, tof-strategy.md |
+| Google Ads benchmarks (Search, Shopping, PMax, Display) | google-ads.md | benchmarks.md |
+| PMax audit methodology & branded cannibalization | google-ads.md | — |
+| Shopping feed optimization | google-ads.md | — |
+| Google × Meta budget allocation | google-ads.md | channel-allocation.md |
+| Tracking validation & purchase reconciliation | measurement.md | — |
+| Platform setup verification (CAPI, EMQ, Consent Mode) | measurement.md | google-ads.md |
 
 ## Skill-Specific Loading
 
 | Skill | Load These Chunks |
 |---|---|
-| client-audit | benchmarks, tof-strategy, channel-allocation, measurement + high-ticket OR low-ticket (by AOV) + andromeda, scaling-frequency (if Meta) + email-sms, list-building (if Klaviyo) |
+| client-audit | benchmarks, tof-strategy, channel-allocation, measurement + high-ticket OR low-ticket (by AOV) + andromeda, scaling-frequency (if Meta) + google-ads (if Google) + email-sms, list-building (if Klaviyo) |
 | cro-audit | benchmarks, creative-testing, post-purchase + high-ticket OR low-ticket (by AOV) |
 | amazon-ads-audit | benchmarks |
 | seo-audit | benchmarks, measurement |
 | Any Meta-specific work | andromeda, tof-strategy, creative-testing, scaling-frequency |
+| Any Google-specific work | google-ads, benchmarks, measurement |
 | Any Klaviyo-specific work | email-sms, list-building, benchmarks |
 | New client onboarding | mat-testing, tof-strategy, channel-allocation, list-building |
 

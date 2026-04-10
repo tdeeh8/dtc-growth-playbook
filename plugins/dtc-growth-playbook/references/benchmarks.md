@@ -138,6 +138,115 @@ If the client's economics require a 4x ROAS but the channel averages 1.9x, the p
 
 **Attribution reality check:** Platform-reported ROAS is always inflated. Cross-check: if Meta says 4x ROAS and Google says 3x ROAS, but Shopify revenue doesn't support both being true, at least one is over-attributing. Use Shopify as source of truth for total revenue, then allocate credit proportionally.
 
+### Profitability & Unit Economics Layer
+
+ROAS tells you if ads are efficient. Contribution margin tells you if the business is profitable. Always run this layer during audits — less than 30% of DTC audits include profitability metrics.
+
+**The CM1/CM2/CM3 framework:**
+- **CM1 (Product Margin):** Revenue - COGS
+- **CM2 (Fulfillment Margin):** Revenue - COGS - shipping - packaging - pick-pack labor
+- **CM3 (Marketing-Inclusive Margin):** Revenue - COGS - shipping - fulfillment - marketing spend - payment processing - returns
+
+CM3 is the only margin that tells you if the business is actually making money. ROAS and gross margin both hide the true cost of acquiring and fulfilling customers.
+
+**Contribution margin benchmarks by vertical:**
+
+| Vertical | Gross Margin | CM3 (Target) | COGS Estimate (if not shared) |
+|---|---|---|---|
+| Apparel/Fashion | 55-65% | 20-35% | 35-45% of revenue |
+| Beauty/Skincare | 60-80% | 25-40% | 25-35% of revenue |
+| Food/Consumables | 65-75% | 30-45% | 30-40% of revenue |
+| Home Goods | 50-65% | 18-32% | 35-50% of revenue |
+| Electronics | 15-30% | 15-25% | 50-70% of revenue |
+| Supplements | 70-85% | 30-50% | 15-30% of revenue |
+
+If the client won't share COGS, use the "COGS Estimate" column and flag it as ASSUMPTION. Back into CM3 from there.
+
+**"Good ROAS but bad profit" — the most common DTC wall:**
+1. Check return rates — apparel often 25-40% returns, which ROAS doesn't account for
+2. Check discount stacking — promo accumulation eroding true transaction margin
+3. Check hidden fulfillment costs — shipping, packaging, pick-pack not allocated to margin
+4. Check whether CAC is loaded entirely to first purchase vs amortized over LTV
+5. Check invisible overhead — agency retainers, creative production, tools not in platform ROAS
+6. Calculate MER (Total Revenue / Total Marketing Spend including all costs) — this is the honest number
+
+**CAC Payback Period:**
+
+Formula: `CAC Payback (months) = Fully Loaded CAC / Monthly Contribution Margin per Customer`
+
+Fully Loaded CAC includes: ad spend + creative production + agency fees + attribution tools + platform overhead.
+
+| Payback Period | Rating | Action |
+|---|---|---|
+| Under 3 months | Excellent | Scale aggressively — cash cycle supports growth |
+| 3-6 months | Healthy | Sustainable with adequate cash reserves |
+| 6-12 months | Caution | Requires external capital or retention improvements |
+| Beyond 12 months | Unsustainable | Fix unit economics before scaling |
+
+**Payback benchmarks by vertical:**
+
+| Vertical | Healthy Payback | Notes |
+|---|---|---|
+| Consumables (supplements, food, pet) | 4-8 weeks | Natural replenishment cycle helps |
+| Beauty/Skincare | 6-12 weeks | Usage frequency drives repeats |
+| Apparel/Fashion | 8-16 weeks | Seasonal, new styles drive returns |
+| Home Goods | 12-20 weeks | Infrequent replenishment |
+| High-Ticket ($500+) | Up to 12 months | Expected — longer consideration cycle |
+
+**Why payback matters more than LTV:CAC for most DTC brands:** A 5:1 LTV:CAC with 24-month payback is cash-negative for 2 years. A 2.5:1 LTV:CAC with 3-month payback is more profitable in practice. DTC margins (20-30%) are much thinner than SaaS (60-90%), so cash timing determines survival more than lifetime projections.
+
+**LTV:CAC Ratio:**
+
+Formula: `LTV:CAC = (AOV × Purchase Frequency/Year × Customer Lifespan Years × Gross Margin %) / Fully Loaded CAC`
+
+| LTV:CAC | Rating | Notes |
+|---|---|---|
+| Below 2:1 | Unsustainable | Losing money on customer acquisition |
+| 2-3:1 | Marginal | Viable only with high volume or improving retention |
+| 3-4:1 | Healthy | Standard benchmark for profitable DTC |
+| 4-5:1 | Strong | Efficient growth — can afford to invest in brand |
+| 5:1+ | Excellent | Either very efficient or under-investing in growth |
+
+Always pair LTV:CAC with payback period. Either metric alone is misleading. Use cohort-based LTV (customers acquired in same month, tracked over 12-18 months) — blended LTV hides retention decay in older cohorts.
+
+**Repeat Purchase Rate benchmarks:**
+
+| Vertical | 12-Month RPR | Notes |
+|---|---|---|
+| Consumables (supplements, food, pet) | 35-45% | Natural replenishment |
+| Beauty/Skincare | 30-40% | Usage frequency |
+| Apparel/Fashion | 15-17% | Seasonal, style-driven |
+| Home Goods | 18-25% | Infrequent but steady |
+| Subscription models | 40-55% | Built-in recurring billing |
+
+Aggregate DTC average: ~18.8% (12-month window). 50.3% of repeat customers repurchase within 30 days. Each 5-point increase in RPR can increase LTV by 15-25%.
+
+**Metrics by business stage:**
+
+| Stage | Primary Metrics | Key Threshold |
+|---|---|---|
+| Launch (<$500K) | CM per order, blended CAC, AOV | First-purchase profitability is rare — target 60% revenue from returning customers |
+| Growth ($500K-$5M) | CAC payback, channel-level CM3, MER, ncROAS | Paid CAC shouldn't exceed blended CAC by more than 25-35% |
+| Mature ($5M+) | LTV:CAC, cohort profitability, retention rate | 3:1 LTV:CAC at scale, path to 5:1+ with investment |
+
+**Revenue growing but margin shrinking — diagnosis:**
+1. Channel mix shifting toward higher-CAC channels (check channel-level CM3)
+2. CAC payback extending (acquisition becoming less efficient month-over-month)
+3. Return rates increasing (quality or expectation mismatch)
+4. Discount dependency rising (track revenue split by discount tier: full price vs 10% vs 20%+ off)
+
+**Blended CPA rising despite stable channel CPA — diagnosis:**
+1. Budget allocation shifting toward higher-cost channels
+2. Repeat customer costs rising (loyalty spend, higher email/SMS frequency)
+3. New customer quality declining (worse retention or higher return rates in newer cohorts)
+
+**Profitability analysis tools:**
+- **Shopify native:** COGS Report (requires cost-per-item entry), Profit Report, Product Profitability Report
+- **Lifetimely:** Deep P&L statements, LTV by cohort, discount code profitability, staff/shipping/ad spend allocation
+- **Polar Analytics:** Contribution margin, LTV by cohort, COGS tracking, inventory analytics
+- **Triple Whale:** Channel-specific ROAS attribution, Creative Cockpit — less strong on advanced cost allocation
+- **If no tool:** Build manual CM3 model from Shopify exports + ad platform spend data
+
 ## Sources
 
 - Triple Whale 2025 Benchmarks Report (35k brands): https://www.triplewhale.com/benchmarks

@@ -1,6 +1,6 @@
 # Measurement & Attribution
 
-Last updated: 2026-04-09. Sources: Measured Inc (triangulation framework), Triple Whale (GeoLift, unified measurement), Northbeam (Clicks + Views model, Oct 2025), Common Thread Collective (incrementality studies), Stella (225 geo-tests, 2024-2025), Foxwell Digital (2026 State of Agencies), Fospha, Sellforte, Pilothouse, Jon Loomer Digital, DataSlayer, SearchEngineLand.
+Last updated: 2026-04-09. Sources: Measured Inc (triangulation framework), Triple Whale (GeoLift, unified measurement), Northbeam (Clicks + Views model, Oct 2025), Common Thread Collective (incrementality studies), Stella (225 geo-tests, 2024-2025), Foxwell Digital (2026 State of Agencies), Fospha, Sellforte, Pilothouse, Jon Loomer Digital, DataSlayer, SearchEngineLand, Meta Business Help (EMQ), Meta Developers (CAPI deduplication), Google Ads Help (Consent Mode v2), Conversios (Enhanced Conversions), Analytics Mania (GA4 cross-domain, duplicate events), NewMetrics (Shopify vs GA4), Digital Position (Checkout Extensibility), CustomerLabs (Safari ITP), Elevar (post-purchase tracking), Upstack Data (Meta attribution pitfalls).
 
 ## Core Methodology (Evergreen)
 
@@ -140,6 +140,129 @@ Browser-only tracking (Meta Pixel alone) misses 30-40% of conversions due to iOS
 
 **January 2026 Shopify change:** Auto-upgrade broke some CAPI configurations. If Meta ROAS dropped suddenly in Jan 2026, check Data Sharing setting — it may have reverted to "Optimized" from "Always On."
 
+### Tracking Validation (Run Before Any Performance Analysis)
+
+Every diagnosis downstream is wrong if the input data is wrong. Before analyzing campaign performance, verify that tracking infrastructure is actually working. This section provides a systematic pre-audit checklist.
+
+**Principle:** Shopify orders are the source of truth. Platform-reported conversions are claims that need validation against Shopify before trusting any performance data.
+
+#### Step 1: Platform Setup Verification
+
+**Meta CAPI + Pixel:**
+1. Open Events Manager → Data Sources → your Pixel → Event Quality tab
+2. Check Event Match Quality (EMQ) for Purchase event: target **8+/10** (acceptable minimum 6+, but underperforms)
+3. Verify deduplication: Test Events tab → place test order → confirm Purchase appears once (not twice) with Source = Server
+4. Check event_id parameter exists on both Pixel and CAPI events (missing event_id causes 80% of deduplication failures)
+5. Verify fbp (browser cookie) and fbc (click ID) parameters are passing to CAPI
+6. Common misconfigs: event name case sensitivity ("purchase" vs "Purchase" won't deduplicate), mismatched event_ids between Pixel and CAPI, missing hashed customer data parameters
+
+**Google Ads:**
+1. Verify Enhanced Conversions enabled: Google Ads → Settings → Conversion Tracking
+2. Check Consent Mode v2 status (mandatory for EEA/UK traffic since March 2024, active enforcement July 2025)
+3. Confirm conversion modeling is active: requires 700+ ad clicks over 7 days per country
+4. Four consent signals must be configured: analytics_storage, ad_storage, ad_user_data, ad_personalization
+5. Enhanced Conversions can recover 30-50% of lost conversions; combined with modeling, 70%+ recovery possible
+6. Common misconfigs: Consent Mode incomplete, Enhanced Conversions not hashing correctly, "Wait for Tags" not enabled on link clicks (causes race conditions)
+
+**GA4:**
+1. Verify measurement ID (G-XXXXXX) is consistent across all domains including checkout
+2. Check cross-domain tracking: Admin → Data Streams → Configure Tag Settings → verify all domains listed
+3. Test cross-domain: click a cross-domain link, check URL contains `_gl=1*xxxxx*` parameter
+4. Verify `_ga` cookie value matches across domains
+5. Check GA4 Realtime for page_view events firing on all pages
+6. Common misconfigs: different measurement IDs on different domains, GA4 hardcoded AND running in GTM (duplicates all events), cross-domain list missing checkout subdomain, _gl parameter stripped in redirect chains
+
+#### Step 2: Purchase Count Reconciliation
+
+Pull purchase counts from all sources for the same 7-day period and compare:
+
+| Source | Role | Expected Variance from Shopify |
+|---|---|---|
+| Shopify Orders | Source of truth | — |
+| GA4 Transactions | Behavioral tracking | ±10-15% (under-counts due to ad blockers, consent) |
+| Meta Conversions (Purchase) | Platform attribution | ±15-20% (modeled conversions inflate or deflate) |
+| Google Ads Conversions | Platform attribution | ±10-15% (conversion modeling fills gaps) |
+
+**Variance thresholds:**
+- **Within ±15%:** Normal — platforms measure differently by design
+- **15-30% gap:** Warrants investigation but may be explainable (consent mode, ad blockers, attribution windows)
+- **>30% gap from Shopify:** Tracking problem — stop analysis and fix tracking first
+
+**Common over-counting causes:** duplicate Pixel + CAPI fires without deduplication, same GA4 ID loaded twice (hardcoded + GTM), page reloads on thank-you page, upsell apps firing separate purchase events for same order
+
+**Common under-counting causes:** Consent Mode blocking (ad_user_data='denied'), ad blockers (block 15-30% of conversion data), redirect chain breakage losing _gl parameter, iOS/Safari ITP limiting attribution to 7-day window, third-party checkout (PayPal, Klarna) redirecting away before attribution fires
+
+#### Step 3: Duplicate Event Detection
+
+**How to test for duplicates:**
+1. **Meta:** Events Manager → Test Events → place test order with shared event_id → verify Purchase counted once, not twice
+2. **GA4:** Admin → DebugView → make test purchase → filter by event_name = "purchase" → should fire exactly once per transaction
+3. **Google:** Tag Assistant → perform test purchase → check "Tags Fired" section → verify same tag doesn't fire multiple times
+
+**Deduplication architecture:**
+- Meta: Generate unique event_id per purchase (order_id or UUID), send same event_id to both Pixel and CAPI. Meta matches on event_name + event_id + arrival time.
+- GA4: Add transaction_id parameter to purchase event using Shopify order_id. For post-purchase upsells, append "-upsell" to prevent ID collision.
+- Generate event_id in checkout before payment (not after) to ensure both client and server have it.
+
+#### Step 4: Known Tracking Failure Modes
+
+**Shopify Checkout Extensibility (deadline August 28, 2025):**
+- Shopify discontinued checkout.liquid customizations and script tags on Thank You / Order Status pages
+- New sandbox environment blocks most third-party tracking scripts in checkout
+- Fix: Migrate to Shopify Custom Pixels or Customer Events API before deadline
+- Post-purchase upsell apps may only track initial purchase value — verify upsell revenue is captured
+
+**iOS/Safari ITP (inherent limitation, not misconfiguration):**
+- JavaScript-set first-party cookies: 7-day max duration
+- Link-decorated traffic (UTM parameters): 24-hour attribution window only
+- Affects ~25-30% of US traffic, 60%+ of EU traffic on Safari
+- June 2025: iOS 26 introduced Expanded Link Tracking Protection
+- Mitigation: server-side tracking, first-party data collection, platform conversion modeling. Document ITP impact in reports — it's a known gap, not a tracking failure.
+
+**Tag Manager Race Conditions:**
+- Tags fire but page navigates away before tracking completes (under-counts conversions)
+- Fix: Enable "Wait for Tags" on all link click and form submission triggers in GTM
+- Use Initialization trigger for config tags → event tags fire after config is loaded
+- Verify firing order in GTM Preview: config tags first, then event tags
+
+**Third-Party App Interference:**
+- Upsell apps (Rebuy, AOV.ai), survey apps, and checkout customization apps may inject their own tracking
+- If you manually installed tracking AND an app also installed tracking = double-counted events
+- Audit all installed Shopify apps → identify which inject tracking → disable duplicate tracking in app settings
+- Use order-level metafields to preserve attribution data through post-purchase flows
+
+**Ad Blocker Impact:**
+- 15-30% of conversion data blocked before reaching platforms (Meta Pixel heavily blocklisted)
+- Server-side tracking recovers ~34% more conversions vs. pixel-only in high-blocker audiences
+- Plan for 15-30% inherent data loss; document in reports as known gap
+
+#### Step 5: Tracking Health Monitoring
+
+**Weekly health check (run every Monday before analyzing performance):**
+
+| Metric | Target | Red Flag |
+|---|---|---|
+| GA4 Transactions vs. Shopify Orders | Within ±15% | >15% variance |
+| Meta Conversions vs. Shopify Orders | Within ±20% | >30% variance |
+| Google Ads Conversions vs. Shopify Orders | Within ±15% | >25% variance |
+| Meta Event Match Quality | 8+/10 | Below 6/10 |
+| Google Conversion Modeling Status | Active | "Insufficient data" |
+
+**Decision tree when conversions drop:**
+
+Conversions dropped → Did traffic also drop?
+- **Yes:** Real business problem (not tracking). Investigate UX, pricing, competition.
+- **No (traffic flat):** Did ALL platforms drop together?
+  - **Yes (all dropped):** Systemic tracking failure. Check: GTM container changes, app installations, domain config, Shopify updates.
+  - **No (only one platform):** Platform-specific issue. Meta → check EMQ. GA4 → check cross-domain setup. Google → check conversion tag + Consent Mode.
+
+**Red flags that indicate tracking broke (not performance changed):**
+- Sudden conversion drop (>20%) with stable sessions/users
+- Direct traffic spiking suddenly (attribution broken — UTM parameters or _gl parameter lost)
+- Meta EMQ dropping from 8+ to below 6 (data quality degrading)
+- Phantom events in Meta Events Manager (conversions with no corresponding Shopify orders)
+- Platform conversions diverging from Shopify in opposite directions (one over-counting, another under-counting)
+
 ---
 
 ## Diagnostic Signals
@@ -165,3 +288,16 @@ Browser-only tracking (Meta Pixel alone) misses 30-40% of conversions due to iOS
 - Jon Loomer Meta Attribution 2026: https://www.jonloomer.com/meta-ads-attribution-2026/
 - Sellforte MMM for Ecommerce: https://sellforte.com/blog/mmm-for-ecommerce-brands/
 - Meta Robyn: https://github.com/facebookexperimental/Robyn
+- Meta Event Match Quality: https://www.facebook.com/business/help/765081237991954
+- Meta CAPI Deduplication: https://developers.facebook.com/docs/marketing-api/conversions-api/deduplicate-pixel-and-server-events/
+- Google Consent Mode v2 Modeling: https://support.google.com/google-ads/answer/10548233
+- Google Enhanced Conversions 2025: https://www.conversios.io/blog/google-ads-enhanced-conversions-2025-guide/
+- GA4 Cross-Domain Tracking: https://support.google.com/analytics/answer/10071811
+- Shopify vs GA4 Discrepancies: https://newmetrics.io/knowledge-base/ga4-vs-shopify/
+- Shopify Checkout Extensibility Deadline: https://www.digitalposition.com/resources/blog/ppc/shopify-checkout-extensibility-deadline-august-28-2025-is-coming-heres-how-to-not-screw-it-up/
+- Safari ITP Impact: https://www.customerlabs.com/blog/understanding-safari-intelligent-tracking-prevention-apple-itp-impact/
+- GA4 Duplicate Events: https://www.analyticsmania.com/post/duplicate-events-in-google-analytics-4-and-how-to-fix-them/
+- Server-Side Tracking vs Ad Blockers: https://www.conversios.io/blog/bypass-adblock-with-server-side-tracking/
+- GTM Race Conditions: https://trevorfox.com/2015/01/avoiding-race-conditions-with-gtm-events/
+- Shopify Post-Purchase Upsell Tracking: https://getelevar.com/shopify/configure-post-purchase-upsell-conversion-tracking/
+- Meta Attribution Pitfalls Shopify: https://www.upstackdata.com/blog/common-meta-attribution-pitfalls-and-event-duplication-for-shopify-merchants
