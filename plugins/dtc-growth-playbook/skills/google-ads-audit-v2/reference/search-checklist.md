@@ -1,6 +1,6 @@
 # Search Campaign Audit Checklist
 
-Reference for the google-ads-v2 audit skill. Systematic checklist for Search campaign health assessment, covering Quality Score, keywords, match types, ad copy, landing pages, bid strategy, and conversion tracking.
+Reference for the google-ads-audit-v2 audit skill. Systematic checklist for Search campaign health assessment, covering Quality Score, keywords, match types, ad copy, landing pages, bid strategy, and conversion tracking.
 
 ---
 

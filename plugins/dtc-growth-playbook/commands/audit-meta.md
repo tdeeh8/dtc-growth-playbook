@@ -18,9 +18,9 @@ Opens Meta Ads Manager in the browser, customizes columns for real metrics, extr
 
 ## Instructions
 
-1. Read the full skill file: `.claude/skills/meta-ads-v2/SKILL.md`
+1. Read the full skill file: `.claude/skills/meta-ads-audit-v2/SKILL.md`
 2. Follow the skill instructions exactly — it covers playbook loading, reference file loading, manifest checking, all 9 audit phases, and the evidence JSON schema.
-3. Read all reference files in `.claude/skills/meta-ads-v2/reference/` before opening the browser.
+3. Read all reference files in `.claude/skills/meta-ads-audit-v2/reference/` before opening the browser.
 
 ## Quick Reference: Audit Phases
 

@@ -1,6 +1,6 @@
 # Conversion Tracking Audit Checklist
 
-Reference for the google-ads-v2 audit skill. Systematic checklist for Google Ads conversion tracking health assessment. Draws heavily from `protocols/playbook/measurement.md` (Tracking Validation section).
+Reference for the google-ads-audit-v2 audit skill. Systematic checklist for Google Ads conversion tracking health assessment. Draws heavily from `protocols/playbook/measurement.md` (Tracking Validation section).
 
 **Principle:** Every diagnosis downstream is wrong if the input data is wrong. This checklist runs BEFORE performance analysis.
 

@@ -1,6 +1,6 @@
 # Google Ads UI Navigation Patterns
 
-Reference for the google-ads-v2 audit skill. Contains browser automation patterns, column customization steps, report extraction patterns, date range setting, and known UI gotchas for Google Ads.
+Reference for the google-ads-audit-v2 audit skill. Contains browser automation patterns, column customization steps, report extraction patterns, date range setting, and known UI gotchas for Google Ads.
 
 ---
 

@@ -16,7 +16,7 @@ This skill activates when the user wants to:
 3. **Figure out what to run next** (reads manifest, suggests next platform skill)
 
 This skill does NOT activate for:
-- Running a specific platform audit (those are separate skills: google-ads-v2, meta-ads-v2, etc.)
+- Running a specific platform audit (those are separate skills: google-ads-audit-v2, meta-ads-audit-v2, etc.)
 - Generating the final report (that's the audit-synthesizer)
 - Quick one-off questions about a client's account
 
@@ -189,7 +189,7 @@ The synthesizer loads cross-channel chunks (`channel-allocation.md`, `measuremen
 ## Error Handling
 
 **User says "audit" but means a single platform:**
-- If they say "audit their Google Ads", that's google-ads-v2, not this skill
+- If they say "audit their Google Ads", that's google-ads-audit-v2, not this skill
 - If they say "full audit" or "audit this client" or "start an audit", that's this skill
 
 **Manifest is corrupted or missing fields:**

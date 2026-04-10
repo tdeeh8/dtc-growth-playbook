@@ -1,6 +1,6 @@
 # Creative Audit Checklist
 
-Reference for the meta-ads-v2 audit skill. Systematic checklist for Meta creative performance assessment, fatigue detection, and diversity analysis. Draws from `protocols/playbook/andromeda.md` (canonical source for creative fatigue and Entity ID clustering) and `protocols/playbook/benchmarks.md` (creative metric thresholds).
+Reference for the meta-ads-audit-v2 audit skill. Systematic checklist for Meta creative performance assessment, fatigue detection, and diversity analysis. Draws from `protocols/playbook/andromeda.md` (canonical source for creative fatigue and Entity ID clustering) and `protocols/playbook/benchmarks.md` (creative metric thresholds).
 
 **Principle:** Creative IS targeting in the Andromeda era. Poor creative diversity = narrow delivery, high frequency, and wasted spend. The creative audit is often the highest-leverage finding in a Meta audit.
 

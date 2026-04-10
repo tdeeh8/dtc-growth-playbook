@@ -1,6 +1,6 @@
 # PMax Campaign Audit Checklist
 
-Reference for the google-ads-v2 audit skill. Systematic checklist for Performance Max campaign assessment, including asset group quality, search term performance, budget health, audience signals, and diagnostics.
+Reference for the google-ads-audit-v2 audit skill. Systematic checklist for Performance Max campaign assessment, including asset group quality, search term performance, budget health, audience signals, and diagnostics.
 
 ---
 

@@ -1,6 +1,6 @@
 # Meta Ads Manager UI Navigation Patterns
 
-Reference for the meta-ads-v2 audit skill. Contains browser automation patterns, column customization steps, breakdown extraction, date range setting, and custom report building for Meta Ads Manager.
+Reference for the meta-ads-audit-v2 audit skill. Contains browser automation patterns, column customization steps, breakdown extraction, date range setting, and custom report building for Meta Ads Manager.
 
 ---
 
