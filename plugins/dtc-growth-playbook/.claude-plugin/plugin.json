@@ -1,7 +1,7 @@
 {
   "name": "dtc-growth-playbook",
-  "version": "2.4.0",
-  "description": "DTC/eCommerce growth toolkit — marketing science playbook (Andromeda, TOF framework, creative testing, benchmarks), client growth audit, CRO diagnostic audit, SEO audit, and human voice protocol. Auto-loads relevant knowledge during audits and strategy work.",
+  "version": "3.0.0",
+  "description": "DTC/eCommerce growth toolkit — modular audit system v2 (independent platform audits with structured evidence handoff + cross-channel synthesis), marketing science playbook (Andromeda, TOF framework, creative testing, benchmarks), CRO diagnostic, SEO audit, and human voice protocol.",
   "author": {
     "name": "Tanner Hill"
   },
@@ -10,6 +10,8 @@
     "ecommerce",
     "marketing",
     "meta-ads",
+    "google-ads",
+    "amazon-ads",
     "andromeda",
     "playbook",
     "audit",
@@ -19,6 +21,11 @@
     "seo",
     "human-voice",
     "conversion-rate",
-    "humanize"
+    "humanize",
+    "modular-audit",
+    "ga4",
+    "klaviyo",
+    "shopify",
+    "bigcommerce"
   ]
 }
