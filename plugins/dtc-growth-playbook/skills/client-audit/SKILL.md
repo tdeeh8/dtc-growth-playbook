@@ -21,6 +21,7 @@ Read `protocols/playbook/index.md` first, then load the client-audit-relevant ch
 
 **Conditional by platforms being audited:**
 - **If Meta is being audited:** also andromeda.md, scaling-frequency.md
+- **If Google is being audited:** also google-ads.md
 - **If Klaviyo is being audited:** also email-sms.md, list-building.md
 
 Use playbook benchmarks when evaluating campaign performance, channel health, and forming recommendations. Cite the playbook when making diagnoses (e.g., "Per benchmarks, blended ROAS below 2.0x indicates channel reallocation is needed...").
@@ -143,6 +144,9 @@ Structure it like this:
 ## Source Inventory
 (filled during Phase 1)
 
+## Tracking Health
+(filled during Phase 1b — purchase count reconciliation, EMQ, conversion tracking status)
+
 ## Website Findings
 (filled during Phase 2)
 
@@ -201,6 +205,20 @@ Build a **source inventory** in your working notes documenting:
 If a critical platform is inaccessible, tell the user immediately and ask if they can grant access or provide exports instead.
 
 **Save the source inventory to your working notes file before proceeding to Phase 2.**
+
+### Phase 1b: Tracking Validation (if ad platforms are being audited)
+
+**Every diagnosis downstream is wrong if the input data is wrong.** Before analyzing performance data, run the tracking validation checklist from measurement.md (the "Tracking Validation" section). This is a pre-audit gate — not optional.
+
+At minimum, check:
+1. **Purchase count reconciliation** — Compare Shopify orders vs. GA4 transactions vs. Meta conversions vs. Google Ads conversions for the same period. If any platform is >30% off from Shopify, flag it as a tracking problem before proceeding.
+2. **Meta CAPI / Event Match Quality** — If Meta Events Manager is accessible, check EMQ score. Below 6/10 = data quality issue that will distort every Meta metric in the audit.
+3. **Google conversion tracking status** — If Google Ads is accessible, check whether Enhanced Conversions and Consent Mode v2 are configured (especially for clients with EU traffic).
+4. **Cross-platform contradiction check** — If Meta claims 58 purchases, Google claims 71, but Shopify shows 42 real orders, note this up front. Don't discover it halfway through the audit.
+
+If tracking is broken, surface it as the #1 finding in the report. A client spending money optimizing campaigns with broken tracking is wasting that money. The tracking fix comes before any other recommendation.
+
+Record tracking validation findings in your working notes under a `## Tracking Health` section before proceeding.
 
 ### Phase 2: Evidence Collection
 
@@ -287,6 +305,16 @@ Start from the patterns you identified in Phase 3. Ask yourself:
 
 Every claim in the diagnosis must cite the supporting evidence. If you can't point to a specific data point, it's a hypothesis, not a finding — and it needs to be labeled as such.
 
+**Profitability check (mandatory for every audit):** Before finalizing the diagnosis, run the profitability layer from benchmarks.md:
+- Calculate Break-even CPA and Target CPA from AOV × margin
+- Calculate Minimum ROAS and Target ROAS from margin %
+- If COGS is available: calculate CM1 → CM2 → CM3. If not available, use the COGS estimate table by vertical from benchmarks.md and label as ASSUMPTION
+- Calculate CAC Payback Period if repeat purchase data is visible
+- Run the "Good ROAS but bad profit" diagnostic checklist if ROAS looks healthy but the client is asking why profit is flat
+- Compare observed metrics against the contribution margin benchmarks by vertical
+
+This step prevents the most common audit mistake: recommending "scale the channel" when the unit economics don't support it.
+
 ### Phase 5: Opportunity Mapping
 
 Identify opportunities that are directly supported by the evidence. Don't force opportunities into pre-defined categories — let them emerge from the diagnosis.
@@ -368,6 +396,47 @@ After generating the report, read it back and verify it against your working not
 - [ ] Verify the executive summary accurately reflects the diagnosis (not a different or overstated narrative)
 
 If you find errors, fix them before delivering the report. If the errors are substantial, regenerate the report rather than patching.
+
+### Phase 8b: Live Platform Spot-Check
+
+After verifying the report against your working notes, go back to the live platform tabs and visually confirm a sample of key data points against what the report states. This catches stale data, copy errors, and any numbers that drifted between the initial pull and report generation.
+
+**Why this step exists:** Working notes can have transcription errors from the initial pull. The report generation script can introduce rounding differences. And if significant time passed between data collection and report writing, numbers on live dashboards may have updated (especially "last 30 days" rolling windows). A quick live spot-check is the final safeguard.
+
+**How to execute:**
+
+1. **Select 5-8 high-stakes data points** from across the report. Prioritize:
+   - The headline metric the client cares most about (e.g., total revenue, total orders)
+   - At least one number from each platform audited
+   - Any number that drives a key recommendation (e.g., the CPA that justifies pausing a campaign)
+   - Any number that appears in the Executive Summary
+
+2. **Navigate to each platform tab** (they should still be open from the audit) and take a screenshot or use `read_page` to confirm the number is still visible and matches.
+
+3. **Build a spot-check table** comparing report values to live values:
+
+   | Data Point | Report Says | Live Platform Shows | Match? |
+   |---|---|---|---|
+   | Total Sales | $X | $X (Shopify) | ✅ / ❌ |
+   | Meta Spend | $X | $X (Meta Ads) | ✅ / ❌ |
+   | Google Ads Conversions | X | X (Google Ads) | ✅ / ❌ |
+
+4. **If any number doesn't match:**
+   - Determine which is correct (live platform is the source of truth)
+   - Update the working notes AND the report
+   - If the mismatch changes a recommendation, flag it to the user
+   - Note: small differences (<1%) in rolling-window metrics are expected and acceptable — flag only material discrepancies
+
+5. **Show the spot-check table to the user** when delivering the report. This builds confidence that the data was verified end-to-end and gives the client a quick proof of accuracy.
+
+**Minimum spot-check coverage:**
+- At least 1 revenue/sales number (from store backend)
+- At least 1 spend number (from an ad platform)
+- At least 1 conversion/purchase count (from an ad platform)
+- At least 1 rate metric (ROAS, CPA, or conversion rate)
+- Any warning/alert status mentioned in the report (e.g., "enhanced conversions not recording")
+
+This step typically takes 2-3 minutes and prevents the most embarrassing class of audit errors: reporting a number that the client can immediately see is wrong by opening the same dashboard.
 
 ## Anti-Hallucination Checklist
 
