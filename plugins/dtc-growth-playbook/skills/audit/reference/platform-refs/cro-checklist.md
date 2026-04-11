@@ -142,3 +142,78 @@ Use this checklist during the site-audit-v2 walkthrough. Score each element as *
 | Accessibility basics | Can all users navigate? | Sufficient contrast, alt text on images, keyboard navigable | Low contrast text, missing alt text, elements only accessible via mouse |
 | SSL/Security | Is the site secure? | Valid SSL certificate, no mixed content warnings | SSL issues, browser security warnings |
 | Cookie consent | GDPR/CCPA compliance | Unobtrusive banner with clear opt-in/out | Missing, or massive overlay blocking the page |
+
+---
+
+## Deep Audit Checks (Opt-In)
+
+> **Only use this section when the site audit is running in deep/CRO mode.** See `site.md > Activation Rules` for when deep checks apply.
+
+### Page Speed & Core Web Vitals
+
+| Element | What to Check | Strong | Weak |
+|---------|--------------|--------|------|
+| LCP (Largest Contentful Paint) | Main content loads fast | <2.5s on mobile and desktop | >4s on either device type |
+| FID / INP (Interaction to Next Paint) | Page responds quickly to input | <200ms | >500ms |
+| CLS (Cumulative Layout Shift) | Page doesn't jump around during load | <0.1 | >0.25 |
+| Image optimization | Are images properly formatted and sized? | WebP/AVIF, lazy-loaded, responsive srcset | Legacy PNG/JPEG, all loaded eagerly, single size |
+| Render-blocking resources | Do scripts/styles block initial render? | Deferred JS, critical CSS inlined | Large blocking JS bundles, unoptimized CSS |
+| Mobile vs desktop gap | Speed difference between devices | <20% gap in LCP | >50% gap — mobile significantly slower |
+| Hero image weight | Is the above-fold hero image lean? | <200KB, optimized format | >500KB, uncompressed |
+
+### Form Friction
+
+| Element | What to Check | Strong | Weak |
+|---------|--------------|--------|------|
+| Required field count | How many fields must the user complete? | Minimal (name, email, address, payment only) | 10+ fields including optional ones marked required |
+| Inline validation | Are errors shown as the user types? | Real-time validation with specific error messages | Errors only on form submit, generic messages |
+| Error messaging | Are error messages helpful? | "Enter a valid email address" with field highlight | "Invalid input" with no indication of which field |
+| Autofill support | Do fields use correct autocomplete attributes? | All standard fields support browser autofill | Autofill doesn't work, custom field names break it |
+| Mobile keyboard types | Do inputs trigger the right keyboard? | Email → email keyboard, phone → numpad, zip → numeric | All fields trigger standard text keyboard |
+| Multi-step UX | For multi-step forms, is progress clear? | Progress bar, step count, ability to go back | No progress indicator, can't review previous steps |
+| Required vs optional | Are optional fields clearly marked? | Optional fields labeled "(optional)" | Required fields marked with * but no legend |
+
+### Trust Signals (Deep)
+
+| Element | What to Check | Strong | Weak |
+|---------|--------------|--------|------|
+| Review volume | Enough reviews to be credible? | 50+ reviews on key products, mix of ratings | <10 reviews, or only 5-star reviews |
+| Photo/video reviews | Are visual reviews featured? | Photo reviews in gallery, video testimonials | Text-only reviews |
+| Negative review handling | Are critical reviews addressed? | Owner responses to negative reviews, professional tone | Negative reviews ignored or only positive reviews shown |
+| Money-back guarantee | Is the guarantee prominent? | Visible on PDP near CTA, specific terms (30-day, no-questions) | Buried in footer, vague terms |
+| Press / "As seen in" | Third-party credibility signals | Logos on homepage, linked to actual coverage | No press mentions, or fake-looking logos |
+| Customer count claims | Social proof via numbers | "Trusted by 50,000+ customers" with credible context | No customer count, or unbelievable claims |
+| UGC integration | User-generated content on site | Instagram feed, customer photos on PDPs, hashtag gallery | No UGC presence |
+| Real-time social proof | Activity indicators | Recent purchase notifications (if authentic), "X viewing" | Fake urgency or no activity indicators |
+
+### Copy Quality
+
+| Element | What to Check | Strong | Weak |
+|---------|--------------|--------|------|
+| Headline clarity | Is the homepage headline specific and benefit-driven? | "Premium leather bags built to last a lifetime" | "Welcome to our store" or clever-but-unclear pun |
+| Value prop visibility | Is the USP above fold on key pages? | Clear, specific, differentiated from competitors | Generic claims, buried below fold, or missing |
+| CTA specificity | Do CTAs describe the action and benefit? | "Get 20% Off Your First Order", "Build Your Bundle" | "Submit", "Click Here", generic "Shop Now" on every page |
+| Benefit vs feature language | Do descriptions lead with benefits? | "Wake up pain-free" before "Memory foam, 12-inch" | Spec-sheet-only descriptions, no emotional connection |
+| Objection handling | Are common hesitations addressed? | FAQ section, "Why choose us", comparison tables | No objection handling — buyer must trust blindly |
+
+### Mobile UX (Deep)
+
+| Element | What to Check | Strong | Weak |
+|---------|--------------|--------|------|
+| Thumb-zone CTAs | Are primary actions in the natural thumb zone? | ATC, checkout, nav in bottom-center reach zone | Key actions at top of screen requiring hand repositioning |
+| Sticky ATC on PDP | Does the add-to-cart button follow the user? | Slim sticky bar appears on scroll, doesn't obscure content | No sticky ATC — must scroll back up to add to cart |
+| Hamburger menu depth | Can users reach any product quickly? | Any product reachable in ≤3 taps from menu | Deep nesting (4+ taps), confusing hierarchy |
+| Image loading on mobile | Are images optimized for cellular? | Compressed, placeholder/blur-up, fast swap-in | Full-size desktop images on mobile, slow loading |
+| Scroll-to-top | Can users return to top on long pages? | Floating "back to top" button on long pages | No scroll-to-top — must manually scroll |
+| Accordion UX | Do expandable sections work well on mobile? | Large tap targets (44px+), smooth animation, clear +/- indicators | Tiny tap targets, janky animation, unclear expand/collapse |
+
+### Post-Purchase Experience
+
+| Element | What to Check | Strong | Weak |
+|---------|--------------|--------|------|
+| Confirmation page upsell | Does the thank-you page maximize the moment? | Cross-sell offers, "Customers also bought" | Bare "Order confirmed" with no next action |
+| Referral program | Is word-of-mouth incentivized post-purchase? | "Give $10, get $10" or similar offer on confirmation page | No referral mechanism visible |
+| Account creation timing | Is account creation offered (not forced) post-purchase? | "Save your info for faster checkout next time?" after purchase | Forced account creation pre-purchase, or no offer at all |
+| Subscription/replenishment | For consumables, is auto-reorder offered? | Subscribe & save option on PDP or post-purchase prompt | No subscription option for products with clear reorder cycles |
+| Loyalty program | Is there a visible rewards program? | Points earned on purchase shown, benefits clear | No loyalty program, or hidden behind a footer link |
+| Social sharing | Can buyers share their purchase? | Share buttons on confirmation page, branded hashtag prompt | No sharing options post-purchase |

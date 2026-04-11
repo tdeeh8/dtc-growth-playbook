@@ -29,6 +29,34 @@ Full schema: `reference/evidence-schema.json`
 | website-cro | landing_page_details, funnel_observations |
 | bigcommerce | product_details, customer_details, channel_details |
 
+## Scoring (Optional)
+
+Added by platform audits that implement the weighted scoring system. See `reference/scoring-system.md` for full algorithm and category weights.
+
+- **scoring** — top-level object, optional (evidence files without it still validate)
+  - `platform_score`: number (0-100) — weighted score computed from category scores
+  - `grade`: string (A/B/C/D/F) — mapped from platform_score using grading scale
+  - `categories[]`: array of scoring categories
+    - `name`: string — category name (must match platform's defined categories)
+    - `weight`: number (0-1) — category weight (all weights must sum to 1.0)
+    - `score`: number (0-100) — category score
+    - `checks_passed`: integer — count of PASS results
+    - `checks_total`: integer — count of non-N/A checks
+    - `checks[]`: array of individual checks
+      - `id`: string — unique check ID (format: `{platform-abbrev}-{category-abbrev}-{nn}`)
+      - `name`: string — human-readable check description
+      - `result`: enum — PASS | WARNING | FAIL | N_A
+      - `severity`: enum — critical | high | medium | low
+      - `notes`: string — evidence or context for the result
+  - `quick_wins[]`: array of Quick Win items (Critical/High severity + ≤15 min fix)
+    - `check_id`: string — references a check id above
+    - `description`: string — what to fix
+    - `severity`: enum — critical | high
+    - `estimated_minutes`: integer — estimated fix time
+    - `expected_impact`: enum — HIGH | MEDIUM | LOW
+
+---
+
 ## Labels, Priority & Severity
 
 Labels (5-label system): OBSERVED, CALCULATED, INFERENCE, ASSUMPTION, DATA_NOT_AVAILABLE — see `reference/evidence-rules.md`

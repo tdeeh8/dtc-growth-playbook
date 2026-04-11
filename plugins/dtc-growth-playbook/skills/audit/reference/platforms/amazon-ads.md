@@ -20,7 +20,7 @@ You are a senior Amazon growth strategist conducting a rigorous, evidence-based 
 **Conditional playbook loading:**
 - AOV > $200 → also load `high-ticket.md`
 - AOV < $100 → also load `low-ticket.md`
-- Pill Pod audit → also load `Pill-Pod/CLAUDE.md` and `Pill-Pod/memory.md`
+- {Brand} audit → also load `{Brand}/context/brand-context.md` and `{Brand}/context/notes.md`
 
 ## Step 0: Gather Audit Inputs
 
@@ -33,7 +33,7 @@ Scan the conversation first. Extract everything already provided. Check the audi
 3. **Product margin estimate** — needed for break-even ACOS. Ask: "Roughly what percentage of your selling price is profit before ad spend? (e.g., sell for $15, all-in cost $7 = ~53%)"
 4. **Lookback period** — default: Year to Date
 5. **Known issues** — anything the seller suspects is wrong (offer "No special context" option)
-6. **Department routing** — Pill Pod or Disruptive client? (determines file save location)
+6. **Department routing** — {Brand} or Agency client? (determines file save location)
 
 Confirm inputs and begin Phase 1 immediately.
 
@@ -72,10 +72,15 @@ Create `{Account_Name}_amazon_audit_notes.md` at the start using the template fr
 - Brand Analytics / Ranking Data (Phase 2D)
 - TACoS by Product Line (Phase 2C/3)
 - Diagnosis (Phase 3)
-- Evidence JSON Validation (Phase 5)
-- Retrospective (Phase 6)
 
 **Hard rule: save findings after each platform section.** Do not move to the next data source until current findings are written to notes with OBSERVED labels.
+
+**Working notes are internal only.** They are NOT the deliverable. The deliverable is the evidence JSON (which feeds the synthesizer to produce the report). Working notes should contain raw data extraction, cross-checks, and diagnostic thinking — but NOT:
+- Retrospective sections about extraction methods (what worked/didn't)
+- Evidence JSON validation checklists (run those checks, but don't log them in notes)
+- "Parking Lot" or "Hypotheses to Test" sections (these become `open_questions` in evidence JSON)
+
+Keep working notes focused on data and diagnosis. Extraction method notes can go in `meta.auditor_notes` in the evidence JSON if needed for future reference.
 
 ---
 
@@ -205,7 +210,7 @@ Flag signals requiring investigation on other platforms:
 Build evidence JSON conforming to the schema in `evidence-schema-quick.md` (full schema: `audit-orchestrator/reference/evidence-schema.json`).
 
 **Filename:** `{Client}_amazon-ads_evidence.json`
-**Location:** Disruptive → `Disruptive-Advertising/reports/{Client-Name}/evidence/` | Pill Pod → `Pill-Pod/reports/evidence/`
+**Location:** {Agency} → `{Agency}/reports/{Client-Name}/evidence/` | {Brand} → `{Brand}/reports/evidence/`
 
 #### Amazon-Specific account_overview Metrics
 
@@ -253,19 +258,36 @@ Before saving the evidence JSON:
 - [ ] Featured Offer % flags for any ASIN below 50%
 - [ ] `raw_metrics` tables populated with extracted data
 - [ ] JSON is valid (no trailing commas, proper quoting)
+- [ ] `tracking_health.flags` correctly classified (see below)
 
-### Phase 6: Closeout & Retrospective
+#### Tracking Health Flag Classification
+
+When writing `tracking_health.flags` in the evidence JSON, classify each flag correctly. The synthesizer uses this classification to route flags to the right section of the report.
+
+**Actionable tracking issues** (these affect data quality — go in report Tracking Health section):
+- Featured Offer % below 50% on any selling ASIN
+- Conversion tracking discrepancies between Campaign Manager and Seller Central
+- Attribution window mismatches
+- Any issue that means the numbers in the report might be wrong
+
+**Extraction notes** (these are data collection artifacts — go in Methodology appendix):
+- Account defaulting to wrong entity (caught and corrected)
+- Column virtualization blocking keyword-level extraction
+- Date picker mismatches caught and corrected during extraction
+- ag-Grid API accessibility issues
+- DOM/fiber tree extraction method details
+
+**How to tag them:** Use severity levels to signal the distinction:
+- Actionable issues: `severity: "high"` or `severity: "medium"`
+- Extraction notes: `severity: "low"` AND include `"extraction_note": true` in the flag's evidence text (the synthesizer checks for this)
+
+### Phase 6: Closeout
 
 Follow standard closeout from `audit-lifecycle.md` (save JSON, update manifest, flag criticals, save notes).
 
-**Amazon-specific retrospective** (add to working notes):
-1. **Extraction methods that worked** — which data sources, which method (CSV, ag-Grid API, DOM, accessibility tree)
-2. **Extraction methods that failed** — what was tried, why it failed
-3. **New platform UI changes** — anything different from what nav-amazon.md describes
-4. **Data integrity surprises** — cross-check failures, unexpected metric labels
-5. **Time sinks** — where time was spent vs. value extracted
+**Extraction method notes:** If extraction approaches yielded useful learnings for future audits (e.g., a new ag-Grid technique, a Seller Central workaround), add them to `meta.auditor_notes` in the evidence JSON. Do NOT add a Retrospective section to the working notes — the evidence JSON's `meta.auditor_notes` field is the right place for this.
 
-**If new patterns discovered:** Flag for potential update to `reference/platform-refs/nav-amazon.md`.
+**If new platform UI patterns discovered:** Flag for potential update to `reference/platform-refs/nav-amazon.md`.
 
 ---
 
@@ -296,4 +318,4 @@ From `reference/playbook/benchmarks.md` — always load the full file for curren
 | Evidence JSON | `{dept}/reports/{Client-Name}/evidence/` or `{dept}/reports/evidence/` |
 | Manifest update | Same evidence directory |
 
-Where `{dept}` = `Disruptive-Advertising` for clients, `Pill-Pod` for Pill Pod.
+Where `{dept}` = `{Agency}` for clients, {Brand} for {Brand}.

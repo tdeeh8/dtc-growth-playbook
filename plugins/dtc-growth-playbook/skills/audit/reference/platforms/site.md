@@ -6,6 +6,27 @@ You are a senior CRO analyst performing a structured website audit using browser
 
 ---
 
+## Activation Rules
+
+This file contains two tiers of checks: **Basic** and **Deep**.
+
+**In Full Audit mode** (user said "full audit", "audit this client", etc.):
+- Run Phases 0–6 and Phase 10–11 ONLY (the basic CRO walkthrough).
+- Skip "## Deep CRO Checks (Opt-In)" entirely unless the user explicitly requests "CRO audit", "deep site audit", or "website deep dive".
+
+**In Channel Audit mode** (user said "audit their site", "CRO audit", "deep site audit", "website deep dive"):
+- Run ALL phases including the Deep CRO Checks section.
+
+**Quick reference — what triggers deep checks:**
+- "CRO audit" ✓
+- "deep site audit" ✓
+- "website deep dive" ✓
+- "audit their site" ✓ (channel audit = full depth)
+- "full audit" alone ✗ (basic checks only)
+- "full audit with CRO deep dive" ✓ (explicit opt-in)
+
+---
+
 ## Before Starting — Required Context Loading
 
 **Mandatory. Do not skip, even after compaction or session handoff.**
@@ -174,78 +195,70 @@ LANDING PAGES (screenshot if navigated):
 
 ---
 
-## Phase 7: Page Speed & Core Web Vitals
+## Deep CRO Checks (Opt-In)
 
-If PageSpeed Insights or similar accessible:
+> **Only run this section when activation rules above say to.** In a standard full audit, skip to Phase 10. Use `reference/platform-refs/cro-checklist.md > Deep Audit Checks` for detailed element-by-element scoring during these phases.
 
-CORE WEB VITALS:
-  → LCP: <2.5s good | 2.5-4s needs improvement | >4s poor
-  → FID/INP: <200ms good | 200-500ms needs improvement | >500ms poor
-  → CLS: <0.1 good | 0.1-0.25 needs improvement | >0.25 poor
-  → Mobile vs desktop speed gap significant?
-  → Render-blocking resources: large JS, unoptimized images?
+### Phase 7: Page Speed & Core Web Vitals
 
-If tools unavailable: note subjective speed observations + specific slow pages. Mark `DATA_NOT_AVAILABLE` with `attempted: "No PageSpeed Insights access"`.
+Core Web Vitals thresholds: LCP <2.5s good / >4s poor, FID/INP <200ms good / >500ms poor, CLS <0.1 good / >0.25 poor. Check mobile AND desktop. Also assess: image optimization (WebP/AVIF, lazy loading, srcset, hero weight <500KB), render-blocking resources. If no PageSpeed access, note subjective observations and mark `DATA_NOT_AVAILABLE`.
+
+### Phase 8: Form Friction Analysis
+
+Evaluate checkout and lead-capture forms: required field count (fewer = better), inline validation vs submit-only errors, error message specificity, autofill support (correct autocomplete attributes), mobile keyboard types (email → email keyboard, phone → numpad), multi-step progress indicators, required vs optional marking.
+
+### Phase 9a: Trust Signal Deep Dive
+
+Review/rating depth: platform used, visibility across pages, volume credibility (<10 = thin), photo/video reviews, negative review handling. Security: SSL messaging, money-back guarantee prominence, warranty visibility, payment badges near CTA. Social proof: customer count claims, press/"As seen in" logos, UGC integration, real-time activity indicators (if authentic).
+
+### Phase 9b: Copy Quality Assessment
+
+Headlines: clear, specific, benefit-driven vs vague? Value prop above fold on key pages? USP articulated? CTAs: specific ("Get 20% Off") vs generic ("Shop Now")? Consistency across site? Benefit vs feature language in descriptions? Objection handling on key pages (price, quality, shipping)?
+
+### Phase 9c: Mobile UX Deep Dive
+
+Beyond basic mobile check: thumb-zone CTA placement, sticky ATC on PDP (present, not obscuring), sticky header slim (<60px), hamburger menu depth (≤3 taps to any product), mobile image compression/blur-up, accordion tap targets (44px+), scroll-to-top on long pages.
+
+### Phase 9d: Post-Purchase Experience
+
+Observable from front-end: confirmation page upsells/cross-sells, referral program prompt, account creation (offered not forced), social sharing. Shipping/communication signals: delivery date shown, notification flow mentioned, subscription/replenishment for consumables, loyalty program enrollment nudge.
+
+### Phase 9e: Information Architecture
+
+Depth to purchase (benchmark: 3-4 clicks max), breadcrumbs, internal linking between related products/categories, search quality (autocomplete, typo handling), 404 page (helpful or dead end), site-wide banners (dismissible?).
 
 ---
 
-## Phase 8: Information Architecture & Navigation
-
-SITE STRUCTURE:
-  → Depth to purchase: clicks from homepage to checkout? (Benchmark: 3-4 max)
-  → Breadcrumbs: present and functional?
-  → Internal linking: pages link to related products/categories?
-  → Search quality: relevant results? Typo handling?
-  → 404 handling: try a broken URL — helpful or dead end?
-  → Site-wide banners: announcement bars? Dismissible?
-
----
-
-## Phase 9: Compile Evidence File
+## Phase 10: Compile Evidence File
 
 ### File details
 - **Filename:** `{Client}_website-cro_evidence.json`
-- **Location:** Client's evidence directory (per manifest or CLAUDE.md routing)
+- **Location:** Client's evidence directory (per manifest or workspace routing)
 - **Schema:** Must conform to evidence-schema-quick.md structure
 
 ### Site-audit-specific evidence mapping
 
-**`meta.platform`:** `"website-cro"`
+**`meta.platform`:** `"website-cro"` | **`meta.depth`:** `"basic"` or `"deep"`
 
-**`account_overview`:** Site-level metrics (labeled_metric format) — CVR, mobile vs desktop CVR gap, ATC rate, cart abandonment rate, AOV, page speed scores. Label each: OBSERVED, INFERENCE, ASSUMPTION, or DATA_NOT_AVAILABLE.
+**`account_overview`:** CVR, mobile vs desktop CVR gap, ATC rate, cart abandonment rate, AOV, page speed scores. Label each: OBSERVED / INFERENCE / ASSUMPTION / DATA_NOT_AVAILABLE.
 
-**`campaigns`:** N/A for website CRO — omit or empty array.
+**`campaigns`:** N/A — omit or empty array.
 
-**`tracking_health`:** Missing events, cookie consent issues, chat widget interference, conflicting analytics tools.
+**`tracking_health`:** Missing events, cookie consent issues, chat widget interference, conflicting analytics.
 
-**`findings`:** Each UX/conversion observation with: title, label (OBSERVED), evidence (specific description), source (URL/page — format: `"Screenshot: [page URL] > [section]"`), significance (why it matters + benchmark reference).
+**`findings`:** Each with: title, label (OBSERVED), evidence, source (`"Screenshot: [URL] > [section]"`), significance.
 
 **`anomalies`:** Broken functionality, contradictory messaging, prominently featured OOS products.
 
-**`diagnosis`:** `primary_constraint` (single biggest barrier) + `secondary_constraints` (ranked by impact).
+**`diagnosis`:** `primary_constraint` + `secondary_constraints` (ranked by impact).
 
-**`opportunities`:** Each cites evidence from findings. Priority: CRITICAL/HIGH/MEDIUM/LOW. Expected impact with benchmark ranges. Confidence: high/medium/low with reasoning.
+**`opportunities`:** Each cites findings. Priority: CRITICAL/HIGH/MEDIUM/LOW. Expected impact + confidence.
 
-**`cross_channel_signals`:** Examples:
-  → "Lack trust signals → check Meta retargeting ROAS" → `["meta-ads", "google-ads"]`
-  → "No BNPL for $250+ AOV → check cart abandonment stage" → `["ga4", "shopify"]`
-  → "Mobile degraded → check mobile vs desktop CVR" → `["ga4"]`
-  → "Landing pages don't match ads" → `["meta-ads", "google-ads"]`
-  → "Site slow → check paid traffic bounce rate" → `["ga4"]`
+**`cross_channel_signals`:** Flag site issues that need investigation on other platforms: trust signals → Meta/Google ROAS, no BNPL → cart abandonment in GA4/Shopify, mobile degraded → GA4 CVR, landing page mismatch → ad platforms, slow site → bounce rates.
 
-**`open_questions`:** What you couldn't determine from front-end audit (backend cart abandonment, CVR by source, heatmaps, A/B test history, page speed under load).
+**`open_questions`:** What you couldn't determine (backend cart abandonment, CVR by source, heatmaps, A/B test history).
 
-**`raw_metrics`:** Use `landing_page_details` and `funnel_observations`:
-```json
-{
-  "landing_page_details": [{
-    "page": "Homepage", "url": "https://...", "screenshot_taken": true,
-    "hero_score": "weak|ok|strong", "cta_clarity": "weak|ok|strong",
-    "trust_signals": "weak|ok|strong", "mobile_experience": "weak|ok|strong",
-    "issues_found": [], "strengths": []
-  }]
-}
-```
+**`raw_metrics`:** `landing_page_details` per page (hero_score, cta_clarity, trust_signals, mobile_experience — each weak|ok|strong, plus issues_found[] and strengths[]). In deep mode, also include `deep_cro_details` with page_speed, form_friction, trust_signal_coverage, copy_quality, and post_purchase sub-objects. Omit `deep_cro_details` entirely in basic mode.
 
 ### Before saving — apply shared evidence rules
 
@@ -257,18 +270,30 @@ Read `reference/evidence-rules.md` for labeling rules and anti-hallucination che
 
 ---
 
-## Phase 10: Closeout
+## Phase 11: Closeout
 
 Follow `reference/audit-lifecycle.md` → "After the Audit — Standard Closeout" for: saving evidence JSON, updating manifest, flagging critical issues, saving working notes.
 
 ---
 
+## Scoring Categories
+
+These weights are used by the scoring system to calculate an overall site health score.
+
+| Category | Weight | Covers |
+|---|---|---|
+| Homepage & Navigation | 15% | Value prop, hero, nav, search, site structure |
+| Collection Pages | 10% | Grid, filtering, sorting, product cards |
+| Product Pages | 20% | Images, pricing, description, reviews, trust, cross-sells |
+| Cart & Checkout | 25% | Cart UX, checkout flow, payment options, guest checkout |
+| Mobile Experience | 20% | Mobile UX, tap targets, sticky CTAs, mobile CVR gap |
+| Page Speed & Vitals | 5% | LCP, INP, CLS (only scored when deep checks run) |
+| Trust & Copy Quality | 5% | Trust signals, copy clarity, social proof (only scored when deep checks run) |
+
+Note: When deep checks are NOT run, Page Speed & Vitals and Trust & Copy Quality weights redistribute proportionally across the other categories.
+
+---
+
 ## Important Principles
 
-- **Browse first, judge second.** Complete the full walkthrough before forming your diagnosis. First impressions can be misleading.
-- **Screenshot everything.** The synthesizer and the AM need visual evidence, not just descriptions.
-- **Benchmark against the playbook.** Conversion rates, ATC rates, cart abandonment — compare to benchmarks.md thresholds and note where the client falls (Floor / Healthy / Strong).
-- **Think like a customer.** Would YOU buy from this site? Where would YOU abandon?
-- **Note what's working too.** The evidence file includes strengths, not just problems. This prevents the synthesizer from painting an unfairly negative picture.
-- **Mobile is not optional.** Over 60% of ecommerce traffic is mobile. A desktop-only audit misses the majority experience.
-- **Cross-channel signals are your handoff.** Flag anything that needs investigation on other platforms. The synthesizer will connect the dots.
+Browse first, judge second — complete the walkthrough before diagnosing. Screenshot everything (the synthesizer needs visual evidence). Benchmark against playbook thresholds (Floor / Healthy / Strong). Think like a customer — would you buy here? Note strengths, not just problems. Mobile is not optional (60%+ of ecommerce traffic). Cross-channel signals are your handoff to other platforms.

@@ -46,7 +46,7 @@ Use playbook benchmarks and frameworks when analyzing data and forming recommend
 
 ## Publishing Updates to GitHub
 
-The playbook is distributed as a Cowork plugin via a private GitHub repo: `github.com/tdeeh8/dtc-growth-playbook`
+The playbook is distributed as a Cowork plugin via a private GitHub repo: `github.com/{your-username}/dtc-growth-playbook`
 
 **When Tanner says "push the playbook to GitHub" or "update the plugin":**
 
@@ -57,7 +57,7 @@ PLUGIN_DIR="/Users/tannerhill/Library/Mobile Documents/com~apple~CloudDocs/Claud
 REPO_DIR="/tmp/dtc-growth-playbook"
 
 # Clone, copy updated files, commit, push
-git clone https://github.com/tdeeh8/dtc-growth-playbook.git $REPO_DIR
+git clone https://github.com/{your-username}/dtc-growth-playbook.git $REPO_DIR
 # Copy all 13 chunks from reference/playbook/ → $PLUGIN_DIR/skills/playbook-reference/references/
 # Copy SKILL.md, plugin.json, playbook.md, README.md if changed
 # cp -R $PLUGIN_DIR/. $REPO_DIR/
@@ -81,7 +81,7 @@ git clone https://github.com/tdeeh8/dtc-growth-playbook.git $REPO_DIR
 
 This playbook uses a learning loop tied to the 3-strike promotion rule:
 
-1. After audits or strategy sessions, note new findings in memory.md tagged [new] with the chunk name. Example: `[new] [benchmarks] Client X welcome flow at 52% open rate — above top performer range. (2026-04-08)`
+1. After audits or strategy sessions, note new findings in workspace notes tagged [new] with the chunk name. Example: `[new] [benchmarks] Client X welcome flow at 52% open rate — above top performer range. (2026-04-08)`
 2. Same pattern across 2+ clients: tag [confirmed x2]
 3. At 3 confirmations: update the relevant chunk with date and source
 4. If something contradicts existing playbook content: flag and update immediately
@@ -108,4 +108,4 @@ The consolidated audit skill at `skills/audit/SKILL.md` is the single entry poin
 
 ### Post-Audit Playbook Learning Step
 
-After completing any audit, evaluate: did any findings contradict or extend the playbook? If yes, note in the relevant department's memory.md tagged `[new]` with the chunk it relates to.
+After completing any audit, evaluate: did any findings contradict or extend the playbook? If yes, note in the relevant department's workspace notes tagged `[new]` with the chunk it relates to.

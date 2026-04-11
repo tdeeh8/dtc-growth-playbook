@@ -46,17 +46,21 @@ This skill runs AFTER one or more platform audit skills have produced evidence J
 
 ---
 
-## Step 0: Locate Evidence Files
+## Step 0: Locate Evidence Files and Select Report Depth
 
 1. Determine the client name from the user's request or the active manifest.
 2. Determine the evidence directory:
-   - Disruptive clients: `Disruptive-Advertising/reports/{Client-Name}/evidence/`
-   - Pill Pod: `Pill-Pod/reports/evidence/`
+   - Agency clients: `{Agency}/reports/{Client-Name}/evidence/`
+   - {Brand}: `{Brand}/reports/evidence/`
 3. List all `*_evidence.json` files in that directory.
 4. Read the audit manifest if it exists (`{Client}_audit_manifest.md`).
 5. Count evidence files. This determines the report mode:
    - **1 file** → Single-Platform Report mode
    - **2+ files** → Cross-Channel Synthesis mode
+6. **Select report depth mode** (see `report-template.md` for full rules):
+   - **Quick** (default for single-platform, or when user says "quick", "summary", "highlights")
+   - **Full** (default for 3+ platforms, or when user says "full", "detailed", "comprehensive")
+   - User can always override: "give me the full report" on a single platform = Full mode
 
 If zero evidence files are found, STOP. Tell the user: "No evidence files found for {Client}. Run at least one platform audit first (e.g., /audit-google-ads)."
 
@@ -76,6 +80,28 @@ For each evidence JSON file:
 8. **Note tracking health issues.** If `tracking_health.flags` exist, these feed into the Tracking Health section.
 
 **Data integrity rule:** If a field is missing or null in the JSON, note it as DATA_NOT_AVAILABLE. Never invent a value. Never silently skip it.
+
+---
+
+## Step 1b: Compute Aggregate Health Score
+
+After ingesting all evidence files, check each for a `scoring` object (see `reference/scoring-system.md` for the full schema).
+
+**If scoring data exists in one or more evidence files:**
+
+1. Extract each platform's `platform_score` and `grade`.
+2. Compute the aggregate score using spend-weighted averaging: `aggregate_score = sum(platform_score × platform_spend_share)`. If spend data is unavailable, use equal weighting (`1 / number_of_scored_platforms`).
+3. Map the aggregate to a grade: A (90-100), B (75-89), C (60-74), D (40-59), F (0-39).
+4. Collect all `quick_wins` arrays across platforms into a unified list, re-sorted by `severity_multiplier × estimated_impact_score` descending.
+5. For each scored platform, note the lowest-scoring category as its "top priority."
+
+**If scoring data is missing from ALL evidence files:**
+- Skip this step entirely. In the report, note: "Health Score: Not available (scoring not applied to this audit)."
+
+**Mixed scoring (some platforms scored, others not):**
+- Compute the aggregate using only the platforms that have scores.
+- Note in the report: "Health Score based on {N} of {M} audited platforms. Scores pending for: {list of unscored platforms}."
+- The aggregate reflects scored platforms only — do not estimate or penalize unscored ones.
 
 ---
 
@@ -103,7 +129,16 @@ Using the manifest (if available) and the evidence files found:
 
 **Run this step if ANY evidence file contains a `tracking_health` section with flags.**
 
-1. Aggregate all tracking flags across platforms. Sort by severity (high → medium → low).
+### 3a. Classify tracking flags
+
+Before aggregating, classify each flag as either **actionable** or **extraction-note**:
+
+- **Actionable tracking issues** (go in report Tracking Health section): Conversion tracking gaps, attribution mismatches, EMQ scores below threshold, Enhanced Conversions disabled, duplicate conversion actions, cross-platform transaction count gaps. These affect data quality and what the marketer should do.
+- **Extraction notes** (go in Methodology appendix only): Column virtualization blocking data, date picker mismatches caught and corrected during audit, account defaulting to wrong entity, UI navigation workarounds. These are data collection artifacts, not data quality problems.
+
+### 3b. Aggregate actionable flags
+
+1. Collect only actionable flags across platforms. Sort by severity (high → medium → low).
 2. Check for cross-platform tracking disconnects:
    - If both GA4 and Shopify evidence exist: compare transaction counts. Flag if gap >15%.
    - If platform evidence + GA4 exist: compare platform conversions to GA4. Flag if gap >25%.
@@ -112,30 +147,47 @@ Using the manifest (if available) and the evidence files found:
 4. Check EMQ scores (Meta) — flag if below 6/10.
 5. Check Enhanced Conversions status (Google) — flag if not enabled.
 
-**If high-severity tracking issues exist, add a prominent warning at the top of findings:**
+**If HIGH-severity actionable issues exist, add a prominent warning:**
 "⚠️ Tracking issues detected. Performance metrics below may be inflated or understated. Fix tracking before making budget decisions."
 
-Reference thresholds from `measurement.md` → Tracking Validation → Purchase Count Reconciliation.
+### 3c. Route extraction notes to appendix
+
+All extraction-note flags go to the Methodology & Sources appendix (Section 10 of report template). They are NOT mentioned in the main report body.
 
 ---
 
 ## Step 4: Platform-by-Platform Findings
 
-For each platform with an evidence file, generate a findings section:
+For each platform with an evidence file, generate a findings section following the structure in `report-template.md` Section 5.
 
-1. **Headline metrics table** — pulled directly from `account_overview`. Show metric, value, and benchmark comparison (from `benchmarks.md`). Use the three-tier system: Floor / Healthy / Strong.
-2. **Primary constraint** — from `diagnosis.primary_constraint`. This is the single biggest lever for improvement on this platform.
-3. **Key findings** — from `findings[]`. Group by theme if >5 findings. Each finding must show:
-   - What was observed (with label: OBSERVED, CALCULATED, INFERENCE)
-   - Why it matters (significance)
-   - The evidence trail (source reference)
-4. **Anomalies** — from `anomalies[]`. Unusual patterns that warrant investigation.
-5. **Platform-specific opportunities** — from `opportunities[]`. Sorted by priority (HIGH → MEDIUM → LOW).
+**Depth mode controls the detail level** (see report-template.md for full rules):
+
+### Quick mode:
+1. **Key Metrics table** — Use the platform's key metrics shortlist from report-template.md. 5-6 metrics max, no Label column. Show formula once below the table.
+2. **Primary constraint** — 2-3 sentences from `diagnosis.primary_constraint`.
+3. **Key findings** — Top 3-5 only, ranked by significance. 2-3 sentences each. No evidence labels, no source citations inline. Apply dedup rule against exec summary.
+4. **Campaign/product tables** — Top 5 rows by spend or revenue + summary row for remainder.
+5. **Anomalies** — Only actionable ones. Skip extraction-method anomalies.
+6. **Skip Platform Opportunities** — those merge into Top 5 Actions.
+
+### Full mode:
+1. **Performance Overview table** — All meaningful metrics from `account_overview`. No Label column (labels in appendix). Include benchmark comparison columns.
+2. **Primary constraint** — Full description with evidence trail.
+3. **Key findings** — All findings from `findings[]`. Group by theme if >5. Apply dedup rule (brief callback for items already in exec summary). Include inline source citations.
+4. **Campaign/product tables** — All rows with meaningful activity. Drop zero-activity rows.
+5. **Anomalies** — Actionable anomalies only (extraction notes → appendix).
+6. **Platform Opportunities** — Full table sorted by priority.
+
+### Both modes:
+- **Summary Table Rules:** Roll up to the highest useful level. Per-ASIN tables → product-line summaries with 2-3 outlier callouts. Per-keyword tables → campaign-level summaries. Raw data lives in evidence JSON.
+- **No inline evidence labels.** No `[OBSERVED]`, `[CALCULATED]` tags in prose. The Formula column or inline formula makes provenance clear.
+- **Benchmark comparison:** Show tier ranges (Floor/Healthy/Strong) on FIRST mention of each metric only. Subsequent mentions just state value + rating.
+- **Dedup rule:** If a finding restates something from the exec summary, use a brief callback ("TACoS at 25.98% — see Executive Summary — drives the ad-dependency problem") not a full restatement.
 
 **Benchmark comparison rules:**
 - Always calculate client-specific thresholds first (break-even CPA, minimum ROAS) from profitability math before comparing to industry benchmarks.
 - Show both: "CPA is $45 vs. $32 break-even (client-specific) and $38 industry median."
-- If client-specific thresholds aren't calculable (no margin data), use industry benchmarks and label as ASSUMPTION.
+- If client-specific thresholds aren't calculable (no margin data), use industry benchmarks and note the assumption in prose.
 
 ---
 
@@ -256,30 +308,33 @@ Aggregate opportunities from ALL evidence files plus cross-channel opportunities
 
 **Default output: Markdown (.md)**
 Save to: `{department}/reports/{Client-Name}/{Client}_audit_report_{date}.md`
-- Disruptive clients: `Disruptive-Advertising/reports/{Client-Name}/`
-- Pill Pod: `Pill-Pod/reports/`
+- Agency clients: `{Agency}/reports/{Client-Name}/`
+- {Brand}: `{Brand}/reports/`
 
-**Use the structure defined in `reference/synthesis/report-template.md`.** The report sections in order:
+**Use the structure defined in `reference/synthesis/report-template.md`.** Apply the depth mode selected in Step 0.
 
-1. Executive Summary (2-3 paragraphs, no jargon, business-owner readable)
-2. What Was Audited (platforms, date ranges, depth)
-3. What's Accessible vs. Missing (and what the report cannot tell you)
-4. Tracking Health (if applicable — tracking issues before performance analysis)
-5. Findings by Platform (one section per platform with evidence)
-6. Cross-Channel Diagnosis (multi-platform only — patterns detected)
-7. Profitability Analysis (MER, CM framework, unit economics)
-8. Prioritized Opportunities (ranked list with impact/confidence/effort)
-9. Top 5 Actions (the "if you do nothing else, do these" list)
-10. Tiered Roadmap (Week 1 / Month 1 / Months 2-3)
-11. Open Questions (unresolved data gaps, client info needed)
+### Report sections (both modes):
 
-**Writing rules:**
+1. **Header Block** — Client name, audit date, platforms audited, date ranges. If scoring data exists: Overall Health Score, Grade, and a one-line interpretation (e.g., "Grade C — notable issues across multiple platforms").
+2. **Executive Summary** (identical in both modes)
+2a. **Platform Scores** (only if scoring data exists) — Summary table: | Platform | Score | Grade | Top Issue |. If mixed scoring, include note: "Scores available for {N} of {M} platforms." Quick Wins pulled from each platform's `quick_wins` array, unified and re-sorted by severity × impact.
+3-4. Scope / Missing / Tracking Health (collapsed callout in Quick, separate sections in Full)
+5. Findings by Platform (condensed in Quick, full detail in Full)
+— Cross-Channel Diagnosis (multi-platform only, both modes)
+6. Profitability (break-even summary in Quick, full CM waterfall in Full)
+7. Actions & Opportunities (Top 5 only in Quick, full table + Top 5 in Full). Quick Wins from scoring feed into this section — deduplicate against manually identified opportunities.
+8. Implementation Roadmap (fewer items in Quick)
+9. Open Questions (top 3-4 in Quick, all in Full)
+10. Methodology & Sources appendix (both modes — this is where evidence labels, source citations, extraction notes, and calculation references live)
+
+### Writing rules:
 - Run `reference/human-voice.md` check on all prose sections before finalizing.
 - Use direct language. No hedging. "CPA is 40% above break-even" not "CPA appears to be somewhat elevated."
-- Every number must trace to a source. Use inline citations: `(Source: Google Ads evidence, account_overview.spend)`.
-- Show calculation formulas for all derived metrics: `MER = $125,000 / $28,500 = 4.39x`.
-- Label every data point: OBSERVED, CALCULATED, INFERENCE, ASSUMPTION, or DATA_NOT_AVAILABLE.
-- Benchmark comparisons use the format: `{metric} is {value} — {rating} (Floor: {x}, Healthy: {y}, Strong: {z})`.
+- **No inline evidence labels.** Do NOT put `[OBSERVED]`, `[CALCULATED]`, `[INFERENCE]`, `[ASSUMPTION]` in prose or table cells. These labels are tracked in the evidence JSON and summarized in the Methodology appendix.
+- **Source citations:** In Full mode, include inline `(Source: evidence.json, field)` after findings and data claims. In Quick mode, omit inline citations — the appendix handles traceability.
+- Show calculation formulas once per metric, inline: `TACoS = $6,290 / $24,210 = 25.98%`. Do not repeat the same formula in later sections.
+- Benchmark tier ranges (Floor/Healthy/Strong) appear once per metric at first mention. Later references just state value + rating.
+- **Dedup rule:** When a finding or metric was already discussed in the Executive Summary, use a brief callback in later sections, not a full restatement.
 
 **DOCX output (only if explicitly requested):**
 If the user says "make it a doc", "Word document", "DOCX", or "client-ready document":
@@ -287,6 +342,7 @@ If the user says "make it a doc", "Word document", "DOCX", or "client-ready docu
 2. Generate the same content structure but formatted as .docx.
 3. Save as `{Client}_audit_report_{date}.docx` in the same directory.
 4. The markdown version is NOT generated when DOCX is requested — only one output format per run.
+5. Depth mode still applies — Quick DOCX = shorter doc.
 
 ---
 
@@ -296,14 +352,15 @@ If the user says "make it a doc", "Word document", "DOCX", or "client-ready docu
 
 Load `reference/synthesis/anti-hallucination.md` and run the full checklist:
 
-1. **Source trace:** For every metric in the report, verify it traces to a specific evidence JSON file + field path. If a number cannot be traced, remove it or mark DATA_NOT_AVAILABLE.
+1. **Source trace:** For every metric in the report, verify it traces to a specific evidence JSON file + field path. If a number cannot be traced, remove it or note DATA_NOT_AVAILABLE in the appendix.
 2. **Calculation verify:** Re-run all CALCULATED metrics. Check the formula matches the inputs. Flag any rounding discrepancies >1%.
-3. **Label audit:** Ensure every data point has one of the five labels. No unlabeled numbers.
-4. **Assumption inventory:** List all ASSUMPTION-labeled items. Each must explain what assumption was made and what data would resolve it.
+3. **Label audit:** Ensure every data point in the evidence JSON has one of the five labels. (Labels are NOT shown inline in the report — they're in the Methodology appendix and the evidence JSON.)
+4. **Assumption inventory:** List all ASSUMPTION-labeled items in the Methodology appendix. Each must explain what assumption was made and what data would resolve it.
 5. **Cross-check totals:** If multiple evidence files report the same metric differently (e.g., total spend), flag the discrepancy and note which source is used.
 6. **Benchmark accuracy:** Verify all benchmark comparisons reference the correct tier from `benchmarks.md`. Check AOV tier is correct (high-ticket vs. low-ticket thresholds).
 7. **Missing platform acknowledgment:** Verify the report explicitly states what analysis is NOT possible due to missing platforms.
 8. **Confidence calibration:** Review all confidence labels on opportunities. Downgrade any labeled HIGH that rely on ASSUMPTION data.
+9. **Dedup check:** Scan the report for metrics or findings restated more than twice. If found, consolidate to first-mention + brief callbacks.
 
 If verification catches errors, fix them before delivering the report.
 

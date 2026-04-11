@@ -10,10 +10,10 @@ The audit manifest is the human-readable tracker for a client audit. It lives al
 
 **Examples:**
 - `Kodiak-Leather_audit_manifest.md`
-- `Body-Kitchen_audit_manifest.md`
-- `Pill-Pod_audit_manifest.md`
+- `Acme-Co_audit_manifest.md`
+- `{Brand}_audit_manifest.md`
 
-Use the PascalCase-With-Dashes client folder name as the prefix (per CLAUDE.md naming rules).
+Use the PascalCase-With-Dashes client folder name as the prefix (per workspace naming rules).
 
 ---
 
@@ -21,8 +21,8 @@ Use the PascalCase-With-Dashes client folder name as the prefix (per CLAUDE.md n
 
 | Department | Path |
 |---|---|
-| Disruptive client | `Disruptive-Advertising/reports/{Client-Name}/evidence/` |
-| Pill Pod | `Pill-Pod/reports/evidence/` |
+| Agency client | `{Agency}/reports/{Client-Name}/evidence/` |
+| {Brand} | `{Brand}/reports/evidence/` |
 
 The manifest lives in the same `evidence/` directory as the JSON evidence files.
 
@@ -37,7 +37,7 @@ The manifest lives in the same `evidence/` directory as the JSON evidence files.
 **Last Updated:** YYYY-MM-DD
 **Audit Type:** Full / Platform-specific
 **AOV Tier:** Over $200 / $100-200 / Under $100
-**Department:** Disruptive-Advertising / Pill-Pod
+**Department:** {Agency} / {Brand}
 
 ## Platforms
 
@@ -129,7 +129,7 @@ The orchestrator suggests this order based on data dependencies:
 1. **Shopify** — Financial source of truth. Revenue, AOV, orders, refunds. Every other platform's numbers get compared against this.
 2. **Google Ads** — Usually the largest ad spend. PMax, Search, Shopping.
 3. **Meta Ads** — Second largest ad platform. TOF/MOF/BOF structure, creative performance.
-4. **Amazon Ads** — If applicable (Pill Pod, or Disruptive clients selling on Amazon).
+4. **Amazon Ads** — If applicable ({Brand}, or Agency clients selling on Amazon).
 5. **GA4** — Cross-platform traffic view. Attribution comparison vs ad platforms.
 6. **Klaviyo** — Email/SMS. Revenue attribution, flow health, list health.
 7. **Website/CRO** — Last because it benefits from knowing traffic quality and conversion data from other platforms first.

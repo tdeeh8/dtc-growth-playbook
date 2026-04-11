@@ -22,7 +22,7 @@
         "platform": {
           "type": "string",
           "description": "Platform identifier. Must match one of the recognized platform keys.",
-          "enum": ["google-ads", "meta-ads", "ga4", "klaviyo", "shopify", "bigcommerce", "amazon-ads", "website-cro"]
+          "enum": ["google-ads", "meta-ads", "ga4", "klaviyo", "shopify", "bigcommerce", "amazon-ads", "website-cro", "seo"]
         },
         "audit_date": {
           "type": "string",
@@ -231,7 +231,7 @@
           "signal": { "type": "string", "description": "What was noticed on this platform." },
           "check_in": {
             "type": "array",
-            "items": { "type": "string", "enum": ["google-ads", "meta-ads", "ga4", "klaviyo", "shopify", "bigcommerce", "amazon-ads", "website-cro"] },
+            "items": { "type": "string", "enum": ["google-ads", "meta-ads", "ga4", "klaviyo", "shopify", "bigcommerce", "amazon-ads", "website-cro", "seo"] },
             "description": "Which other platforms should investigate this signal."
           },
           "what_to_look_for": { "type": "string", "description": "Specific question or data point to check on those platforms." }
@@ -250,6 +250,74 @@
           "question": { "type": "string" },
           "data_needed": { "type": "string", "description": "What data would answer this question." },
           "attempted": { "type": "string", "description": "What was tried and why it didn't work." }
+        }
+      }
+    },
+
+    "scoring": {
+      "type": "object",
+      "description": "Platform health score computed by the weighted scoring system. Optional — evidence files without this object still validate. See reference/scoring-system.md for the full algorithm.",
+      "required": ["platform_score", "grade", "categories"],
+      "additionalProperties": false,
+      "properties": {
+        "platform_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Weighted platform health score (0-100). Computed from category scores × category weights."
+        },
+        "grade": {
+          "type": "string",
+          "enum": ["A", "B", "C", "D", "F"],
+          "description": "Letter grade mapped from platform_score. A=90-100, B=75-89, C=60-74, D=40-59, F=0-39."
+        },
+        "categories": {
+          "type": "array",
+          "description": "Scoring categories with individual check results. Category weights must sum to 1.0.",
+          "items": {
+            "type": "object",
+            "required": ["name", "weight", "score", "checks_passed", "checks_total", "checks"],
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string", "description": "Category name (must match platform's defined categories in scoring-system.md)." },
+              "weight": { "type": "number", "minimum": 0, "maximum": 1, "description": "Category weight as decimal (e.g., 0.25 for 25%). All weights must sum to 1.0." },
+              "score": { "type": "number", "minimum": 0, "maximum": 100, "description": "Category score (0-100) computed from check results and severity multipliers." },
+              "checks_passed": { "type": "integer", "minimum": 0, "description": "Number of checks with PASS result." },
+              "checks_total": { "type": "integer", "minimum": 0, "description": "Total non-N/A checks evaluated." },
+              "checks": {
+                "type": "array",
+                "description": "Individual check results within this category.",
+                "items": {
+                  "type": "object",
+                  "required": ["id", "name", "result", "severity"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": { "type": "string", "description": "Unique check ID within the platform. Format: {platform-abbrev}-{category-abbrev}-{nn}." },
+                    "name": { "type": "string", "description": "Human-readable description of what was checked." },
+                    "result": { "type": "string", "enum": ["PASS", "WARNING", "FAIL", "N_A"], "description": "Check result. N_A = could not evaluate (excluded from score calculation)." },
+                    "severity": { "type": "string", "enum": ["critical", "high", "medium", "low"], "description": "Check severity. Determines multiplier: critical=5.0, high=3.0, medium=1.5, low=0.5." },
+                    "notes": { "type": "string", "description": "Evidence or context supporting the result." }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "quick_wins": {
+          "type": "array",
+          "description": "High-severity checks that failed but can be fixed in ≤15 minutes. Sorted by severity × expected_impact descending.",
+          "items": {
+            "type": "object",
+            "required": ["check_id", "description", "severity", "estimated_minutes", "expected_impact"],
+            "additionalProperties": false,
+            "properties": {
+              "check_id": { "type": "string", "description": "References a check id from the categories array." },
+              "description": { "type": "string", "description": "What to fix — specific and actionable." },
+              "severity": { "type": "string", "enum": ["critical", "high"], "description": "Only critical or high severity checks qualify as Quick Wins." },
+              "estimated_minutes": { "type": "integer", "maximum": 15, "description": "Estimated time to implement the fix (must be ≤15)." },
+              "expected_impact": { "type": "string", "enum": ["HIGH", "MEDIUM", "LOW"], "description": "Expected business impact of implementing the fix." }
+            }
+          }
         }
       }
     },

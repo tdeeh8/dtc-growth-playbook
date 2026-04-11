@@ -11,7 +11,7 @@ description: "The single entry point for all marketing audits. Use this skill wh
 
 ## How It Works
 
-The user types `/audit` (with optional context), and this skill figures out what to do. There are four modes, detected automatically from context:
+The user types `/audit` (with optional context), and this skill figures out what to do. There are five modes, detected automatically from context:
 
 | What the user says | Mode | What happens |
 |---|---|---|
@@ -21,6 +21,7 @@ The user types `/audit` (with optional context), and this skill figures out what
 | `/audit` + pastes a platform URL | **Channel Audit** | Auto-detects platform from URL, runs that single audit |
 | "audit their Meta" / "audit Google Ads" | **Channel Audit** | Runs one platform, offers to generate report after |
 | "generate the audit report" / "synthesize" | **Report** | Reads all evidence files, generates cross-channel report |
+| "quick audit", "health check", "fast audit" | **Quick Audit** | 15-minute scored scorecard across accessible platforms |
 
 ---
 
@@ -31,8 +32,8 @@ Read the user's message and check for existing state. This determines which mode
 ### Check for existing manifest:
 1. Determine client name from the user's message (if provided)
 2. Search for `{Client}_audit_manifest.md` in likely locations:
-   - `Disruptive-Advertising/reports/{Client-Name}/evidence/`
-   - `Pill-Pod/reports/evidence/`
+   - `{Agency}/reports/{Client-Name}/evidence/`
+   - `{Brand}/reports/evidence/`
 3. If found → manifest exists. If not → no manifest.
 
 ### Mode routing:
@@ -56,6 +57,11 @@ Read the user's message and check for existing state. This determines which mode
 - "generate the report", "synthesize the audit", "write up the audit", "cross-channel analysis"
 - "finalize the audit", "combine the findings"
 - All platforms in an existing manifest are DONE (auto-triggered after Resume mode detects this)
+
+**Quick Audit** — Enter this mode when:
+- "quick audit", "health check", "quick check", "fast audit", "15-minute audit", "prospect audit"
+- `/audit quick [client]`, `/audit health-check [client]`
+- When detected → read `reference/quick-audit.md` and follow its instructions entirely. Skip all other modes.
 
 ### URL auto-detection:
 
@@ -89,7 +95,7 @@ Use AskUserQuestion to collect what's needed. Be efficient — one question with
 
 **Required:**
 - **Client name** — Confirm PascalCase-With-Dashes version (e.g., "Kodiak Leather" → `Kodiak-Leather`)
-- **Department** — Disruptive Advertising or Pill Pod?
+- **Department** — {Agency} or {Brand}?
 - **Platforms accessible** — checkboxes:
   - [ ] Shopify
   - [ ] BigCommerce
@@ -109,8 +115,8 @@ If the user already provided info in their message, pre-fill and only ask for ga
 ### Step 1.2: Create Manifest + Evidence Directory
 
 1. Create the evidence directory:
-   - Disruptive: `Disruptive-Advertising/reports/{Client-Name}/evidence/`
-   - Pill Pod: `Pill-Pod/reports/evidence/`
+   - {Agency}: `{Agency}/reports/{Client-Name}/evidence/`
+   - {Brand}: `{Brand}/reports/evidence/`
 2. Create `{Client}_audit_manifest.md` using the format in `reference/manifest-format.md`
 3. Set accessible platforms to `NOT STARTED`, inaccessible to `NO ACCESS`
 
@@ -123,29 +129,36 @@ Tell the user briefly:
 
 **Then immediately start the first platform audit.** Don't wait for the user to run another command.
 
-### Step 1.4: Run Platform Audits (Sequential)
+### Step 1.4: Run Platform Audits
 
-Work through each platform in the order below (skip any with NO ACCESS):
+Platforms execute in four phases. Phase 1 is always sequential. Phase 2 can run in parallel when 3+ platforms are active:
 
-| Order | Platform | Skill to read | Why this order |
+| Phase | Platform(s) | Skill to read | Why this order |
 |---|---|---|---|
-| 1 | Shopify (or BigCommerce) | `reference/platforms/shopify.md` (or `reference/platforms/bigcommerce.md`) | Financial source of truth — anchors profitability math |
+| 1 | Shopify (or BigCommerce) | `reference/platforms/shopify.md` (or `bigcommerce.md`) | Financial source of truth — anchors profitability math |
 | 2 | Google Ads | `reference/platforms/google-ads.md` | Usually largest ad spend |
-| 3 | Meta Ads | `reference/platforms/meta-ads.md` | TOF pipeline, creative performance |
-| 4 | Amazon Ads | `reference/platforms/amazon-ads.md` | Only if they sell on Amazon |
-| 5 | GA4 | `reference/platforms/ga4.md` | Cross-platform traffic reconciliation |
-| 6 | Klaviyo | `reference/platforms/klaviyo.md` | Email/SMS retention engine |
-| 7 | Website/CRO | `reference/platforms/site.md` | Benefits from having all other data first |
+| 2 | Meta Ads | `reference/platforms/meta-ads.md` | TOF pipeline, creative performance |
+| 2 | Amazon Ads | `reference/platforms/amazon-ads.md` | Only if they sell on Amazon |
+| 2 | Klaviyo | `reference/platforms/klaviyo.md` | Email/SMS retention engine |
+| 3 | GA4 | `reference/platforms/ga4.md` | Cross-platform reconciliation — needs ad platform data |
+| 4 | Website/CRO | `reference/platforms/site.md` | Benefits from having all other data first |
 
-**For each platform:**
-1. Read the platform's SKILL.md 
-2. Execute it phase by phase, using the manifest context (client name, AOV, department, evidence path) so you don't re-ask the user for info they already provided
-3. Before starting, check if previous platforms left `cross_channel_signals` in their evidence — carry those forward as context
+**Parallel execution decision (before starting Phase 2):**
+Count the active Phase 2 platforms (skip any with NO ACCESS). If 3+ are active, read `reference/parallel-execution.md` and dispatch them simultaneously using the Agent tool. If only 1-2 Phase 2 platforms are active, continue sequentially. Parallel mode requires front-loading all client context (manifest + Shopify financials) into each subagent prompt — see `parallel-execution.md` for the template.
+
+**For each platform (sequential mode, or Phases 1/3/4):**
+1. Read the platform's instruction file
+2. Execute it phase by phase, using the manifest context so you don't re-ask the user
+3. Before starting, check if previous platforms left `cross_channel_signals` in their evidence — carry those forward
 4. Write the evidence JSON file when done
 5. Update the manifest: Status → DONE, fill in Evidence File and Date Completed
 6. Move to the next platform
 
-**Context window awareness:** After completing each platform, assess whether there's enough context remaining for the next one. Deep audits (Google Ads, Meta) consume more context than lighter ones (GA4, site). If context is getting long:
+**Note:** In parallel mode, Phase 2 platforms do NOT have each other's cross-channel signals. The synthesizer handles cross-channel pattern detection at report time, so nothing is lost.
+
+**In Full Audit mode, site.md runs basic checks only.** Run Phases 0–6 and 10–11. Skip the "Deep CRO Checks" section unless the user explicitly opted in (e.g., "full audit with CRO deep dive").
+
+**Context window awareness:** After completing each platform, assess remaining capacity. Deep audits (Google Ads, Meta) consume more context than lighter ones (GA4, site). If context is getting long:
 - Save all progress (evidence JSON + manifest are already saved)
 - Tell the user: "Completed [platforms done]. Start a new chat and say `/audit [client]` to continue. Next up: [next platform]."
 - The manifest makes resume seamless — nothing is lost.
@@ -180,9 +193,13 @@ Map the user's request to a platform skill:
 | "Klaviyo", "email", "email marketing", "flows" | `reference/platforms/klaviyo.md` |
 | "GA4", "Google Analytics", "analytics" | `reference/platforms/ga4.md` |
 | "Amazon", "Amazon Ads", "Seller Central" | `reference/platforms/amazon-ads.md` |
-| "site", "website", "CRO", "landing pages" | `reference/platforms/site.md` |
+| "site", "website", "landing pages" | `reference/platforms/site.md` |
+| "SEO", "organic", "search rankings" | `reference/platforms/seo.md` |
+| "CRO", "deep site", "conversion optimization" | `reference/platforms/site.md` (deep mode — run all phases including Deep CRO Checks) |
 
 Or use the URL auto-detection table from Step 0.
+
+**Note:** SEO and Deep CRO are opt-in only. They do not run in the default full audit sequence. They trigger only when the user explicitly asks for "SEO audit", "CRO audit", "deep site audit", etc. SEO does not require a URL in the auto-detection table — it's keyword-triggered.
 
 ### Step 2.2: Gather Minimal Context
 
@@ -283,9 +300,10 @@ This is how the orchestrator executes a platform audit. It applies in Modes 1, 2
 
 ### After the platform audit completes:
 1. Verify the evidence JSON was saved to the evidence directory
-2. Update the manifest: Status → DONE, Evidence File → filename, Date Completed → today
-3. Note any `cross_channel_signals` from the new evidence for upcoming audits
-4. Proceed to the next platform (or report generation if this was the last one)
+2. Each platform's evidence JSON should include a `scoring` object as defined in `reference/scoring-system.md`. The platform audit instructions tell the agent which checks to score. If scoring data is not produced (e.g., older platform instructions), the system continues without it — scoring is optional.
+3. Update the manifest: Status → DONE, Evidence File → filename, Date Completed → today
+4. Note any `cross_channel_signals` from the new evidence for upcoming audits
+5. Proceed to the next platform (or report generation if this was the last one)
 
 ### If a platform audit fails or can't complete:
 1. Update manifest: Status → IN PROGRESS, note what was accomplished
@@ -309,8 +327,8 @@ This is how the orchestrator executes a platform audit. It applies in Modes 1, 2
 - The report generates automatically when auditing is done
 
 ### File routing
-- Disruptive evidence: `Disruptive-Advertising/reports/{Client-Name}/evidence/`
-- Pill Pod evidence: `Pill-Pod/reports/evidence/`
+- {Agency} evidence: `{Agency}/reports/{Client-Name}/evidence/`
+- {Brand} evidence: `{Brand}/reports/evidence/`
 - Reports: same parent directory as evidence (`reports/{Client-Name}/`)
 - PascalCase-With-Dashes for client folder names
 
@@ -326,6 +344,12 @@ This is how the orchestrator executes a platform audit. It applies in Modes 1, 2
 - After each platform, assess remaining capacity
 - Save progress and recommend a session break rather than rush and produce poor evidence
 - The manifest is the checkpoint system — it makes resume seamless
+
+### Scoring
+- Scoring is optional but recommended. If a platform audit produces a `scoring` object in its evidence JSON, the synthesizer will include it in the report. If not, the report works without scores.
+
+### Opt-in platforms
+- SEO and Deep CRO are never auto-dispatched in a full audit. They only run on explicit user request ("SEO audit", "CRO audit", "deep site audit").
 
 ---
 

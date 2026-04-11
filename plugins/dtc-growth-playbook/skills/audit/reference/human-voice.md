@@ -7,7 +7,7 @@
 
 ## Why This Exists
 
-AI-generated text has measurable linguistic fingerprints. Trained readers spot them at a ~90% rate. Detection tools flag them. Audiences feel them even if they can't name them. This protocol eliminates those tells so Pill Pod content, job materials, outreach, and any external writing reads like a real person wrote it.
+AI-generated text has measurable linguistic fingerprints. Trained readers spot them at a ~90% rate. Detection tools flag them. Audiences feel them even if they can't name them. This protocol eliminates those tells so {Brand} content, job materials, outreach, and any external writing reads like a real person wrote it.
 
 ---
 
@@ -323,7 +323,7 @@ Before finalizing any people-facing writing, scan for:
 
 ## TANNER'S VOICE (Specific to This System)
 
-Per root CLAUDE.md:
+Per workspace config:
 - Casual, direct — no corporate fluff
 - Concise over thorough
 - Bullets for internal, prose for external
@@ -335,7 +335,7 @@ When writing AS Tanner (cover letters, LinkedIn, emails):
 - Short paragraphs, punchy sentences
 - Contractions always (don't, won't, can't — not "do not")
 
-When writing FOR Pill Pod (social, product copy, descriptions):
+When writing FOR {Brand} (social, product copy, descriptions):
 - Brand voice: approachable, health-conscious, clean
 - Talk like a friend who found something useful, not a marketer selling
 - Specifics over adjectives ("fits in your pocket" > "conveniently portable")
@@ -345,12 +345,12 @@ When writing FOR Pill Pod (social, product copy, descriptions):
 ## WHICH SKILLS MUST REFERENCE THIS PROTOCOL
 
 Any skill that produces content a human will read externally:
-- `Pill-Pod/skills/creator-outreach/` — TikTok comments, DMs to creators
-- `Pill-Pod/skills/social-content-optimizer/` — social descriptions, captions
+- `{Brand}/skills/creator-outreach/` — TikTok comments, DMs to creators
+- `{Brand}/skills/social-content-optimizer/` — social descriptions, captions
 - `Job-Search-Agent/` — cover letters, LinkedIn messages, outreach
-- `Pill-Pod/` — product copy, listing optimization, email to customers
+- `{Brand}/` — product copy, listing optimization, email to customers
 - `Executive-Assistant/` — emails on behalf of Tanner
-- `Disruptive-Advertising/` — client-facing reports and comms
+- `{Agency}/` — client-facing reports and comms
 - Any future content creation skill
 
 Internal-only outputs (dashboards, memory files, session logs) are exempt.

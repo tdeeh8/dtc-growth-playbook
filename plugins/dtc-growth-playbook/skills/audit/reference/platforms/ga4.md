@@ -190,7 +190,7 @@ Record: reporting attribution model (Data-driven / Last click / other), conversi
 ## Evidence File Output
 
 **Filename:** `{Client}_ga4_evidence.json`
-**Location:** Per audit-lifecycle.md (Disruptive or Pill Pod evidence directory).
+**Location:** Per audit-lifecycle.md ({Agency} or {Brand} evidence directory).
 
 **Schema:** Follow `reference/evidence-schema-quick.md`. Key GA4-specific mappings:
 

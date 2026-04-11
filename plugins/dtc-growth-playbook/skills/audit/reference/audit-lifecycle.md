@@ -28,8 +28,8 @@ Read ALL files in this skill's `reference/` directory before opening any browser
 ### 3. Check for Audit Manifest
 
 Look for an existing manifest:
-- **Disruptive clients:** `Disruptive-Advertising/reports/{Client-Name}/evidence/{Client}_audit_manifest.md`
-- **Pill Pod:** `Pill-Pod/reports/evidence/Pill_Pod_audit_manifest.md`
+- **Agency clients:** `{Agency}/reports/{Client-Name}/evidence/{Client}_audit_manifest.md`
+- **{Brand}:** `{Brand}/reports/evidence/{Brand}_audit_manifest.md`
 
 **If manifest exists:** Read it for client context (AOV tier, department, platform URLs, known issues, completed audits). Use AOV tier to load conditional playbook chunks.
 
@@ -37,15 +37,15 @@ Look for an existing manifest:
 - Client name (for evidence file naming)
 - Platform account URL or ID
 - AOV (approximate — for benchmark tier)
-- Department (Disruptive-Advertising or Pill-Pod)
+- Department ({Agency} or {Brand})
 - Known issues or focus areas
 - Date range preference (default varies by platform)
 
 ### 4. Set Up Evidence Directory
 
 Ensure the directory exists:
-- **Disruptive:** `Disruptive-Advertising/reports/{Client-Name}/evidence/`
-- **Pill Pod:** `Pill-Pod/reports/evidence/`
+- **{Agency}:** `{Agency}/reports/{Client-Name}/evidence/`
+- **{Brand}:** `{Brand}/reports/evidence/`
 
 ---
 

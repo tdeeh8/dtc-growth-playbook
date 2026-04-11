@@ -96,7 +96,7 @@ Last updated: YYYY-MM-DD. Sources: [list].
 ## Learning Loop
 
 After any audit or strategy session that surfaces a new insight:
-1. Note finding in the relevant department's memory.md tagged [new] with the playbook chunk it relates to
+1. Note finding in the relevant department's workspace notes tagged [new] with the playbook chunk it relates to
 2. When same pattern appears across 2+ clients or departments: tag [confirmed x2]
 3. At 3 confirmations: promote into the relevant playbook chunk with date stamp and source
 4. If a finding contradicts existing playbook content: flag immediately, update chunk, note what changed and why

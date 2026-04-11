@@ -5,7 +5,7 @@ A Claude plugin for DTC/eCommerce growth marketing — modular audit system, mar
 ## Install
 
 ```
-/plugin install github.com/tdeeh8/dtc-growth-playbook
+/plugin install github.com/{your-username}/dtc-growth-playbook
 ```
 
 ## What's Inside
