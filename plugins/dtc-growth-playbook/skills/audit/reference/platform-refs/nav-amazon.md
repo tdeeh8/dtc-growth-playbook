@@ -325,6 +325,26 @@ Campaign Manager has **two separate date controls** that operate independently:
 
 **Real failure mode (April 2026):** Summary bar showed YTD totals ($16,200 sales). Grid was stuck on "Apr 1-7" (1 week). Extracted campaign data showed only $342 in spend (one week) instead of the actual $6,290 YTD. This produced a wildly wrong TACoS (1.42% vs actual 25.98%) and completely inverted the diagnosis. The error was only caught because the user knew their actual spend.
 
+### Gotcha 16: Targeting Page May Not Show Metric Columns
+The Targeting page in Campaign Manager sometimes displays only basic columns (checkbox, Active, Target, Status, Targeting type) with **no visible metric columns** (Spend, Sales, Orders, ACOS, CPC). This appears to happen intermittently. "Customize columns" and "Reset to default" clicks have no visible effect when this occurs.
+**Impact:** The ag-Grid API extraction method (React fiber tree → `gridApi.forEachNode()`) that works on the Campaigns page does NOT reliably work on the Targeting page — the fiber key may not be found on `.ag-root-wrapper`.
+**Workaround:** Skip the Targeting page UI entirely. Instead:
+1. Use the **Targets/Keywords Report** from the Reports section (Campaign Manager → Measurement & reporting → Sponsored ads reports → create a Targets report)
+2. Or download the Targets CSV from the Targeting page's export button (if available)
+3. The CSV contains all columns regardless of what the UI displays
+**When this was observed:** April 2026 on the PillPocket account. 1,401 total targets were present, but the grid only rendered 5 columns and 51 visible rows with no metric data.
+
+### Gotcha 17: Search Term Report Downloads as XLSX (Not CSV)
+Despite the platform calling it a "report," the Sponsored Products Search Term Report downloads as `.xlsx` format, not `.csv`. This matters for automated parsing:
+- The Read tool cannot read binary `.xlsx` files directly
+- The bash sandbox cannot access `~/Downloads` (it's not a mounted path)
+- The file must be parsed via openpyxl in a mounted location, or extracted via browser-based JavaScript
+**Workaround options:**
+1. **Preferred:** Use the Targets CSV export instead (contains keyword-level data with spend, sales, ACOS). This gives most of what the Search Term Report provides.
+2. **If search term data is specifically needed:** Copy the xlsx to the workspace folder (which IS mounted) and parse with openpyxl via bash.
+3. **Alternative:** Download the Targets report from the Targeting tab, which often provides similar keyword-level granularity in a more accessible format.
+**When this was observed:** April 2026. Report generated successfully but the xlsx format created a parsing bottleneck.
+
 ---
 
 ## Navigation Quick Reference
@@ -345,3 +365,6 @@ Campaign Manager has **two separate date controls** that operate independently:
 | Download Brand Analytics data | Brand Analytics → SQR page → Export (if available) or JavaScript extraction |
 | Extract ag-Grid data (fallback) | Try React fiber tree first → `__agComponent` second → DOM scroll third |
 | Extract SC grid data (fallback) | Try CSV download first → multi-pass DOM second → accessibility tree third |
+| Kick off Search Term Report early | Reports section → Create report → SP Search Term → Run report (do this in Phase 1) |
+| Download Targets CSV | Targeting tab → export/download, OR Reports section → Targets report |
+| Skip Targeting page UI for metrics | Go to Reports/CSV instead — UI may not show Spend/Sales/ACOS columns (Gotcha #16) |

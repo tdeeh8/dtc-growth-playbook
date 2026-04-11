@@ -158,10 +158,12 @@ Count the active Phase 2 platforms (skip any with NO ACCESS). If 3+ are active, 
 
 **In Full Audit mode, site.md runs basic checks only.** Run Phases 0–6 and 10–11. Skip the "Deep CRO Checks" section unless the user explicitly opted in (e.g., "full audit with CRO deep dive").
 
-**Context window awareness:** After completing each platform, assess remaining capacity. Deep audits (Google Ads, Meta) consume more context than lighter ones (GA4, site). If context is getting long:
+**Context window awareness:** After completing each platform, assess remaining capacity. Deep audits (Google Ads, Meta, Amazon) consume more context than lighter ones (GA4, site, Klaviyo). Amazon audits in particular require heavy browser interaction across 3 data sources (Campaign Manager, Seller Central, Brand Analytics) and routinely approach context limits.
+If context is getting long:
 - Save all progress (evidence JSON + manifest are already saved)
 - Tell the user: "Completed [platforms done]. Start a new chat and say `/audit [client]` to continue. Next up: [next platform]."
 - The manifest makes resume seamless — nothing is lost.
+**Critical for Amazon audits:** If context compaction occurs mid-Amazon-audit, the session summary MUST include all extracted numerical data (campaign spend/sales/ACOS per campaign, ASIN sessions/CVR/sales, SQR query data, target-level spend). Without actual numbers preserved, the evidence JSON cannot be written after compaction. Raw data > narrative summary for session continuity.
 
 ### Step 1.5: Auto-Generate Report
 

@@ -84,6 +84,16 @@ Open Amazon Ads and Seller Central in separate browser tabs. Confirm access:
 
 Build source inventory in working notes. If any critical source is inaccessible, tell the user immediately.
 
+#### Immediate Action: Kick Off Search Term Report
+The Search Term Report takes time to generate (often 2-5 minutes). **Start it immediately in Phase 1** before doing anything else:
+1. Navigate to Amazon Ads → Measurement & reporting → Sponsored ads reports
+2. Create a new "Sponsored Products Search term report"
+3. Set report period to match the audit lookback (e.g., "Last 30 days")
+4. Click "Run report"
+5. Note the report status as "Pending" in working notes
+6. Continue with the rest of Phase 1 and Phase 2 — you'll come back for this in Phase 2B
+**Rationale:** In testing, this report sat "Pending" for the entire first session. Front-loading it ensures it's ready by the time you need keyword-level data for wasted spend analysis.
+
 **Reference:** `reference/platform-refs/nav-amazon.md` for all navigation patterns and platform gotchas.
 
 ### Phase 2: Bulk Data Export (5 min)
@@ -105,6 +115,9 @@ Navigate to Amazon Ads Campaign Manager.
 **Download the following CSV reports:**
 - **Sponsored Products campaign report** — Campaign Manager → Reports → Create Report, or use the download/export button on the campaign grid
 - **Search Term Report** — from the same Reports section
+- **Targets Report** — Also generate a Targets report from the Reports section (or use the Targeting tab's download/export option if available). This gives all keyword/target-level data with spend, sales, ACOS, and bid columns in one clean CSV.
+
+**⚠️ DO NOT attempt to extract keyword data from the Targeting page UI.** In testing, the Targeting page only displayed 5 columns (checkbox, Active, Target, Status, Targeting type) with no visible metric columns (Spend, Sales, ACOS). "Customize columns" and "Reset to default" had no visible effect. The ag-Grid API that works on the Campaigns page does NOT work on the Targeting page. **Go straight to CSV export and skip the Targeting page entirely.**
 
 If CSV download is not directly available on the grid, use the ag-Grid API extraction method from `nav-amazon.md` as fallback.
 
@@ -199,6 +212,8 @@ Flag signals requiring investigation on other platforms:
 - **High CVR products** → flag for potential DTC expansion (Shopify evidence)
 
 ### Phase 4: Write Evidence JSON
+
+**⚠️ CRITICAL: Write the evidence JSON yourself in the main thread.** Do NOT delegate evidence JSON creation to a sub-agent (Agent tool). In testing, a sub-agent given all the correct data fabricated every number — fake campaign names, fake metrics, inverted conclusions. The data integrity risk is too high. The main execution thread that collected the data must also write the evidence file.
 
 Build evidence JSON conforming to the schema in `evidence-schema-quick.md` (full schema: `audit-orchestrator/reference/evidence-schema.json`).
 
@@ -306,6 +321,13 @@ From `reference/playbook/benchmarks.md` — always load the full file for curren
 **Break-even ACOS = margin %.** Target ACOS = break-even × 0.6-0.7 (leaves room for overhead + profit).
 
 **Match type CVR hierarchy (expected):** Exact > Phrase > Broad > Auto. If broad outperforms exact, campaign structure needs review.
+
+## Context Window Management
+The full Amazon audit (Phases 1-6 with all three data sources) consistently approaches or exceeds a single context window. Plan for this:
+1. **Phase 1-2 completes in session 1** — All data extraction (Campaign Manager, Seller Central, Brand Analytics)
+2. **Phase 2B-6 can continue in session 1 if context allows** — but if context is getting long after Phase 2C, save working notes and tell the user to resume
+3. **On resume:** Working notes + manifest contain all collected data. The evidence JSON can be written from working notes alone.
+**If context is compacted mid-audit:** The session summary must include ALL extracted numerical data (campaign metrics, ASIN data, SQR data, targets data) — not just "data was collected." Without the actual numbers, the evidence JSON cannot be written accurately after compaction.
 
 ---
 
