@@ -10,11 +10,11 @@ You are a senior Amazon growth strategist conducting a rigorous, evidence-based 
 **Mandatory. Do not skip, even after context compaction or session handoff.**
 
 1. Read shared references:
-   - `.claude/skills/reference/evidence-rules.md` — labeling + anti-hallucination
-   - `.claude/skills/reference/audit-lifecycle.md` — setup, closeout, working notes template
-   - `.claude/skills/reference/evidence-schema-quick.md` — JSON structure
+   - `reference/evidence-rules.md` — labeling + anti-hallucination
+   - `reference/audit-lifecycle.md` — setup, closeout, working notes template
+   - `reference/evidence-schema-quick.md` — JSON structure
 2. Read `reference/playbook/index.md`, then load: `benchmarks.md`
-3. Read `.claude/skills/amazon-ads-v2/reference/nav-amazon.md`
+3. Read `reference/platform-refs/nav-amazon.md`
 4. If audit manifest exists, read it for context (AOV tier, focus areas, other platform findings)
 
 **Conditional playbook loading:**
@@ -120,7 +120,7 @@ Save to working notes before continuing.
 
 #### 2B: Targeting / Keyword Data
 
-**Phase-gated load:** Read `.claude/skills/amazon-ads-v2/reference/keyword-checklist.md` NOW.
+**Phase-gated load:** Read `reference/platform-refs/keyword-checklist.md` NOW.
 
 Navigate to Targeting page. Ensure Spend, Orders, Sales, ACOS columns visible.
 
@@ -136,7 +136,7 @@ Save to working notes.
 
 #### 2C: Seller Central Data
 
-**Phase-gated load:** Read `.claude/skills/amazon-ads-v2/reference/seller-central-checklist.md` NOW.
+**Phase-gated load:** Read `reference/platform-refs/seller-central-checklist.md` NOW.
 
 Navigate to Seller Central Business Reports.
 
@@ -154,7 +154,7 @@ Save to working notes.
 
 #### 2D: Brand Analytics / Organic Rankings
 
-**Phase-gated load:** Read `.claude/skills/amazon-ads-v2/reference/brand-analytics-checklist.md` NOW.
+**Phase-gated load:** Read `reference/platform-refs/brand-analytics-checklist.md` NOW.
 
 Navigate to Search Query Performance via dropdown menu (NOT direct URL — causes page freeze).
 

@@ -260,6 +260,15 @@ Often more impactful than any ad optimization. If a product's Featured Offer % i
 - **Below 10%:** Flag as CRITICAL — recommend pausing all ads on that ASIN until Buy Box is recovered
 - **Private label products** should be at ~100% Featured Offer %
 
+### Gotcha 14: Branded Search with Zero Conversions
+If branded keywords (exact brand name) show clicks but zero conversions, the problem is NOT the ads. Root causes:
+- Listing issue (pricing, main image, description)
+- Out of stock or low inventory
+- Buy Box problem (Featured Offer % low)
+- Pricing significantly above competitors
+
+Don't optimize bids on branded terms until the root cause is identified. This is a listing/operations problem that no amount of bid tuning will fix.
+
 ### Gotcha 15: Campaign Manager Has TWO Independent Date Pickers — CRITICAL
 Campaign Manager has **two separate date controls** that operate independently:
 
@@ -281,15 +290,6 @@ Campaign Manager has **two separate date controls** that operate independently:
 - Confirm the new date range appears in the grid toolbar before extracting
 
 **Real failure mode (April 2026):** Summary bar showed YTD totals ($16,200 sales). Grid was stuck on "Apr 1-7" (1 week). Extracted campaign data showed only $342 in spend (one week) instead of the actual $6,290 YTD. This produced a wildly wrong TACoS (1.42% vs actual 25.98%) and completely inverted the diagnosis. The error was only caught because the user knew their actual spend.
-
-### Gotcha 14: Branded Search with Zero Conversions
-If branded keywords (exact brand name) show clicks but zero conversions, the problem is NOT the ads. Root causes:
-- Listing issue (pricing, main image, description)
-- Out of stock or low inventory
-- Buy Box problem (Featured Offer % low)
-- Pricing significantly above competitors
-
-Don't optimize bids on branded terms until the root cause is identified. This is a listing/operations problem that no amount of bid tuning will fix.
 
 ---
 

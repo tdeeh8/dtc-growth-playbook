@@ -12,7 +12,7 @@ You are a senior CRO analyst performing a structured website audit using browser
 
 ### Shared lifecycle setup
 
-Read and follow `.claude/skills/reference/audit-lifecycle.md` for:
+Read and follow `reference/audit-lifecycle.md` for:
 - Playbook loading (benchmarks.md + AOV-conditional chunks)
 - Manifest check and client context
 - Evidence directory setup
@@ -20,7 +20,7 @@ Read and follow `.claude/skills/reference/audit-lifecycle.md` for:
 **Site-audit-specific additions to lifecycle setup:**
 - Load `reference/playbook/benchmarks.md` → Website/Ecommerce section (CVR, ATC rate, cart abandonment, bounce rate, mobile gap)
 - **AOV $200+:** Also read `reference/playbook/high-ticket.md`
-- Read `.claude/skills/reference/evidence-schema-quick.md` for the JSON contract
+- Read `reference/evidence-schema-quick.md` for the JSON contract
 
 **Phase-gated reference files** (loaded during their respective steps, NOT upfront):
 - `reference/platform-refs/cro-checklist.md` → loaded at Phase 1 (desktop audit start)
@@ -249,7 +249,7 @@ SITE STRUCTURE:
 
 ### Before saving — apply shared evidence rules
 
-Read `.claude/skills/reference/evidence-rules.md` for labeling rules and anti-hallucination checks. Additionally verify site-audit-specific integrity:
+Read `reference/evidence-rules.md` for labeling rules and anti-hallucination checks. Additionally verify site-audit-specific integrity:
 1. Every finding references a specific page/URL you actually visited
 2. Every screenshot reference corresponds to a screenshot you actually took
 3. Cross-channel signals flag things you actually noticed, not generic CRO advice
@@ -259,7 +259,7 @@ Read `.claude/skills/reference/evidence-rules.md` for labeling rules and anti-ha
 
 ## Phase 10: Closeout
 
-Follow `.claude/skills/reference/audit-lifecycle.md` → "After the Audit — Standard Closeout" for: saving evidence JSON, updating manifest, flagging critical issues, saving working notes.
+Follow `reference/audit-lifecycle.md` → "After the Audit — Standard Closeout" for: saving evidence JSON, updating manifest, flagging critical issues, saving working notes.
 
 ---
 
