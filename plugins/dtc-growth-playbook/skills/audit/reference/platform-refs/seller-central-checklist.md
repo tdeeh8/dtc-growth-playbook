@@ -48,24 +48,38 @@ Reference checklist for Phase 2C of the amazon-ads-v2 audit. Covers Sales Dashbo
 
 ### 3. Extraction Methods (Priority Order)
 
-**Method 1 — CSV Download (always try first):**
-- [ ] Click "Download (.csv)" button on the report page
-- [ ] If CSV downloads, parse with pandas or similar
-- [ ] This gives ALL columns and rows in one pass — no virtualization issues
-- [ ] Verify row count matches what the UI shows
+**Primary Method — CSV Download (expected to work ~90% of the time):**
+- [ ] Click "Download (.csv)" button on the Detail Page report page
+- [ ] Parse CSV — verify it contains all expected columns (Sessions, Page Views, Units Ordered, Sales, Featured Offer %, etc.)
+- [ ] Verify row count matches what the UI header shows
+- [ ] If CSV is complete with Featured Offer % column, browser extraction is NOT needed for this source
 
-**Method 2 — Multi-pass DOM Extraction (if CSV fails):**
+**If CSV is missing Featured Offer % column:**
+- [ ] Featured Offer % may not be included in all CSV exports
+- [ ] Go back to the browser to extract Featured Offer % per ASIN from the grid UI
+- [ ] Use accessibility tree (read_page) or JavaScript extraction for this specific column only
+
+**Fallback — Multi-pass DOM Extraction (only if CSV download fails entirely):**
 - [ ] Find grid container (custom class, many child `div` elements)
 - [ ] Pass 1 (left side): product titles, ASINs, sessions, page views
 - [ ] Pass 2 (right side): scroll right → units ordered, sales, Featured Offer %
 - [ ] Pass 3+: scroll down for additional rows, repeat left/right
 - [ ] Use stable numeric field (session count) as row alignment anchor between passes
-
-**Method 3 — Accessibility tree verification:**
-- [ ] Use `read_page` to cross-check specific values
+- [ ] Use `read_page` accessibility tree to cross-check specific values
 - [ ] Useful for ASIN identifiers that don't render via DOM
 
 **See Gotcha 9 in nav-amazon.md** for why standard table selectors don't work.
+
+### 4. CSV Parsing Checklist
+
+**After CSV Download:**
+- [ ] Open/parse the CSV file
+- [ ] Verify column headers match expected schema
+- [ ] Check for any empty rows or malformed data
+- [ ] Rank ASINs by Ordered Product Sales descending
+- [ ] Identify top 20% ASINs by revenue contribution (these get full diagnosis attention)
+- [ ] Flag any ASIN with Featured Offer % below 50% immediately
+- [ ] Calculate total revenue for TACoS denominator
 
 ---
 

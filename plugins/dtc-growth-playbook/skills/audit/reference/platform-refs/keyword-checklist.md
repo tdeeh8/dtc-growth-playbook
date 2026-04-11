@@ -34,7 +34,15 @@ For every target with meaningful spend, extract:
 3. **Record "Targets not delivering"** count from the Overview panel
 4. **Count zero-conversion targets** — targets with clicks > 0 but orders = 0
 
-### ag-Grid Extraction Notes
+### Primary Method — CSV Report Download
+
+- [ ] Use the campaign report and/or search term report CSV downloaded in Phase 2
+- [ ] Parse CSV to extract all per-target metrics
+- [ ] The CSV contains all columns: keyword, match type, campaign, ad group, bid, impressions, clicks, spend, orders, sales, ACOS, ROAS
+- [ ] Sort by Spend descending after parsing
+- [ ] Monetary values in the CSV should already be in dollars (unlike the ag-Grid API which uses millicents)
+
+### Fallback — ag-Grid Extraction (only if CSV not available)
 
 - Use React fiber tree method first (see `nav-amazon.md`)
 - Monetary values on Targeting page are in **millicents** (÷ 100,000 for dollars)

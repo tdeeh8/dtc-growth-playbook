@@ -1,6 +1,6 @@
 # Brand Analytics / Search Query Performance Checklist
 
-Reference checklist for Phase 2D of the amazon-ads-v2 audit. Covers navigation (CRITICAL: use dropdown, NOT direct URL), data extraction, impression share interpretation, and organic ranking gap analysis.
+Reference checklist for Phase 2 (Brand Analytics Export) of the amazon-ads-v2 audit. Covers navigation (CRITICAL: use dropdown, NOT direct URL), data extraction, impression share interpretation, and organic ranking gap analysis.
 
 ---
 
@@ -32,23 +32,20 @@ Direct URL navigation causes the page renderer to **freeze** — CDP screenshot 
 
 ## Data Extraction
 
-### Table Structure
+### Primary Method — CSV/Report Export (try first)
 
-The SQR table uses `role="row"` markup. Two extraction approaches:
+- [ ] Check if the Search Query Performance page has an export/download option
+- [ ] If CSV export is available, download it
+- [ ] Parse CSV to extract all per-query metrics
+- [ ] Verify column headers match expected schema (search query, volume, impressions, clicks, cart adds, purchases — with brand vs total splits)
 
-**Method 1 — JavaScript extraction (preferred):**
-```javascript
-// Try role-based selectors first
-document.querySelectorAll('[role="row"]')
+### Fallback — JavaScript Extraction (expected for Brand Analytics)
 
-// If that fails, try standard table selectors
-document.querySelectorAll('table tbody tr')
-```
+Note: Brand Analytics may not offer a CSV export. If no export is available, JavaScript extraction is the primary method for this source.
 
-Try both approaches — Amazon periodically changes the page structure.
-
-**Method 2 — Accessibility tree (`read_page`):**
-Use as a fallback or cross-check. The accessibility tree captures text content regardless of rendering method.
+- [ ] Use role-based selectors: `document.querySelectorAll('[role="row"]')`
+- [ ] If that fails, try: `document.querySelectorAll('table tbody tr')`
+- [ ] Cross-check with accessibility tree (read_page) for validation
 
 ### Per-Query Data Points
 

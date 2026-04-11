@@ -13,6 +13,37 @@ Platform navigation patterns, extraction techniques, and documented gotchas for 
 
 ---
 
+## CSV Report Downloads (Primary Method)
+
+CSV downloads are faster, more reliable, and avoid all virtualization/scrolling issues. **Always attempt CSV first** before using any DOM or ag-Grid extraction technique.
+
+### Amazon Ads Campaign Reports
+
+- Navigate to Campaign Manager → Reports section (or use the export/download button on the campaign grid if available)
+- Download **Sponsored Products Campaign Report** as CSV
+- Download **Search Term Report** as CSV
+- These reports contain all campaign-level and keyword-level metrics in one file — no scrolling, no virtualization issues
+- Report generation may take 30-60 seconds. Wait for the download to complete.
+- If the Reports section isn't available or the download fails, fall back to ag-Grid extraction (see fallback section below)
+
+### Seller Central Business Reports CSV
+
+- Navigate to Business Reports → Detail Page Sales and Traffic By Child Item
+- Click the **"Download (.csv)"** button on the report page
+- This gives ALL columns and ALL rows in one clean pass
+- Verify row count makes sense (should match the count shown in the UI header)
+- In testing, CSV download succeeds >90% of the time. Only proceed to DOM extraction if the download button is missing or produces an empty/corrupted file.
+- If CSV download button is missing or fails, fall back to multi-pass DOM extraction (see Seller Central Grid Extraction below)
+
+### Brand Analytics Export
+
+- Navigate via dropdown menu (NOT direct URL — Gotcha #11 still applies)
+- Check if an export/download option is available on the Search Query Performance page
+- If CSV export exists, use it
+- If no export option: use JavaScript extraction from `[role="row"]` elements as the primary method (this is the one platform source where DOM extraction is expected to be needed)
+
+---
+
 ## Amazon Ads Campaign Manager
 
 **URL:** `https://advertising.amazon.com/cm/campaigns`
@@ -46,11 +77,13 @@ The "All" campaigns tab shows brand-specific metrics (Branded searches, Detail p
 
 ---
 
-## ag-Grid Extraction Techniques
+## ag-Grid Extraction Techniques (Fallback Only)
+
+> **Use these methods ONLY when CSV report download fails.** CSV downloads are faster, more reliable, and avoid all virtualization issues. These techniques exist as a fallback for when Amazon's export functionality is unavailable or broken.
 
 Amazon Ads uses **ag-Grid**, which only renders rows currently visible in the viewport (virtualized rendering). If `read_page` returns empty cells, scroll the table to load more rows, then retry.
 
-### Method 1 — React Fiber Tree (Most Reliable for Bulk Extraction)
+### Fallback Method 1 — React Fiber Tree (Most Reliable for Bulk Extraction)
 
 Walk the React internal fiber tree to find the ag-Grid API object:
 
@@ -67,7 +100,7 @@ gridApi.forEachNode(node => rows.push(node.data));
 
 This bypasses virtualization entirely — you get every row even if it's not currently rendered.
 
-### Method 2 — `__agComponent` Shortcut
+### Fallback Method 2 — `__agComponent` Shortcut
 
 Some ag-Grid cells expose `__agComponent` directly:
 
@@ -77,7 +110,7 @@ Some ag-Grid cells expose `__agComponent` directly:
 
 This is faster when you only need a few values, but less reliable for full table extraction.
 
-### Method 3 — DOM Scraping with Scroll (Fallback)
+### Fallback Method 3 — DOM Scraping with Scroll
 
 If React fiber and __agComponent both fail:
 
@@ -157,10 +190,11 @@ The Business Reports grid is **NOT a standard HTML table**. It uses a custom Rea
 
 **Extraction priority order:**
 
-1. **CSV Download (always try first):**
+1. **CSV Download (expected method — succeeds >90% of the time):**
    - Click the "Download (.csv)" button on the report page
    - If a CSV file downloads, parse it — gives all columns and rows in one clean pass
    - This is the most reliable method by far
+   - Only proceed to DOM extraction if the download button is missing or produces an empty/corrupted file
 
 2. **Multi-pass DOM Extraction (fallback if CSV fails):**
    - Find the grid container (look for classes like `css-1snoav0` or similar with many child `div` elements)
@@ -305,5 +339,9 @@ Campaign Manager has **two separate date controls** that operate independently:
 | Open Seller Central reports | Navigate to `https://sellercentral.amazon.com/business-reports` |
 | Set date range (SC) | Use dropdown presets — don't try custom dates |
 | Open Brand Analytics SQR | Navigate to Brand Analytics main → Search Analytics dropdown → Search Query Performance |
-| Extract ag-Grid data | Try React fiber tree first → `__agComponent` second → DOM scroll third |
-| Extract SC grid data | Try CSV download first → multi-pass DOM second → accessibility tree third |
+| Download Ads campaign CSV | Campaign Manager → Reports → Create/Download report |
+| Download Ads search term CSV | Campaign Manager → Reports → Search Term Report |
+| Download SC business report CSV | Business Reports → Detail Page → "Download (.csv)" button |
+| Download Brand Analytics data | Brand Analytics → SQR page → Export (if available) or JavaScript extraction |
+| Extract ag-Grid data (fallback) | Try React fiber tree first → `__agComponent` second → DOM scroll third |
+| Extract SC grid data (fallback) | Try CSV download first → multi-pass DOM second → accessibility tree third |

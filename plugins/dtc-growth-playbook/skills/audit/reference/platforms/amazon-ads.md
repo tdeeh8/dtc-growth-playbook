@@ -45,19 +45,11 @@ Confirm inputs and begin Phase 1 immediately.
 
 Use the most reliable method available, in order:
 
-1. **JavaScript DOM extraction** (`javascript_tool`) — most reliable for numeric data. Eliminates visual misreading.
-2. **CSV download** — most reliable for Seller Central Business Reports. Always try first on SC pages.
-3. **ag-Grid API extraction** — for Amazon Ads campaign/targeting tables. See `reference/platform-refs/nav-amazon.md` for techniques.
-4. **Accessibility tree** (`read_page`) — captures text including off-screen columns.
-5. **Screenshot + visual reading** — for orientation and page verification only. Less reliable for exact numbers.
-6. **Manual estimation** — NEVER. Mark as DATA_NOT_AVAILABLE instead.
-
-### Verification Checkpoints (Run After Each Data Source)
-
-1. **Total cross-check:** Individual campaign spends ≈ account-level total? **If the sum of grid campaign spends is dramatically lower than the summary bar total, the grid date range is likely wrong (see Gotcha #15).** This is the #1 source of catastrophic errors in Amazon audits.
-2. **Rate verification:** ACOS = Spend / Sales? CVR = Orders / Clicks? Spot-check ≥3 campaigns.
-3. **Date range confirmation:** All data from same period? **Amazon Ads has TWO independent date pickers (summary bar vs grid) — verify BOTH.** Seller Central often defaults differently too.
-4. **Missing data:** Mark as DATA_NOT_AVAILABLE — never estimate.
+1. **CSV/Report Download** — Primary method for ALL bulk data extraction. Eliminates virtualization issues, scroll problems, and ag-Grid complexity entirely.
+2. **JavaScript DOM extraction** (`javascript_tool`) — Fallback ONLY when CSV download fails or for data not available in reports (e.g., specific UI-only metrics).
+3. **Accessibility tree** (`read_page`) — Cross-check for individual values when needed.
+4. **Screenshot** — Orientation and page verification only.
+5. **Manual estimation** — NEVER. Mark as DATA_NOT_AVAILABLE instead.
 
 ---
 
@@ -66,14 +58,10 @@ Use the most reliable method available, in order:
 Create `{Account_Name}_amazon_audit_notes.md` at the start using the template from `audit-lifecycle.md`. Add these Amazon-specific phase sections:
 
 - Source Inventory (Phase 1)
-- Campaign Performance Data (Phase 2A)
-- Targeting / Keyword Data (Phase 2B)
-- Seller Central Data (Phase 2C)
-- Brand Analytics / Ranking Data (Phase 2D)
-- TACoS by Product Line (Phase 2C/3)
+- Bulk Data Export Log (Phase 2) — which CSVs were downloaded, which required fallback
+- Triage List (Phase 2B) — top 20% ASINs, top campaigns, top keywords
+- Targeted Browser Collection (Phase 2C) — Featured Offer % and any gap fills
 - Diagnosis (Phase 3)
-
-**Hard rule: save findings after each platform section.** Do not move to the next data source until current findings are written to notes with OBSERVED labels.
 
 **Working notes are internal only.** They are NOT the deliverable. The deliverable is the evidence JSON (which feeds the synthesizer to produce the report). Working notes should contain raw data extraction, cross-checks, and diagnostic thinking — but NOT:
 - Retrospective sections about extraction methods (what worked/didn't)
@@ -98,76 +86,81 @@ Build source inventory in working notes. If any critical source is inaccessible,
 
 **Reference:** `reference/platform-refs/nav-amazon.md` for all navigation patterns and platform gotchas.
 
-### Phase 2: Evidence Collection (20-30 min)
+### Phase 2: Bulk Data Export (5 min)
 
-Your only job here is to record what you see. Do NOT diagnose or recommend yet.
+Your only job here is to download ALL data as CSVs/reports FIRST. No analysis, no verification yet — just get the files.
 
-#### 2A: Campaign Performance Data
+#### Step 1: Amazon Ads Reports
 
 **Reference:** See `nav-amazon.md` for ag-Grid extraction techniques and the "All tab" gotcha.
 
 Navigate to Amazon Ads Campaign Manager.
 
-**⚠️ MANDATORY DATE VERIFICATION (Gotcha #15):** Campaign Manager has TWO independent date pickers — the summary bar and the campaign grid can show different date ranges. Before extracting ANY data:
+**⚠️ MANDATORY DATE VERIFICATION (Gotcha #15):** Campaign Manager has TWO independent date pickers — the summary bar and the campaign grid can show different date ranges. Before downloading ANY data:
 1. Check the **summary bar** date range (top of page)
 2. Check the **campaign grid toolbar** date range (near "View: Default")
 3. If they differ, **set the grid date explicitly** to match the audit period
-4. Confirm the grid reloaded before extracting
-5. After extraction, **cross-check:** Does the sum of campaign spends from the grid approximately match the summary bar total? If not, the grid date is likely wrong.
+4. Confirm the grid reloaded before proceeding
 
-**For each active campaign, capture:** Campaign name, type (SP/SB/SD), targeting type (auto/manual), status, daily budget, top-of-search impression share + bid adjustment, clicks, CTR, CPC, total spend, orders, sales, ROAS, ACOS (verify: Spend / Sales).
+**Download the following CSV reports:**
+- **Sponsored Products campaign report** — Campaign Manager → Reports → Create Report, or use the download/export button on the campaign grid
+- **Search Term Report** — from the same Reports section
 
-**Also capture paused campaigns with YTD data** — reveals what was tried and whether the pause was warranted.
+If CSV download is not directly available on the grid, use the ag-Grid API extraction method from `nav-amazon.md` as fallback.
 
-**Verification checkpoint:** Sum of campaign spends ≈ account total from summary bar? If the numbers are dramatically different (e.g., sum is $342 but summary shows $16,200), the grid date range is wrong — go back and fix it before proceeding.
+#### Step 2: Seller Central Reports
 
-Save to working notes before continuing.
+Navigate to Seller Central Business Reports → Detail Page Sales and Traffic By Child Item.
 
-#### 2B: Targeting / Keyword Data
+- Set date range using dropdown presets (YTD preferred)
+- Click **"Download (.csv)"** — this is the most reliable extraction method for SC
+- Also capture the **Sales Dashboard snapshot** (today's orders, sales, compare data) — this is visual-only, use screenshot or `read_page`
+
+#### Step 3: Brand Analytics Export
+
+**Phase-gated load:** Read `reference/platform-refs/brand-analytics-checklist.md` NOW.
+
+Navigate to Brand Analytics via dropdown menu (NOT direct URL — causes page freeze, Gotcha #11).
+
+- Navigate to Search Query Performance
+- Download/export the Search Query Report data
+- If no CSV export is available, extract via JavaScript from `[role="row"]` elements (this is the one source where DOM extraction may still be needed)
+
+**After all 3 downloads complete, save a note to working notes confirming which files were obtained and which required fallback methods.**
+
+### Phase 2B: Parse & Triage (5 min)
 
 **Phase-gated load:** Read `reference/platform-refs/keyword-checklist.md` NOW.
 
-Navigate to Targeting page. Ensure Spend, Orders, Sales, ACOS columns visible.
+Parse all downloaded CSVs and identify the top 20% of ASINs by revenue contribution BEFORE doing any deep analysis.
 
-**For each target with meaningful spend:** Target name/keyword, match type, campaign, ad group, ROAS, CVR, bid, impressions, TOS impression share, clicks, spend, orders, sales, ACOS.
+1. **Parse the Seller Central CSV first** — rank ASINs by Ordered Product Sales descending
+2. **Identify the top 20% of ASINs by revenue** (these get full analysis)
+3. **Parse the Campaign Manager CSV** — map campaigns to ASINs/product lines
+4. **Parse the Search Term Report** — identify top spend keywords
+5. **Parse Brand Analytics data** — identify highest-volume search queries
 
-**Sort by Spend descending.** Capture highest-impact targets first.
+**Output of this phase:** A "triage list" saved to working notes with:
+- Top 20% ASINs by revenue (these are priority for deep-dive)
+- Top campaigns by spend
+- Top keywords by spend
+- Highest-volume search queries
 
-**Critical: zero-conversion targets.** Count targets with clicks but zero sales. Record "Targets not delivering" from Overview panel.
+### Phase 2C: Targeted Browser Collection (5 min)
 
-**Verification checkpoint:** Spot-check ≥3 targets — Spend/Sales = ACOS?
+Go back to the browser ONLY for data that CSVs don't contain:
 
-Save to working notes.
+- **Featured Offer % (Buy Box) per ASIN** — this is critical and only available in the Seller Central grid UI. Flag any below 50% immediately.
+- Any metrics that were missing from the CSV exports
+- Visual verification of date ranges across sources
 
-#### 2C: Seller Central Data
-
-**Phase-gated load:** Read `reference/platform-refs/seller-central-checklist.md` NOW.
-
-Navigate to Seller Central Business Reports.
-
-**Capture:**
-- Sales Dashboard snapshot (today's orders, sales, AOV)
-- Compare data (yesterday, same day last week, same day last year)
-- Detail Page Sales and Traffic By Child Item (per-ASIN sessions, page views, conversion, Featured Offer %)
-- **Featured Offer % for every ASIN** — flag any below 50% immediately
+**Phase-gated load:** Read `reference/platform-refs/seller-central-checklist.md` NOW (for Featured Offer % extraction guidance).
 
 **Calculate TACoS:** `Total Ad Spend / Total Revenue (organic + paid)` — THE critical profitability metric for Amazon. If estimating total revenue from Sales Dashboard daily rate, label as CALCULATED with method shown.
 
 **Calculate TACoS by product line:** Map campaign names to product lines → sum ad spend per line → divide by SC revenue for those ASINs. Reveals which products scale profitably vs. destroy margin.
 
-Save to working notes.
-
-#### 2D: Brand Analytics / Organic Rankings
-
-**Phase-gated load:** Read `reference/platform-refs/brand-analytics-checklist.md` NOW.
-
-Navigate to Search Query Performance via dropdown menu (NOT direct URL — causes page freeze).
-
-**For each search query where brand appears:** Search query text, search query volume, total impressions, brand impression count/share, total clicks, brand click count/share, cart adds (total and brand), purchases (total and brand, with brand purchase share).
-
-**Key extraction:** Which high-volume keywords have <2% brand impression share? These are the biggest organic gaps.
-
-Save to working notes.
+Save all browser-collected data to working notes.
 
 ### Phase 3: Platform Diagnosis (10-15 min)
 
@@ -259,6 +252,12 @@ Before saving the evidence JSON:
 - [ ] `raw_metrics` tables populated with extracted data
 - [ ] JSON is valid (no trailing commas, proper quoting)
 - [ ] `tracking_health.flags` correctly classified (see below)
+- [ ] CSV date ranges match across all 3 sources (Campaign Manager, Seller Central, Brand Analytics)
+- [ ] Campaign spend sum from CSV ≈ account total from summary bar
+- [ ] Spot-check ≥3 campaigns: CSV ACOS = Spend/Sales
+- [ ] Spot-check ≥3 ASINs: CSV session CVR = Units Ordered/Sessions
+- [ ] Featured Offer % values captured for all ASINs (from browser collection)
+- [ ] Triage list matches expectations (top 20% ASINs make sense)
 
 #### Tracking Health Flag Classification
 
