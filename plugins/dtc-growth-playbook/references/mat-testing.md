@@ -1,6 +1,6 @@
 # MAT Testing (Message-Audience-Timing)
 
-Last updated: 2026-04-09. Sources: Pilothouse (3-3-3 framework, $1B+ managed), Foxwell Digital (450+ practitioners), Dara Denney/Motion (100M+ spend managed, 550k+ ads analyzed), ATTN Agency (revenue-first framework), {Agency} Digital (ASC testing guide), Thread Transfer (A/B testing guide), Meta official documentation.
+Last updated: 2026-04-09. Sources: Pilothouse (3-3-3 framework, $1B+ managed), Foxwell Digital (450+ practitioners), Dara Denney/Motion (100M+ spend managed, 550k+ ads analyzed), ATTN Agency (revenue-first framework), Disruptive Digital (ASC testing guide), Thread Transfer (A/B testing guide), Meta official documentation.
 
 ## Core Methodology (Evergreen)
 
@@ -138,7 +138,7 @@ This approach is faster but requires tagging discipline — you need to know whi
 - Motion Creative Trends & Custom Tagging: https://motionapp.com/creative-trends
 - Dara Denney Performance Creative: https://motionapp.com/blog/dara-denneys-guide-to-building-high-performing-creative-teams
 - ATTN Agency Revenue-First Testing: https://www.attnagency.com/blog/revenue-first-creative-testing-framework-beyond-vanity-metrics-dtc-2026
-- {Agency} Digital ASC Testing Guide: https://disruptivedigital.agency/11-strategic-media-tests-to-harness-the-power-of-metas-advantage-shopping-
+- Disruptive Digital ASC Testing Guide: https://disruptivedigital.agency/11-strategic-media-tests-to-harness-the-power-of-metas-advantage-shopping-
 - Thread Transfer A/B Testing 2025: https://thread-transfer.com/blog/2025-08-03-meta-ads-ab-testing/
 - Meta A/B Testing Documentation: https://www.facebook.com/business/help/239549606692303
 - Foreplay Lens Analytics: https://www.foreplay.co/lens-creative-analytics

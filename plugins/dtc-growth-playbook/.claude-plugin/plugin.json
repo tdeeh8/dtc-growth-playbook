@@ -1,7 +1,7 @@
 {
   "name": "dtc-growth-playbook",
-  "version": "4.0.0",
-  "description": "DTC/eCommerce growth toolkit — optimized modular audit system v2 (shared reference files, phase-gated context loading, 8 independent platform audits with structured evidence JSON + cross-channel synthesis), marketing science playbook (Andromeda, TOF framework, creative testing, benchmarks), CRO diagnostic, SEO audit, and human voice protocol.",
+  "version": "5.0.0",
+  "description": "DTC/eCommerce growth toolkit — consolidated single-entry audit system (one /audit command dispatching to 8 platform skills with structured evidence JSON + cross-channel synthesis), marketing science playbook (Andromeda, TOF framework, creative testing, benchmarks), CRO diagnostic, SEO audit, and human voice protocol.",
   "author": {
     "name": "Tanner Hill"
   },
@@ -16,18 +16,18 @@
     "playbook",
     "audit",
     "growth",
-    "client-audit",
     "cro",
     "seo",
     "human-voice",
     "conversion-rate",
     "humanize",
-    "modular-audit",
+    "consolidated-audit",
     "ga4",
     "klaviyo",
     "shopify",
     "bigcommerce",
-    "audit-shared",
-    "evidence-json"
+    "evidence-json",
+    "profitability",
+    "cross-channel"
   ]
 }
