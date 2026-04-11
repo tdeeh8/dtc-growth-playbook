@@ -42,7 +42,7 @@ Each check: ID, name, what to look for, severity, estimated time.
 | QG-09 | Location targeting method | Campaign settings > Locations > Target: "Presence" not "Presence or interest" | high | 1 |
 | QG-10 | No broad match without Smart Bidding | Keywords tab — any broad match keywords in manual CPC campaigns? | high | 1 |
 
-**Category mapping:** QG-01–03 → Conversion Tracking (25%), QG-04–05 → Wasted Spend (20%), QG-06–08 → Account Structure (15%) + Keywords (15%), QG-09–10 → Settings (10%). Ads & Assets skipped for speed.
+**Category mapping:** QG-01–03 → Conversion Tracking (25%), QG-04–05 → Wasted Spend (20%), QG-06–07 → Account Structure (15%), QG-08 → Keywords & QS (15%), QG-09–10 → Settings & Targeting (10%). Ads & Assets skipped for speed.
 
 ### Meta Ads (10 checks)
 

@@ -119,6 +119,7 @@ Using the manifest (if available) and the evidence files found:
 - No GA4 evidence → "Cross-platform attribution reconciliation is not possible. We cannot compare platform claims against an independent behavioral source."
 - No Meta evidence → "Cannot assess TOF pipeline health or Meta → Google halo effects."
 - No Google evidence → "Cannot assess demand capture efficiency or branded search investment."
+- No Amazon evidence → "Cannot assess marketplace channel performance, TACoS efficiency, or organic vs. paid rank dynamics."
 - No Klaviyo evidence → "Cannot assess retention engine or email/SMS contribution to revenue."
 - No site/CRO evidence → "Cannot assess post-click conversion path quality."
 - Single platform only → "Cross-channel pattern detection is not possible with only one platform audited."

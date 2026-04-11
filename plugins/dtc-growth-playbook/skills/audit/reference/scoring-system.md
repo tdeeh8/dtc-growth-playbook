@@ -137,7 +137,11 @@ aggregate_score = sum(platform_score × platform_spend_share)
 
 Where `platform_spend_share` = platform's spend / total spend across all audited platforms. This weights the aggregate toward where the money actually goes.
 
-**Fallback:** If spend data is unavailable, use equal weighting: `1 / number_of_audited_platforms`. Non-spend platforms (Shopify, GA4, Website/CRO) share the remaining proportion equally when mixed with spend-weighted ad platforms. If the mix is unclear, default to equal weighting.
+**When all platforms have spend data:** Use the formula directly. Example: Google ($18K) + Meta ($22K) + Amazon ($8K) = $48K total. Google weight = 18/48 = 0.375, Meta = 22/48 = 0.458, Amazon = 8/48 = 0.167.
+
+**When mixing spend and non-spend platforms:** Default to equal weighting across all audited platforms. Example: Google (score 63), Meta (score 55), Shopify (score 78) = 3 platforms → aggregate = (63 + 55 + 78) / 3 = 65.3 → Grade C. This avoids the ambiguity of deciding how much weight non-spend platforms should carry.
+
+**Fallback:** If spend data is unavailable for any ad platform, use equal weighting: `1 / number_of_audited_platforms`.
 
 ---
 
