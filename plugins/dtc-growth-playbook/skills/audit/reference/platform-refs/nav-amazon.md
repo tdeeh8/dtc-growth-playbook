@@ -204,7 +204,7 @@ The table uses `role="row"` markup. Use JavaScript to extract from `[role="row"]
 
 ## Platform Gotchas — Complete Registry
 
-All 14 documented gotchas for Amazon platform audits. Reference these throughout the audit to avoid common misreads.
+All 15 documented gotchas for Amazon platform audits. Reference these throughout the audit to avoid common misreads.
 
 ### Gotcha 1: "All" Tab Shows 0 Purchases but $X in Sales
 The Purchases metric on the All tab is brand-attributed only. **Switch to Sponsored Products tab** for real purchase counts. You'll see Sales > $0 but Purchases = 0, which is confusing but expected behavior on the All tab.
