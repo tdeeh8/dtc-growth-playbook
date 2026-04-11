@@ -333,8 +333,8 @@ Read `reference/evidence-rules.md` for the full 5-label system (OBSERVED, CALCUL
 - Browser: `"Klaviyo > Flows > [Flow Name] > Analytics"`
 
 **File location:**
-- Disruptive: `Agency-Clients/reports/{Client-Name}/evidence/{Client}_klaviyo_evidence.json`
-- In-House Brand: `In-House-Brand/reports/evidence/In_House_Brand_klaviyo_evidence.json`
+- Disruptive: `Disruptive-Advertising/reports/{Client-Name}/evidence/{Client}_klaviyo_evidence.json`
+- Pill Pod: `Pill-Pod/reports/evidence/Pill_Pod_klaviyo_evidence.json`
 
 ### Phase 10: Closeout
 

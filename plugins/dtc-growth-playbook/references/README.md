@@ -44,3 +44,68 @@ If client AOV is $200+, also load high-ticket.md. If under $100, load low-ticket
 Use playbook benchmarks and frameworks when analyzing data and forming recommendations.
 ```
 
+## Publishing Updates to GitHub
+
+The playbook is distributed as a Cowork plugin via a private GitHub repo: `github.com/tdeeh8/dtc-growth-playbook`
+
+**When Tanner says "push the playbook to GitHub" or "update the plugin":**
+
+1. Sync local chunks to the plugin repo:
+```
+# Via osascript on Tanner's Mac:
+PLUGIN_DIR="/Users/tannerhill/Library/Mobile Documents/com~apple~CloudDocs/Claude Buddy/_temp-plugin-push"
+REPO_DIR="/tmp/dtc-growth-playbook"
+
+# Clone, copy updated files, commit, push
+git clone https://github.com/tdeeh8/dtc-growth-playbook.git $REPO_DIR
+# Copy all 13 chunks from reference/playbook/ → $PLUGIN_DIR/skills/playbook-reference/references/
+# Copy SKILL.md, plugin.json, playbook.md, README.md if changed
+# cp -R $PLUGIN_DIR/. $REPO_DIR/
+# git add -A && git commit -m "Update playbook chunks — [description]" && git push
+# Clean up temp dirs
+```
+
+2. Files to sync (local → plugin repo):
+   - `reference/playbook/*.md` (excluding index.md, README.md) → `references/` (shared at plugin root)
+   - Plugin skills at `skills/client-audit/SKILL.md` and `skills/playbook-reference/SKILL.md` — only if changed
+   - Plugin commands at `commands/` — only if changed
+   - `README.md` and `.claude-plugin/plugin.json` — only if plugin-facing content changed
+
+3. After push: confirm commit hash and verify file count matches
+
+**Team members get updates automatically** — Cowork pulls the latest from the GitHub repo when a plugin is used. No reinstall needed.
+
+---
+
+## Keeping It Updated
+
+This playbook uses a learning loop tied to the 3-strike promotion rule:
+
+1. After audits or strategy sessions, note new findings in memory.md tagged [new] with the chunk name. Example: `[new] [benchmarks] Client X welcome flow at 52% open rate — above top performer range. (2026-04-08)`
+2. Same pattern across 2+ clients: tag [confirmed x2]
+3. At 3 confirmations: update the relevant chunk with date and source
+4. If something contradicts existing playbook content: flag and update immediately
+
+## Skill-Specific Integration Patches
+
+### For the audit skill (all platforms)
+
+The consolidated audit skill at `skills/audit/SKILL.md` is the single entry point. It dispatches to platform-specific files under `reference/platforms/` which each specify their own playbook loading in their "Before You Start" section. The orchestrator does NOT load playbook chunks itself — each platform skill loads only what it needs.
+
+**Platform → Playbook mapping (defined in each platform's skill file):**
+
+| Platform Skill | Playbook Chunks Loaded |
+|---|---|
+| `reference/platforms/google-ads.md` | benchmarks, google-ads, measurement + AOV-conditional |
+| `reference/platforms/meta-ads.md` | benchmarks, andromeda, scaling-frequency, measurement + creative-testing, tof-strategy (conditional) + AOV-conditional |
+| `reference/platforms/shopify.md` | benchmarks, measurement + AOV-conditional |
+| `reference/platforms/bigcommerce.md` | benchmarks, measurement + AOV-conditional |
+| `reference/platforms/klaviyo.md` | benchmarks, email-sms, list-building + AOV-conditional |
+| `reference/platforms/amazon-ads.md` | benchmarks + AOV-conditional |
+| `reference/platforms/ga4.md` | benchmarks, measurement + AOV-conditional |
+| `reference/platforms/site.md` | benchmarks + high-ticket (if AOV $200+) |
+| Synthesizer (`reference/synthesis/synthesizer.md`) | benchmarks, channel-allocation, measurement + platform-conditional + AOV-conditional |
+
+### Post-Audit Playbook Learning Step
+
+After completing any audit, evaluate: did any findings contradict or extend the playbook? If yes, note in the relevant department's memory.md tagged `[new]` with the chunk it relates to.

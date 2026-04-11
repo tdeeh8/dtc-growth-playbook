@@ -20,7 +20,7 @@ You are a senior Amazon growth strategist conducting a rigorous, evidence-based 
 **Conditional playbook loading:**
 - AOV > $200 → also load `high-ticket.md`
 - AOV < $100 → also load `low-ticket.md`
-- In-House Brand audit → also load the brand's workspace config and context files
+- Pill Pod audit → also load `Pill-Pod/CLAUDE.md` and `Pill-Pod/memory.md`
 
 ## Step 0: Gather Audit Inputs
 
@@ -33,7 +33,7 @@ Scan the conversation first. Extract everything already provided. Check the audi
 3. **Product margin estimate** — needed for break-even ACOS. Ask: "Roughly what percentage of your selling price is profit before ad spend? (e.g., sell for $15, all-in cost $7 = ~53%)"
 4. **Lookback period** — default: Year to Date
 5. **Known issues** — anything the seller suspects is wrong (offer "No special context" option)
-6. **Department routing** — In-House Brand or agency client? (determines file save location)
+6. **Department routing** — Pill Pod or Disruptive client? (determines file save location)
 
 Confirm inputs and begin Phase 1 immediately.
 
@@ -54,9 +54,9 @@ Use the most reliable method available, in order:
 
 ### Verification Checkpoints (Run After Each Data Source)
 
-1. **Total cross-check:** Individual campaign spends ≈ account-level total?
+1. **Total cross-check:** Individual campaign spends ≈ account-level total? **If the sum of grid campaign spends is dramatically lower than the summary bar total, the grid date range is likely wrong (see Gotcha #15).** This is the #1 source of catastrophic errors in Amazon audits.
 2. **Rate verification:** ACOS = Spend / Sales? CVR = Orders / Clicks? Spot-check ≥3 campaigns.
-3. **Date range confirmation:** All data from same period? Amazon Ads and Seller Central often default differently.
+3. **Date range confirmation:** All data from same period? **Amazon Ads has TWO independent date pickers (summary bar vs grid) — verify BOTH.** Seller Central often defaults differently too.
 4. **Missing data:** Mark as DATA_NOT_AVAILABLE — never estimate.
 
 ---
@@ -101,13 +101,20 @@ Your only job here is to record what you see. Do NOT diagnose or recommend yet.
 
 **Reference:** See `nav-amazon.md` for ag-Grid extraction techniques and the "All tab" gotcha.
 
-Navigate to Amazon Ads Campaign Manager. Set date range to agreed period.
+Navigate to Amazon Ads Campaign Manager.
+
+**⚠️ MANDATORY DATE VERIFICATION (Gotcha #15):** Campaign Manager has TWO independent date pickers — the summary bar and the campaign grid can show different date ranges. Before extracting ANY data:
+1. Check the **summary bar** date range (top of page)
+2. Check the **campaign grid toolbar** date range (near "View: Default")
+3. If they differ, **set the grid date explicitly** to match the audit period
+4. Confirm the grid reloaded before extracting
+5. After extraction, **cross-check:** Does the sum of campaign spends from the grid approximately match the summary bar total? If not, the grid date is likely wrong.
 
 **For each active campaign, capture:** Campaign name, type (SP/SB/SD), targeting type (auto/manual), status, daily budget, top-of-search impression share + bid adjustment, clicks, CTR, CPC, total spend, orders, sales, ROAS, ACOS (verify: Spend / Sales).
 
 **Also capture paused campaigns with YTD data** — reveals what was tried and whether the pause was warranted.
 
-**Verification checkpoint:** Sum of campaign spends ≈ account total?
+**Verification checkpoint:** Sum of campaign spends ≈ account total from summary bar? If the numbers are dramatically different (e.g., sum is $342 but summary shows $16,200), the grid date range is wrong — go back and fix it before proceeding.
 
 Save to working notes before continuing.
 
@@ -198,7 +205,7 @@ Flag signals requiring investigation on other platforms:
 Build evidence JSON conforming to the schema in `evidence-schema-quick.md` (full schema: `audit-orchestrator/reference/evidence-schema.json`).
 
 **Filename:** `{Client}_amazon-ads_evidence.json`
-**Location:** Disruptive → `Agency-Clients/reports/{Client-Name}/evidence/` | In-House Brand → `In-House-Brand/reports/evidence/`
+**Location:** Disruptive → `Disruptive-Advertising/reports/{Client-Name}/evidence/` | Pill Pod → `Pill-Pod/reports/evidence/`
 
 #### Amazon-Specific account_overview Metrics
 
@@ -289,4 +296,4 @@ From `reference/playbook/benchmarks.md` — always load the full file for curren
 | Evidence JSON | `{dept}/reports/{Client-Name}/evidence/` or `{dept}/reports/evidence/` |
 | Manifest update | Same evidence directory |
 
-Where `{dept}` = `Agency-Clients` for clients, `In-House-Brand` for In-House Brand.
+Where `{dept}` = `Disruptive-Advertising` for clients, `Pill-Pod` for Pill Pod.

@@ -26,7 +26,7 @@ Reference for the google-ads-audit-v2 audit skill. Systematic checklist for Goog
 
 ## 2. Duplicate Purchase Event Detection
 
-**This is the most common and most impactful tracking problem.** The Example Client audit found exactly this: Google Shopping App Purchase AND GA4 purchase both active as primary conversion actions, inflating all reported conversion and ROAS numbers.
+**This is the most common and most impactful tracking problem.** The Kodiak Leather audit found exactly this: Google Shopping App Purchase AND GA4 purchase both active as primary conversion actions, inflating all reported conversion and ROAS numbers.
 
 **Common duplicate patterns:**
 

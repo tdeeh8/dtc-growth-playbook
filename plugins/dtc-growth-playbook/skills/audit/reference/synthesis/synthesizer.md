@@ -50,8 +50,8 @@ This skill runs AFTER one or more platform audit skills have produced evidence J
 
 1. Determine the client name from the user's request or the active manifest.
 2. Determine the evidence directory:
-   - agency clients: `Agency-Clients/reports/{Client-Name}/evidence/`
-   - In-House Brand: `In-House-Brand/reports/evidence/`
+   - Disruptive clients: `Disruptive-Advertising/reports/{Client-Name}/evidence/`
+   - Pill Pod: `Pill-Pod/reports/evidence/`
 3. List all `*_evidence.json` files in that directory.
 4. Read the audit manifest if it exists (`{Client}_audit_manifest.md`).
 5. Count evidence files. This determines the report mode:
@@ -256,8 +256,8 @@ Aggregate opportunities from ALL evidence files plus cross-channel opportunities
 
 **Default output: Markdown (.md)**
 Save to: `{department}/reports/{Client-Name}/{Client}_audit_report_{date}.md`
-- agency clients: `Agency-Clients/reports/{Client-Name}/`
-- In-House Brand: `In-House-Brand/reports/`
+- Disruptive clients: `Disruptive-Advertising/reports/{Client-Name}/`
+- Pill Pod: `Pill-Pod/reports/`
 
 **Use the structure defined in `reference/synthesis/report-template.md`.** The report sections in order:
 

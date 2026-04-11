@@ -205,7 +205,7 @@ SITE STRUCTURE:
 
 ### File details
 - **Filename:** `{Client}_website-cro_evidence.json`
-- **Location:** Client's evidence directory (per manifest or workspace routing)
+- **Location:** Client's evidence directory (per manifest or CLAUDE.md routing)
 - **Schema:** Must conform to evidence-schema-quick.md structure
 
 ### Site-audit-specific evidence mapping

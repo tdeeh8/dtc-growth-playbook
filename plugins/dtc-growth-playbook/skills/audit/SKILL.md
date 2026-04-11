@@ -16,8 +16,8 @@ The user types `/audit` (with optional context), and this skill figures out what
 | What the user says | Mode | What happens |
 |---|---|---|
 | `/audit` | **Full Audit** | Interviews the user, creates manifest, runs platforms in sequence, auto-generates report |
-| `/audit Example Client` (no manifest exists) | **Full Audit** | Same as above, pre-fills client name |
-| `/audit Example Client` (manifest exists) | **Resume** | Reads manifest, reports progress, continues next platform |
+| `/audit Kodiak Leather` (no manifest exists) | **Full Audit** | Same as above, pre-fills client name |
+| `/audit Kodiak Leather` (manifest exists) | **Resume** | Reads manifest, reports progress, continues next platform |
 | `/audit` + pastes a platform URL | **Channel Audit** | Auto-detects platform from URL, runs that single audit |
 | "audit their Meta" / "audit Google Ads" | **Channel Audit** | Runs one platform, offers to generate report after |
 | "generate the audit report" / "synthesize" | **Report** | Reads all evidence files, generates cross-channel report |
@@ -31,8 +31,8 @@ Read the user's message and check for existing state. This determines which mode
 ### Check for existing manifest:
 1. Determine client name from the user's message (if provided)
 2. Search for `{Client}_audit_manifest.md` in likely locations:
-   - `Agency-Clients/reports/{Client-Name}/evidence/`
-   - `In-House-Brand/reports/evidence/`
+   - `Disruptive-Advertising/reports/{Client-Name}/evidence/`
+   - `Pill-Pod/reports/evidence/`
 3. If found → manifest exists. If not → no manifest.
 
 ### Mode routing:
@@ -88,8 +88,8 @@ If the URL is ambiguous, ask: "That looks like [domain]. Should I run a [detecte
 Use AskUserQuestion to collect what's needed. Be efficient — one question with multiple fields, not a long interview.
 
 **Required:**
-- **Client name** — Confirm PascalCase-With-Dashes version (e.g., "Example Client" → `Example-Client`)
-- **Department** — Agency Clients or In-House Brand?
+- **Client name** — Confirm PascalCase-With-Dashes version (e.g., "Kodiak Leather" → `Kodiak-Leather`)
+- **Department** — Disruptive Advertising or Pill Pod?
 - **Platforms accessible** — checkboxes:
   - [ ] Shopify
   - [ ] BigCommerce
@@ -109,8 +109,8 @@ If the user already provided info in their message, pre-fill and only ask for ga
 ### Step 1.2: Create Manifest + Evidence Directory
 
 1. Create the evidence directory:
-   - Disruptive: `Agency-Clients/reports/{Client-Name}/evidence/`
-   - In-House Brand: `In-House-Brand/reports/evidence/`
+   - Disruptive: `Disruptive-Advertising/reports/{Client-Name}/evidence/`
+   - Pill Pod: `Pill-Pod/reports/evidence/`
 2. Create `{Client}_audit_manifest.md` using the format in `reference/manifest-format.md`
 3. Set accessible platforms to `NOT STARTED`, inaccessible to `NO ACCESS`
 
@@ -309,8 +309,8 @@ This is how the orchestrator executes a platform audit. It applies in Modes 1, 2
 - The report generates automatically when auditing is done
 
 ### File routing
-- Disruptive evidence: `Agency-Clients/reports/{Client-Name}/evidence/`
-- In-House Brand evidence: `In-House-Brand/reports/evidence/`
+- Disruptive evidence: `Disruptive-Advertising/reports/{Client-Name}/evidence/`
+- Pill Pod evidence: `Pill-Pod/reports/evidence/`
 - Reports: same parent directory as evidence (`reports/{Client-Name}/`)
 - PascalCase-With-Dashes for client folder names
 

@@ -245,8 +245,8 @@ Tag data for `raw_metrics.audience_details`.
 - Post-Jan 2026 numbers are NOT comparable to pre-Jan 2026
 
 **File location:**
-- Disruptive: `Agency-Clients/reports/{Client-Name}/evidence/{Client}_meta-ads_evidence.json`
-- In-House Brand: `In-House-Brand/reports/evidence/In_House_Brand_meta-ads_evidence.json`
+- Disruptive: `Disruptive-Advertising/reports/{Client-Name}/evidence/{Client}_meta-ads_evidence.json`
+- Pill Pod: `Pill-Pod/reports/evidence/Pill_Pod_meta-ads_evidence.json`
 
 > **Evidence labeling:** Follow `reference/evidence-rules.md`. Meta-specific source format: "Meta Ads Manager > [page] > [section] > [metric] (custom columns)".
 

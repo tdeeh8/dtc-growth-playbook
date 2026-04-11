@@ -11,9 +11,9 @@ argument-hint: "[client name] or [platform URL]"
 
 ```
 /audit                                  → Asks which client and what to audit
-/audit Example Client                   → New client? Full interview. Existing? Resumes where you left off
+/audit Kodiak Leather                   → New client? Full interview. Existing? Resumes where you left off
 /audit https://ads.google.com/...       → Auto-detects Google Ads, runs that audit
-/audit Example Client Meta              → Runs just Meta Ads for Example Client
+/audit Kodiak Leather Meta              → Runs just Meta Ads for Kodiak Leather
 ```
 
 ## What This Command Does

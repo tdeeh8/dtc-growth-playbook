@@ -166,8 +166,8 @@ Synthesize Phases 1-6 into:
 **Google Ads `raw_metrics` keys:** `campaign_details`, `conversion_action_details`, `auction_insights`, `search_term_categories`
 
 **File location:**
-- Disruptive: `Agency-Clients/reports/{Client-Name}/evidence/{Client}_google-ads_evidence.json`
-- In-House Brand: `In-House-Brand/reports/evidence/In_House_Brand_google-ads_evidence.json`
+- Disruptive: `Disruptive-Advertising/reports/{Client-Name}/evidence/{Client}_google-ads_evidence.json`
+- Pill Pod: `Pill-Pod/reports/evidence/Pill_Pod_google-ads_evidence.json`
 
 **Google Ads-specific validation:**
 - Campaign spend sum ≈ account total (±rounding) — flag discrepancies

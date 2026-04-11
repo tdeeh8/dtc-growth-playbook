@@ -1,6 +1,6 @@
 {
   "name": "dtc-growth-playbook",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "description": "DTC/eCommerce growth toolkit — consolidated single-entry audit system (one /audit command dispatching to 8 platform skills with structured evidence JSON + cross-channel synthesis), marketing science playbook (Andromeda, TOF framework, creative testing, benchmarks), CRO diagnostic, SEO audit, and human voice protocol.",
   "author": {
     "name": "Tanner Hill"
