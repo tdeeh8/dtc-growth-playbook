@@ -7,8 +7,8 @@
     {
       "name": "dtc-growth-playbook",
       "source": "./plugins/dtc-growth-playbook",
-      "description": "DTC/eCommerce growth toolkit — marketing science playbook, client growth audit, CRO audit, SEO audit, and human voice protocol.",
-      "version": "2.4.0",
+      "description": "Triage-first marketing audit via Adzviser MCP. Scans connected ad platforms, scores RED/YELLOW/GREEN, deep-dives only where problems exist.",
+      "version": "6.0.0",
       "author": {
         "name": "Tanner Hill"
       }
