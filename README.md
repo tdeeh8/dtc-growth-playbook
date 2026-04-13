@@ -5,44 +5,35 @@ A Claude plugin for DTC/eCommerce growth marketing — modular audit system, mar
 ## Install
 
 ```
-/plugin install github.com/{your-username}/dtc-growth-playbook
+/plugin install github.com/tdeeh8/dtc-growth-playbook
 ```
 
 ## What's Inside
 
-### Modular Audit System v2 (NEW in 3.0.0)
+### Consolidated Audit System (v4)
 
-Independent platform audits that each produce a standardized evidence file, then a synthesis skill reads all evidence and generates a unified cross-channel report.
+One command, one skill. `/audit` handles full multi-platform audits, single-channel deep dives, resume, and report generation — all from a single entry point.
+
+**Platforms:** Google Ads, Meta Ads, Amazon Ads, GA4, Klaviyo, Shopify, BigCommerce, Site/CRO, SEO
 
 **How it works:**
-1. `/audit-start` — Creates audit manifest, identifies which platforms to audit
-2. Run platform audits in any order (each is independent):
-   - `/audit-google-ads` — Google Ads deep audit (PMax, Search, tracking health)
-   - `/audit-meta` — Meta Ads audit (creative, audience, attribution)
-   - `/audit-ga4` — GA4 analytics audit (funnel, attribution, tracking validation)
-   - `/audit-klaviyo` — Klaviyo email/SMS audit (flows, campaigns, list health)
-   - `/audit-shopify` — Shopify profitability audit (financial source of truth)
-   - `/audit-bigcommerce` — BigCommerce profitability audit (Shopify alternative)
-   - `/audit-amazon` — Amazon Ads + Seller Central audit
-   - `/audit-site` — Website CRO audit (homepage, PDP, cart, checkout, mobile)
-3. `/audit-synthesize` — Cross-channel synthesis + unified report
+1. `/audit [client]` — Interviews you, creates audit plan, runs platform audits in sequence
+2. Each platform produces structured evidence JSON
+3. Cross-channel synthesis detects patterns: attribution overlap, halo effects, cannibalization, budget imbalance, funnel gaps
+4. Report generated with MER/CM1/CM2/CM3 profitability framework
 
-Each platform audit writes a structured JSON evidence file. The synthesizer reads all evidence files and detects cross-channel patterns: attribution overlap, halo effects, cannibalization, budget imbalance, and funnel gaps.
+### Ads Audit — Triage-First via Adzviser (NEW in 5.2.0)
 
-**Key features:**
-- Works across sessions — evidence files persist between chats
-- Single-platform or multi-platform — synthesizer handles 1 to N evidence files
-- MER/CM1/CM2/CM3 profitability framework
-- Anti-hallucination verification on every report
-- Every number traces to a source (OBSERVED/CALCULATED/INFERENCE/ASSUMPTION)
+`/ads-audit` uses Adzviser MCP to pull data programmatically instead of browser scraping. Runs lightweight triage on all connected platforms, scores each RED/YELLOW/GREEN, then deep-dives only where problems exist.
 
-### Legacy Audit Skills
+**Platforms:** Google Ads, Meta Ads, Amazon Ads, GA4, Shopify, BigCommerce
 
-| Skill | Command | Description |
-|-------|---------|-------------|
-| client-audit | `/audit` | Full multi-platform growth audit (v1 — single-pass) |
-| cro-audit | `/cro-audit` | CRO diagnostic audit |
-| seo-audit | `/seo-audit` | SEO audit (keywords, on-page, technical, competitors) |
+**Key differences from `/audit`:**
+- Data via Adzviser MCP (faster, no browser needed)
+- Triage-first: scan vitals, find the bleeding, then operate
+- GREEN platforms cost almost nothing — budget goes to analysis
+- Workspace cache for instant client lookup after first run
+- Does NOT cover: SEO, CRO, Klaviyo, site design/UX (use `/audit` for those)
 
 ### Marketing Science Playbook
 
@@ -59,18 +50,30 @@ Each platform audit writes a structured JSON evidence file. The synthesizer read
 | human-voice | `/humanize` | Strip AI tells from written content |
 | playbook-reference | `/playbook` | Auto-load relevant playbook chunks for strategy work |
 
+### Legacy Skills
+
+| Skill | Command | Description |
+|-------|---------|-------------|
+| client-audit | — | Full multi-platform growth audit (v1) |
+| cro-audit | `/cro-audit` | CRO diagnostic audit |
+| seo-audit | `/seo-audit` | SEO audit |
+
 ## Changelog
 
-### 3.0.0 — Modular Audit System v2
-- Added 10 new skills: audit-orchestrator, google-ads-v2, meta-ads-v2, ga4-audit-v2, klaviyo-audit-v2, shopify-audit-v2, bigcommerce-audit-v2, amazon-ads-v2, site-audit-v2, audit-synthesizer
-- Added 10 new slash commands for v2 audit workflow
-- Standardized JSON evidence format with schema validation
-- Cross-channel synthesis with profitability framework
-- Existing v1 skills (client-audit, cro-audit, seo-audit) unchanged
+### 5.2.0 — Ads Audit (Adzviser-powered)
+- Added ads-audit skill: triage-first architecture, Adzviser MCP data collection
+- Added `/ads-audit` command
+- Workspace cache system for instant client resolution
+- Covers: Google Ads, Meta Ads, Amazon Ads, GA4, Shopify, BigCommerce
+- Profitability framework with CM1/CM2/CM3 waterfall, break-even CPA/ROAS, MER
 
-### 2.4.0
-- Added client-audit reference files (nav guides, checklists, report template)
-- SEO audit skill
+### 5.1.2 — Consolidated Audit
+- Health Score (0-100), parallel execution, quick audit mode
+- 9 platform skills, structured evidence JSON, cross-channel synthesis
+
+### 3.0.0 — Modular Audit System v2
+- 10 new skills with standardized JSON evidence
+- Cross-channel synthesis with profitability framework
 
 ### 2.3.0
 - Initial release with playbook, client-audit, cro-audit, human-voice
