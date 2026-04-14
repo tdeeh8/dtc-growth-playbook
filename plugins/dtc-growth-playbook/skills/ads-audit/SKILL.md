@@ -48,9 +48,9 @@ Traditional audits go max-depth on every platform equally. That wastes 60-80% of
 
 **A. Resolve workspace from cache:**
 
-1. Extract client name from the user's message (e.g., "audit Acme Brand" → search for "Acme")
+1. Extract client name from the user's message (e.g., "audit Cresco Resco" → search for "Cresco")
 2. Check if `adzviser_workspace_cache.md` exists in the user's workspace root
-3. **If cache exists:** Read it, search for client name (fuzzy match — "Acme-Brand" matches "Acme-Brand")
+3. **If cache exists:** Read it, search for client name (fuzzy match — "Cresco Resco" matches "Cresco-Resco")
    - **Found** → note the `workspace_name` and its connected platforms. Proceed to step B with this info.
    - **Not found** → cache may be stale. Go to step 4.
 4. **If no cache or cache miss:** Call `list_workspace`, then immediately parse and save the cache file (see cache format below). Search the fresh cache for the client.
@@ -99,11 +99,27 @@ Total workspaces: {N}
 2. Create `{Client}_audit_manifest.md` with: client info, workspace_name, lookback period, platform list, Data Source: Adzviser MCP
 3. Include a Triage Results section (will be filled in Step 1.4)
 
+### Step 1.3.5: Connection Health Check (BEFORE Triage)
+
+**Purpose:** Detect dead connections BEFORE wasting attempts on triage pulls. A broken token will timeout on every retry — catching it early saves 3-5 failed attempts per dead platform.
+
+**Protocol:**
+1. For each platform the user confirmed, call `list_metrics_and_breakdowns_{platform}` (e.g., `list_metrics_and_breakdowns_shopify`).
+2. This is a lightweight metadata call — no date ranges, no data. It returns the list of available metrics.
+3. **If it returns successfully** → platform connection is alive. Proceed to triage.
+4. **If it times out or errors** → the connection itself is dead (expired token, revoked access, etc.).
+   - Immediately score as ⚠️ ERROR in the manifest
+   - Tell the user: "{Platform} connection is broken — `list_metrics` timed out. This needs to be re-authorized in Adzviser at adzviser.com/main. Skipping to next platform."
+   - Do NOT attempt triage pulls on this platform — they will all fail
+   - To confirm it's workspace-specific (not systemic), optionally test the same `list_metrics_and_breakdowns_{platform}` on a different workspace
+
+**Execute health checks in order:** Shopify/BigCommerce → Ad platforms → GA4. If the financial anchor (Shopify/BC) is dead, immediately note that profitability analysis will use estimates.
+
 ### Step 1.4: Run Triage Scan (THE CORE STEP)
 
 **Read `reference/triage-pulls.md` now.** It contains the exact pull specs and scoring thresholds for every platform.
 
-Execute one lightweight Adzviser pull per accessible platform. These are account-level totals only — no breakdowns, no campaign details. The goal is to get enough signal to decide where to go deep.
+Execute one lightweight Adzviser pull per accessible platform (only those that passed the health check). These are account-level totals only — no breakdowns, no campaign details. The goal is to get enough signal to decide where to go deep.
 
 **Triage execution order:**
 1. Shopify/BigCommerce first (financial anchor — AOV, revenue, margins inform everything else)
@@ -265,11 +281,13 @@ When the user names a specific platform. Skips triage — goes straight to deep-
 
 | File | When to load |
 |---|---|
-| `reference/triage-pulls.md` | Always — at triage step (Step 1.4) |
+| `reference/triage-pulls.md` | Always — at triage step (Step 1.4). Includes YoY default protocol. |
 | `reference/playbook/benchmarks.md` | At triage scoring AND any deep-dive — contains Floor/Healthy/Strong thresholds per platform |
 | `reference/adzviser-data-layer.md` | Before any deep-dive |
 | `reference/platforms/*.md` | Only for RED/YELLOW platforms |
-| `reference/synthesizer.md` | At report generation |
+| `reference/diagnostic-patterns.md` | At synthesizer step AND any deep-dive — codified patterns for UTM fragmentation, conversion duplication, owned-channel collapse, etc. |
+| `reference/synthesizer.md` | At report generation — includes Marketing Director Overview structure |
+| `reference/docx-template.md` | When generating a Word-doc report (Agency / Prospect deliverables) — status-color helpers and full template |
 
 ### Playbook References (conditional, from workspace)
 

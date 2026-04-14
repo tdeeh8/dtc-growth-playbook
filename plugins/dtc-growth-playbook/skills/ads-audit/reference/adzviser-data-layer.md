@@ -44,6 +44,16 @@ Adzviser has a ~60 second timeout.
 - Second timeout → reduce to 3-4 metrics
 - Still failing → mark DATA_NOT_AVAILABLE
 
+**YoY / Multi-Period Pulls:**
+- **Default to separate calls** — one per date range. Dual date-range requests (two periods in one `date_ranges` array) timeout ~2× more often than single-period calls.
+- Pull current period first (more important), then comparison period.
+- If the current period already timed out at 8 metrics, don't even try dual-range — go straight to single-period with fewer metrics.
+
+**Connection vs. Query Failures:**
+- If `list_metrics_and_breakdowns_*` itself times out → the connection is dead (token expired, access revoked). Do NOT retry data pulls — they will all fail. Score as ⚠️ ERROR immediately.
+- If `list_metrics` succeeds but `retrieve_reporting_data` times out → query is too heavy. Apply the split/reduce rules above.
+- To confirm a dead connection is workspace-specific (not systemic Adzviser outage), test the same `list_metrics_and_breakdowns_*` tool on a different workspace.
+
 ## Platform Request Keys
 
 | Platform | Request Key | list_metrics Tool |

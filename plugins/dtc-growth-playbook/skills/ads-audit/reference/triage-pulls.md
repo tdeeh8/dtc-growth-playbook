@@ -1,17 +1,40 @@
 # Triage Pull Specs & Scoring
 
-One pull per platform. Account-level totals only. The goal: enough signal to decide RED/YELLOW/GREEN in under 5 minutes per platform.
+One pull per platform (× 2 for YoY). Account-level totals only. The goal: enough signal to decide RED/YELLOW/GREEN in under 5 minutes per platform AND see the YoY trajectory.
 
-**Also load:** `reference/playbook/benchmarks.md` — contains Floor/Healthy/Strong thresholds per platform and profitability math (break-even CPA, target ROAS, minimum ROAS). Use these to contextualize the triage scoring below. The thresholds in this file are simplified decision rules; benchmarks.md has the full vertical-specific context.
+**Also load:** `reference/playbook/benchmarks.md` — contains Floor/Healthy/Strong thresholds per platform and profitability math. Use these to contextualize the triage scoring below.
 
 ---
 
 ## Execution Protocol
 
-1. For each platform, call `list_metrics_and_breakdowns_*` to confirm metric names
-2. Execute the pull below using `retrieve_reporting_data`
-3. Score against thresholds
-4. Record results in manifest
+1. **Health check first** — `list_metrics_and_breakdowns_*` should have already been called in Step 1.3.5. Skip any platform that failed the health check.
+2. Execute the pull below using `retrieve_reporting_data` — **run current period AND YoY period for every platform** (see YoY Default Protocol below).
+3. Score against thresholds using the current period.
+4. Compute YoY deltas for headline metrics (spend, revenue, ROAS, transactions).
+5. Run sanity checks (see below) — YoY included.
+6. Record current + YoY results in manifest.
+
+## YoY Default Protocol (mandatory)
+
+**Every triage pull runs twice: current period + year-ago period.**
+
+Single-period audits miss the highest-leverage finding type: owned-channel collapse. Email/SMS revenue falling 90% YoY is invisible without a baseline. YoY is now required on every triage pull, not a follow-up.
+
+**How it works:**
+- Current period: from manifest (e.g., Last 30 days = today-30 → today-1)
+- YoY period: same calendar range offset by 1 year
+- Run as **two separate calls per platform**, never dual-range in one request (timeout risk — see "YoY / Comparison Period Pulls — Split Protocol" below)
+- Store both in evidence JSON as `account_overview.current` and `account_overview.prior_year`
+- The synthesizer reads both and calculates YoY deltas
+
+**Platforms where YoY is especially valuable (do not skip):**
+- GA4 Channel Group breakdown — catches owned-channel collapse (Email/SMS/Direct)
+- GA4 Source/Medium breakdown — catches UTM tagging regressions
+- Google Ads + Meta Ads totals — ROAS trajectory
+- Shopify/BigCommerce — revenue + AOV trajectory
+
+**When to skip YoY:** only if the account wasn't running the platform 12 months ago (new account, platform added mid-year). Note that in the manifest.
 
 All pulls use:
 ```
@@ -24,6 +47,49 @@ retrieve_reporting_data:
       metrics: [...]
       breakdowns: []  # NO breakdowns for triage
 ```
+
+### YoY / Comparison Period Pulls — Split Protocol
+
+**CRITICAL: Always pull current period and comparison period as SEPARATE requests.**
+
+Adzviser has a ~60 second timeout. Dual date-range pulls (two periods in one request) timeout significantly more often than single-period pulls. The extra API call is much cheaper than a timeout + retry cycle.
+
+```
+# DO THIS — two separate calls:
+retrieve_reporting_data:  # Call 1: Current period
+  date_ranges: [["2026-03-14", "2026-04-13"]]
+  ...
+
+retrieve_reporting_data:  # Call 2: Comparison period
+  date_ranges: [["2025-03-14", "2025-04-13"]]
+  ...
+
+# NOT THIS — one combined call that's more likely to timeout:
+retrieve_reporting_data:
+  date_ranges: [["2026-03-14", "2026-04-13"], ["2025-03-14", "2025-04-13"]]
+  ...
+```
+
+**Exception:** If single-period pulls are working reliably and the platform is fast (e.g., GA4 with few metrics), dual-range is acceptable. But default to splitting.
+
+### Data Quality Sanity Checks
+
+After scoring, run these sanity checks to catch tracking artifacts and implausible data:
+
+| Metric | Implausible Range | Likely Cause | Action |
+|---|---|---|---|
+| ATC rate (ATCs ÷ Sessions) | >40% | Auto-add feature, popup, or event firing multiple times per pageview | Flag as DATA_QUALITY_SUSPECT. Note: "ATC rate of X% exceeds realistic range. Likely a tracking artifact (auto-add, popup, or duplicate event firing). Use with caution for YoY comparison." |
+| Checkout rate (Checkouts ÷ Sessions) | >25% | Same as above, or checkout event misconfigured | Flag as DATA_QUALITY_SUSPECT |
+| CVR (Transactions ÷ Sessions) | >10% (non-Amazon) | Purchase event firing on non-purchase pages, or inflated by returning to thank-you page | Flag as DATA_QUALITY_SUSPECT |
+| Return rate | >40% | Possible data issue OR genuinely broken product/sizing | Flag but investigate — could be real |
+| Discount rate | >50% | Possible gross/net sales confusion | Verify calculation: Discounts ÷ Gross sales |
+
+**YoY sanity check:** If a RATE metric changed >50% YoY (e.g., ATC rate went from 22% to 10%), check whether the change is:
+- **Volume-proportional** (e.g., ATCs dropped 72% but sessions dropped 51% = rate dropped ~44% — proportional to traffic quality decline)
+- **Disproportionate by device** (e.g., desktop ATC rate cratered 82% while mobile only dropped 14% — suggests a platform-specific change, not real behavior)
+- **Tracking-related** (e.g., one period shows implausible rates that the other doesn't — likely a tracking change between periods)
+
+When a sanity check fires, note it in the manifest and in the triage presentation to the user. Do NOT let inflated historical metrics make current performance look worse than it is.
 
 ---
 
