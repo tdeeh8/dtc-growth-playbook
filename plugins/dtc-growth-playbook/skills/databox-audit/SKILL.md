@@ -1,18 +1,18 @@
 ---
-name: ads-audit
-description: "Triage-first marketing audit via Adzviser MCP. Scans all connected ad platforms with lightweight diagnostic pulls, scores each red/yellow/green, then deep-dives ONLY into platforms with real problems. Use for: '/ads-audit', 'ads audit', 'audit their ads', 'quick audit', 'triage audit', 'audit [client]', or when the user wants an Adzviser-powered marketing audit. Covers: Google Ads, Meta Ads, Amazon Ads, GA4, Shopify/BigCommerce. Does NOT cover SEO, CRO, or Klaviyo."
+name: databox-audit
+description: "Triage-first marketing audit via Databox MCP. Scans all connected ad platforms with lightweight diagnostic pulls, scores each red/yellow/green, then deep-dives ONLY into platforms with real problems. Use for: '/databox-audit', 'databox audit', 'audit their databox', 'triage audit via databox', 'audit [client] in databox', or when the user wants a Databox-powered marketing audit. Covers: Google Ads, Meta Ads, Amazon Ads, GA4, Shopify/BigCommerce. Does NOT cover SEO, CRO, or Klaviyo."
 ---
 
-# Ads-Audit — Triage-First Marketing Audit
+# Databox-Audit — Triage-First Marketing Audit
 
-> One command: `/ads-audit`. Pulls lightweight diagnostics across all connected platforms, scores each one, then deep-dives only where problems exist. This means the model spends its token budget on analysis, not extraction.
+> One command: `/databox-audit`. Pulls lightweight diagnostics across all connected platforms, scores each one, then deep-dives only where problems exist. This means the model spends its token budget on analysis, not extraction.
 
 ## Why Triage-First
 
-Traditional audits go max-depth on every platform equally. That wastes 60-80% of context on platforms that are fine. This skill flips it: scan the vitals first (1 pull per platform), find the bleeding, then operate. The result is sharper analysis where it matters and faster delivery.
+Traditional audits go max-depth on every platform equally. That wastes 60-80% of context on platforms that are fine. This skill flips it: scan the vitals first (a handful of per-metric pulls per platform), find the bleeding, then operate. The result is sharper analysis where it matters and faster delivery.
 
 **Platforms:** Google Ads, Meta Ads, Amazon Ads, GA4, Shopify/BigCommerce
-**Data source:** Adzviser MCP (with browser fallback for UI-only checks)
+**Data source:** Databox MCP (with browser fallback for UI-only checks)
 
 ---
 
@@ -20,8 +20,8 @@ Traditional audits go max-depth on every platform equally. That wastes 60-80% of
 
 | What the user says | Mode | What happens |
 |---|---|---|
-| `/ads-audit [client]` (no manifest) | **Full Triage** | Gathers info, runs triage on all platforms, deep-dives flagged ones, generates report |
-| `/ads-audit [client]` (manifest exists) | **Resume** | Reads manifest, reports progress, continues |
+| `/databox-audit [client]` (no manifest) | **Full Triage** | Gathers info, runs triage on all platforms, deep-dives flagged ones, generates report |
+| `/databox-audit [client]` (manifest exists) | **Resume** | Reads manifest, reports progress, continues |
 | "audit their Google Ads" / "audit Meta" | **Channel Audit** | Skips triage, runs full deep-dive on that one platform |
 | "generate the report" / "synthesize" | **Report** | Reads evidence files, generates cross-channel report |
 
@@ -42,84 +42,87 @@ Traditional audits go max-depth on every platform equally. That wastes 60-80% of
 
 ## Mode 1: Full Triage Audit
 
-### Step 1.1: Resolve Workspace + Gather Client Info
+### Step 1.1: Resolve Account + Gather Client Info
 
 **Cache-first flow: look up the client BEFORE asking questions so you can pre-populate platform options.**
 
-**A. Resolve workspace from cache:**
+**A. Resolve account from cache:**
 
 1. Extract client name from the user's message (e.g., "audit Acme Store" → search for "Acme")
-2. Check if `adzviser_workspace_cache.md` exists in the user's workspace root
+2. Check if `databox_account_cache.md` exists in the user's workspace root
 3. **If cache exists:** Read it, search for client name (fuzzy match — "Acme Store" matches "Acme-Store")
-   - **Found** → note the `workspace_name` and its connected platforms. Proceed to step B with this info.
+   - **Found** → note the `account_id` and the `data_source_id` for each connected platform. Proceed to step B with this info.
    - **Not found** → cache may be stale. Go to step 4.
-4. **If no cache or cache miss:** Call `list_workspace`, then immediately parse and save the cache file (see cache format below). Search the fresh cache for the client.
-5. **Still not found after fresh pull** → ask user for the exact workspace name in Adzviser
+4. **If no cache or cache miss:** Call `list_accounts`, then for the matching account call `list_data_sources(account_id)`. Parse and save the cache file (see cache format below). Search the fresh cache for the client.
+5. **Still not found after fresh pull** → ask user for the exact account name in Databox.
 
 **B. Ask user to confirm — with pre-populated platforms from cache:**
 
 Use AskUserQuestion. The platform question should show ONLY the platforms found in the cache for this client, pre-selected, so the user just confirms or unchecks any they don't want audited.
 
 **Required questions:**
-- **Client name + workspace** → "I found workspace '{Workspace-Name}' with these platforms. Confirm?" (pre-filled from cache)
-- **Platforms to audit** → multiSelect checkboxes showing ONLY the client's connected platforms from cache (e.g., if cache shows "Google Ads, Meta Ads, Shopify, GA4" → show those four as options, not a generic list of all possible platforms)
+- **Client name + account** → "I found account '{Account-Name}' with these data sources. Confirm?" (pre-filled from cache)
+- **Platforms to audit** → multiSelect checkboxes showing ONLY the client's connected data sources from cache (e.g., if cache shows "Google Ads, Meta Ads, Shopify, GA4" → show those four as options, not a generic list of all possible platforms)
 - **Department** → Agency client, Brand (own product), or Prospect (pre-sales)?
 - **Lookback period** → Options: Last 30 days, Last 90 days, YTD, Last 6 months, Last 12 months, Custom
 - **Known focus areas** → anything specific? (e.g., "ROAS dropping", "PMax cannibalizing branded")
 
 **Optional:** Monthly revenue, monthly ad spend, AOV tier, vertical
 
-Store confirmed `workspace_name` in manifest.
+Store confirmed `account_id` and the per-platform `data_source_id` map in the manifest.
 
-### Step 1.2: Workspace Cache Management
+### Step 1.2: Databox Account Cache Management
 
-The cache avoids the slow 100K+ `list_workspace` pull on every audit.
+The cache avoids re-calling `list_accounts` + `list_data_sources` on every audit.
 
-**Cache file format** (`adzviser_workspace_cache.md` in workspace root):
+**Cache file format** (`databox_account_cache.md` in workspace root):
 ```markdown
-# Adzviser Workspace Cache
+# Databox Account Cache
 Last updated: {YYYY-MM-DD}
-Total workspaces: {N}
+Total accounts: {N}
 
-| Workspace | Platforms |
-|---|---|
-| Client-Name | Google Ads, Meta Ads, Shopify, GA4 |
+| Account | account_id | Platform | data_source_id |
+|---|---|---|---|
+| Client-Name | 12345 | Google Ads | 678901 |
+| Client-Name | 12345 | Meta Ads | 678902 |
+| Client-Name | 12345 | Shopify | 678903 |
+| Client-Name | 12345 | GA4 | 678904 |
 ```
 
 **Cache rules:**
 - The cache is user-specific and lives in the workspace root — NOT inside the skill source. Each user generates their own on first run.
-- Parse the full `list_workspace` response via bash (python/grep) — do NOT try to read the raw 100K+ response into context. Normalize platform types (e.g., "Facebook Ads" → "Meta Ads", "Google Analytics" → "GA4").
-- The cache is a slim table: workspace name + comma-separated platform types. No account names or IDs needed.
-- If a user says a platform is connected but the cache doesn't show it → re-pull `list_workspace` and update cache
-- If cache is older than 30 days → re-pull on next audit to catch new client workspaces
+- Parse the responses via bash (python/grep) — do NOT try to read raw long responses into context. Normalize platform types (e.g., "Facebook Ads" → "Meta Ads", "Google Analytics 4" → "GA4").
+- The cache is a slim table: account name + account_id + platform + data_source_id. No metric keys — those are resolved at pull time via `list_metrics`.
+- If a user says a platform is connected but the cache doesn't show it → re-pull `list_data_sources` for that account and update cache.
+- If cache is older than 30 days → re-pull on next audit to catch new accounts or new integrations.
 
 ### Step 1.3: Create Manifest + Evidence Directory
 
 1. Create evidence directory per file routing rules
-2. Create `{Client}_audit_manifest.md` with: client info, workspace_name, lookback period, platform list, Data Source: Adzviser MCP
+2. Create `{Client}_audit_manifest.md` with: client info, `account_id`, per-platform `data_source_id` map, lookback period, platform list, Data Source: Databox MCP
 3. Include a Triage Results section (will be filled in Step 1.4)
 
 ### Step 1.3.5: Connection Health Check (BEFORE Triage)
 
-**Purpose:** Detect dead connections BEFORE wasting attempts on triage pulls. A broken token will timeout on every retry — catching it early saves 3-5 failed attempts per dead platform.
+**Purpose:** Detect dead connections BEFORE wasting attempts on triage pulls. A stale data source will return empty/error on every metric pull — catching it early saves dozens of failed calls per dead platform.
 
 **Protocol:**
-1. For each platform the user confirmed, call `list_metrics_and_breakdowns_{platform}` (e.g., `list_metrics_and_breakdowns_shopify`).
-2. This is a lightweight metadata call — no date ranges, no data. It returns the list of available metrics.
-3. **If it returns successfully** → platform connection is alive. Proceed to triage.
-4. **If it times out or errors** → the connection itself is dead (expired token, revoked access, etc.).
+1. For each platform the user confirmed, call `list_metrics(data_source_id=N)` using the `data_source_id` from cache.
+2. This is a lightweight metadata call — no date ranges, no data. It returns the list of available metric_keys for that data source.
+3. **If it returns a non-empty metric list** → platform connection is alive. Proceed to triage.
+4. **If it returns empty, errors, or 403/401** → the data source isn't synced or the token is broken.
    - Immediately score as ⚠️ ERROR in the manifest
-   - Tell the user: "{Platform} connection is broken — `list_metrics` timed out. This needs to be re-authorized in Adzviser at adzviser.com/main. Skipping to next platform."
+   - Tell the user: "{Platform} data source is not returning metrics — the integration may need to be reconnected in Databox (app.databox.com → Data Manager). Skipping to next platform."
    - Do NOT attempt triage pulls on this platform — they will all fail
-   - To confirm it's workspace-specific (not systemic), optionally test the same `list_metrics_and_breakdowns_{platform}` on a different workspace
+   - To confirm it's data-source-specific (not systemic), optionally test `list_metrics` on a different known-good data source.
 
 **Execute health checks in order:** Shopify/BigCommerce → Ad platforms → GA4. If the financial anchor (Shopify/BC) is dead, immediately note that profitability analysis will use estimates.
 
 ### Step 1.4: Run Triage Scan (THE CORE STEP)
 
-**Read `reference/triage-pulls.md` now.** It contains the exact pull specs and scoring thresholds for every platform.
+**Read `reference/triage-pulls.md` now.** It contains the exact metric lists, pull specs, and scoring thresholds for every platform.
 
-Execute one lightweight Adzviser pull per accessible platform (only those that passed the health check). These are account-level totals only — no breakdowns, no campaign details. The goal is to get enough signal to decide where to go deep.
+Execute the per-platform triage pulls using `load_metric_data` (only for data sources that passed the health check). These are account-level totals only — no breakdowns, no dimensions. The goal is to get enough signal to decide where to go deep.
 
 **Triage execution order:**
 1. Shopify/BigCommerce first (financial anchor — AOV, revenue, margins inform everything else)
@@ -135,18 +138,18 @@ Score each platform using the thresholds in `reference/triage-pulls.md`:
 | 🔴 RED | Critical issues detected | Deep-dive required — read platform's reference file |
 | 🟡 YELLOW | Concerning signals, needs investigation | Moderate dive — read platform's reference file, run 2-3 targeted pulls |
 | 🟢 GREEN | Looks healthy at account level | Skip deep-dive — 2-3 sentence summary in report |
-| ⚠️ ERROR | Auth failure, timeout, or connection issue | Cannot pull — note what analysis is now impossible |
+| ⚠️ ERROR | Auth failure, empty metrics, or data source issue | Cannot pull — note what analysis is now impossible |
 
 **Handling connection errors during triage:**
 
-If a platform returns an auth error (e.g., `invalid_grant`, `403`, `token expired`) or repeated timeouts:
+If a data source returns repeated errors, 403s, or empty metric responses:
 1. Score it as ⚠️ ERROR (not RED/YELLOW/GREEN — we have no data to score)
 2. Note the specific error in the manifest
 3. List what analysis is blocked without this platform:
    - No GA4 → no cross-platform attribution reconciliation, no channel-level CVR
    - No Shopify/BigCommerce → no financial anchor (AOV, margins, MER), profitability uses manual inputs
    - No Google/Meta → can't assess that channel or calculate combined attribution ratio
-4. Tell the user: "{Platform} connection is broken ({error}). This needs to be re-authorized in Adzviser. Continuing with remaining platforms."
+4. Tell the user: "{Platform} data source is broken ({error}). This needs to be reconnected in Databox. Continuing with remaining platforms."
 5. Continue the audit with available platforms — do NOT stop the whole audit for one broken connection
 
 **Present triage results to user:**
@@ -154,7 +157,7 @@ If a platform returns an auth error (e.g., `invalid_grant`, `403`, `token expire
 ## Triage Results — {Client}
 | Platform | Score | Key Signal | Recommended Action |
 |----------|-------|------------|-------------------|
-| Shopify | 🟢 GREEN | AOV $85, 12% return rate, healthy | Summary only |
+| Shopify | 🟢 GREEN | AOV , 12% return rate, healthy | Summary only |
 | Google Ads | 🔴 RED | ROAS 1.8× vs 3.0× target | Deep dive |
 | Meta Ads | 🟡 YELLOW | Frequency 4.2, CPM rising 23% MoM | Moderate dive |
 | Amazon Ads | 🟢 GREEN | ACOS 18%, TACoS 12% | Summary only |
@@ -167,8 +170,8 @@ Ask: "This is what I'm seeing. Want me to proceed with deep-dives on the flagged
 
 **For each RED or YELLOW platform:**
 
-1. Read `reference/adzviser-data-layer.md` for data collection protocol
-2. Call the platform's `list_metrics_and_breakdowns_*` tool
+1. Read `reference/databox-data-layer.md` for data collection protocol
+2. Call the platform's `list_metrics(data_source_id=N)` to resolve exact metric_keys
 3. Read the platform's deep-dive file:
    - Google Ads → `reference/platforms/google-ads-deep.md`
    - Meta Ads → `reference/platforms/meta-ads-deep.md`
@@ -176,7 +179,7 @@ Ask: "This is what I'm seeing. Want me to proceed with deep-dives on the flagged
    - GA4 → `reference/platforms/ga4-deep.md`
    - Shopify → `reference/platforms/shopify-deep.md`
    - BigCommerce → `reference/platforms/bigcommerce-deep.md`
-4. Execute the deep-dive pulls and analysis
+4. Execute the deep-dive pulls and analysis. For nuanced questions over a dataset, you can use `ask_genie(dataset_id, question)` instead of raw metric pulls.
 5. Write evidence JSON
 6. Update manifest
 
@@ -206,10 +209,10 @@ After all deep-dives complete (or user says "just give me the report"):
 
 When the user names a specific platform. Skips triage — goes straight to deep-dive.
 
-1. Gather minimal context (client name, department, lookback period, workspace)
+1. Gather minimal context (client name, department, lookback period, account)
 2. **Financial anchor check:** If Shopify or BigCommerce is accessible AND the target platform isn't Shopify/BigCommerce, run a quick triage pull on the ecommerce platform first (see `reference/triage-pulls.md` Shopify/BigCommerce section). This gives you AOV, margins, and order count for profitability calculations. If not accessible, ask user for AOV and margin estimates.
-3. Read `reference/adzviser-data-layer.md`
-4. Call `list_metrics_and_breakdowns_*` for the platform
+3. Read `reference/databox-data-layer.md`
+4. Call `list_metrics(data_source_id=N)` for the platform
 5. Read the platform's deep-dive file
 6. Execute full deep-dive
 7. Write evidence JSON, update manifest
@@ -248,12 +251,12 @@ When the user names a specific platform. Skips triage — goes straight to deep-
 ## Rules
 
 ### Data collection hierarchy
-1. **Adzviser MCP** — primary for all metric/reporting data
+1. **Databox MCP** — primary for all metric/reporting data (`load_metric_data`, `ask_genie`)
 2. **Claude in Chrome** — fallback for UI settings, visual inspections
 3. **DATA_NOT_AVAILABLE** — last resort
 
 ### Data integrity
-- Every number must cite its source
+- Every number must cite its source (include the `metric_key` used)
 - Never invent numbers — say "No data available" if missing
 - Show calculation formulas
 - Handle gaps honestly with DATA_NOT_AVAILABLE labels
@@ -272,7 +275,7 @@ When the user names a specific platform. Skips triage — goes straight to deep-
 
 ### What this skill does NOT cover
 - SEO, CRO, Klaviyo — use the regular `/audit` skill for these
-- Browser-first audits — use `/audit` if Adzviser isn't connected
+- Browser-first audits — use `/audit` if Databox isn't connected
 - Site design/UX evaluation
 
 ---
@@ -281,17 +284,15 @@ When the user names a specific platform. Skips triage — goes straight to deep-
 
 | File | When to load |
 |---|---|
-| `reference/triage-pulls.md` | Always — at triage step (Step 1.4). Includes YoY default protocol. |
+| `reference/triage-pulls.md` | Always — at triage step (Step 1.4) |
 | `reference/playbook/benchmarks.md` | At triage scoring AND any deep-dive — contains Floor/Healthy/Strong thresholds per platform |
-| `reference/adzviser-data-layer.md` | Before any deep-dive |
+| `reference/databox-data-layer.md` | Before any deep-dive |
 | `reference/platforms/*.md` | Only for RED/YELLOW platforms |
-| `reference/diagnostic-patterns.md` | At synthesizer step AND any deep-dive — codified patterns for UTM fragmentation, conversion duplication, owned-channel collapse, etc. |
-| `reference/synthesizer.md` | At report generation — includes Marketing Director Overview structure |
-| `reference/docx-template.md` | When generating a Word-doc report (Agency / Prospect deliverables) — status-color helpers and full template |
+| `reference/synthesizer.md` | At report generation |
 
 ### Playbook References (conditional, from workspace)
 
-If the DTC playbook exists in the workspace (`_system/av-audit-skill-source/reference/playbook/`), load the relevant chunk during deep-dives for richer strategic context. These are NOT required — the skill works without them — but they add depth to recommendations.
+If the DTC playbook exists in the workspace (`_system/databox-audit-skill-source/reference/playbook/` or the shared `protocols/playbook/`), load the relevant chunk during deep-dives for richer strategic context. These are NOT required — the skill works without them — but they add depth to recommendations.
 
 | Deep-dive platform | Playbook chunk to load |
 |---|---|
@@ -300,5 +301,5 @@ If the DTC playbook exists in the workspace (`_system/av-audit-skill-source/refe
 | Meta Ads (if creative flagged) | `creative-testing.md`, `scaling-frequency.md` |
 | GA4 | `measurement.md` (reconciliation methodology, CAPI, tracking validation) |
 | Synthesizer (cross-channel) | `channel-allocation.md` (channel roles, halo effects, budget splits) |
-| Any (AOV >$200) | `high-ticket.md` |
-| Any (AOV <$100) | `low-ticket.md` |
+| Any (AOV >) | `high-ticket.md` |
+| Any (AOV <) | `low-ticket.md` |

@@ -144,7 +144,7 @@ Standard set:
 ### 2.8 Data Gaps to Close
 
 What's missing that would make next audit sharper. Typical:
-- Shopify connected to Adzviser
+- Shopify connected to Databox
 - CRM/attribution platform for multi-touch
 - LTV by channel
 - Creative performance tracked over 60-90 day cycles
@@ -209,19 +209,19 @@ Brief. Data sources, date ranges (current + YoY comparison), triage scoring rule
 
 ## Report Output
 
-### Format decision
+### Format
 
-Ask user: "Want this as a Word doc or markdown?"
+**All reports are delivered as DOCX.** No format question — just generate the Word doc.
 
-**Default by department type:**
-- **Agency / Prospect** → DOCX. Read `reference/docx-template.md` for status-color helpers and the skill's docx template.
-- **Brand** → Markdown (internal reference).
+Read `reference/docx-template.md` for the full generation workflow and status-color helpers. Also read `anthropic-skills:docx` for general docx best practices before generating.
 
-Save to `{department}/reports/{Client-Name}/{Client}_audit_report_{date}.{ext}`
+Save to `{department}/reports/{Client-Name}/{Client}_audit_report_{date}.docx`
+
+**If the user explicitly asks for markdown instead** (e.g., "just give me the md", "I don't need a Word doc"), save as `.md` to the same location. Default is always DOCX.
 
 ### DOCX generation
 
-Use `reference/docx-template.md` for the color-coded status helpers. Status values in Channel Role, Scorecard, and Triage Summary tables should auto-render with RED/YELLOW/GREEN/GRAY fills.
+Use `reference/docx-template.md` for the color-coded status helpers. Status values in Channel Role, Scorecard, and Triage Summary tables auto-render with RED/YELLOW/GREEN/GRAY fills based on cell content. After generation, validate with `scripts/office/validate.py` if available.
 
 ### Writing Rules
 - Direct language. No hedging. No corporate fluff.

@@ -1,6 +1,6 @@
-# DOCX Report Template — Ads Audit
+# DOCX Report Template — Databox Audit
 
-Use this template when generating a Word version of the ads-audit report. Includes reusable status-color helpers so tables auto-render RED/YELLOW/GREEN/GRAY cells based on the Status value.
+Use this template to generate the audit report. **DOCX is the default delivery format for every audit** — markdown output is only used if the user explicitly asks for it. Includes reusable status-color helpers so tables auto-render RED/YELLOW/GREEN/GRAY cells based on the Status value.
 
 **Prerequisites:**
 - `npm install -g docx` (the docx-js package)
@@ -8,8 +8,8 @@ Use this template when generating a Word version of the ads-audit report. Includ
 
 **Workflow:**
 1. Write evidence JSONs during deep-dives (already happens)
-2. Generate the report as markdown for internal review
-3. For Agency/Prospect deliverables, render to DOCX using the template below
+2. Draft the report content (structure from `reference/synthesizer.md`)
+3. Render to DOCX using the template below — this is the standard deliverable
 4. Validate with `scripts/office/validate.py`
 
 ---
