@@ -161,7 +161,7 @@ If a platform returns an auth error (e.g., `invalid_grant`, `403`, `token expire
 | GA4 | 🟡 YELLOW | GA4 revenue 32% below Shopify | Reconciliation dive |
 ```
 
-Ask: "This is what I'm seeing. Want me to proceed with deep-dives on the flagged platforms, or adjust?"
+**Auto-proceed — do NOT pause for approval.** Present the triage table as a status update, then immediately continue to Step 1.5 and begin deep-diving the RED/YELLOW platforms. The user can interrupt if they want to change course, but the default is to keep moving. Only stop and ask if the triage found something so unexpected it changes the scope (e.g., every platform is ERROR, or the user's stated focus area doesn't match any flagged platform).
 
 ### Step 1.5: Deep-Dive Flagged Platforms
 
@@ -194,11 +194,12 @@ Ask: "This is what I'm seeing. Want me to proceed with deep-dives on the flagged
 
 After all deep-dives complete (or user says "just give me the report"):
 
-1. Read `reference/synthesizer.md`
-2. Follow its instructions to generate the cross-channel report
-3. Report emphasizes the RED/YELLOW platforms with detailed findings
-4. GREEN platforms get a 1-paragraph health summary
-5. Save report, update manifest
+1. Read `reference/synthesizer.md` AND `reference/docx-template.md`
+2. **ALWAYS invoke the `docx` skill** to produce the final report — invoke the built-in `docx` skill (via the Skill tool, e.g. `Skill: docx` or `anthropic-skills:docx`) and follow its instructions before creating the file. The audit report is ALWAYS a `.docx` deliverable, never markdown. Do not ask the user which format — just output `.docx`.
+3. Follow the synthesizer instructions for content; follow the docx-template for structure and styling.
+4. Report emphasizes the RED/YELLOW platforms with detailed findings; GREEN platforms get a 1-paragraph health summary.
+5. Save the `.docx` to the client report directory (same parent as `evidence/`), update manifest with the file path.
+6. Optionally save a parallel `.md` copy only if the user explicitly asks for one.
 
 ---
 
@@ -213,7 +214,7 @@ When the user names a specific platform. Skips triage — goes straight to deep-
 5. Read the platform's deep-dive file
 6. Execute full deep-dive
 7. Write evidence JSON, update manifest
-8. Offer to generate single-platform report
+8. Offer to generate single-platform report — if user says yes, always produce `.docx` via the docx skill (see Step 1.6)
 
 **Platform routing:**
 | User says | Deep-dive file |
@@ -240,8 +241,8 @@ When the user names a specific platform. Skips triage — goes straight to deep-
 
 1. Find `*_evidence.json` files in evidence directory
 2. If 0 → tell user to run an audit first
-3. Read `reference/synthesizer.md`, follow its instructions
-4. Save report, update manifest
+3. Read `reference/synthesizer.md` AND `reference/docx-template.md`, then read the `docx` SKILL.md at `/var/folders/x3/r6tjbfkj60z23gcd5xxjd_nm0000gn/T/claude-hostloop-plugins/13690c64666dd2f9/skills/docx/SKILL.md`
+4. **Always output `.docx`** — follow synthesizer for content, docx-template for styling. Save to client report directory, update manifest.
 
 ---
 
