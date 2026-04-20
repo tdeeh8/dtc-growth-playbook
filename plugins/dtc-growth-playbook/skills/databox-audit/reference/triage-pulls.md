@@ -188,6 +188,19 @@ When a sanity check fires, note it in the manifest and in the triage presentatio
 
 **If no Shopify data yet (Google runs before Shopify):** Use AOV/margin from user input or skip profitability thresholds. Flag: "Profitability scoring deferred — awaiting Shopify data."
 
+**Structural Health Check (runs regardless of triage score):**
+
+After triage scoring, ALWAYS run Pull 0 (Structural Health Check) from `reference/platforms/google-ads-deep.md`. Pull 0 is a cheap (4-5 `load_metric_data` calls) hygiene scan that catches issues invisible at account totals: weak Ad Strength, missing extensions, Enhanced Conversions off, missing shared neg lists.
+
+**GREEN → YELLOW upgrade:** Pull 0 can upgrade a GREEN-scored platform to YELLOW if any of the following are true:
+- >30% of active RSAs rated Poor or Average
+- Majority of campaigns (>50%) have <3 sitelinks active
+- Enhanced Conversions definitively OFF
+
+When upgraded, note the trigger in the manifest as: "GREEN→YELLOW structural upgrade: {specific check}"
+
+For a structurally-upgraded YELLOW, run ONLY Pull 6 (Ad + Extensions Depth) as the targeted dive unless other triage signals also flag the account.
+
 ---
 
 ### Meta Ads
@@ -312,6 +325,7 @@ Even if a platform scores GREEN at account level, problems can hide in campaign 
 - **High spend override:** If platform spend > $10k/month and GREEN → upgrade to YELLOW. Reason: high-spend accounts warrant at least a campaign-level scan.
 - **Attribution smell test:** If sum of all ad platform conversions > 1.5× Shopify orders → force GA4 to YELLOW minimum. Something's inflated.
 - **Stale comparison:** If no comparison period data available, scoring confidence is lower. Note: "Single-period data only — trends unknown."
+- **Structural health gate:** Even if a Google Ads platform scores GREEN, Pull 0 may upgrade it to YELLOW for hygiene reasons (see Google Ads section above). This is the primary false-negative defense for Google Ads.
 
 ### Triage output format
 

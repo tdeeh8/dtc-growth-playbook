@@ -8,6 +8,33 @@ Triage has already pulled traffic overview (Sessions, Users, New users, Engageme
 
 ---
 
+## Report Inclusion Rules
+
+Not every metric this deep-dive produces belongs in the report body. Apply these rules when synthesizing:
+
+**BODY (scorecard + diagnosis, 1 chart):**
+- Top-line traffic + conversion efficiency: sessions, engagement rate, purchase revenue, transactions — with YoY deltas.
+- Top 3 and bottom 3 channels from Pull 1 (channel attribution).
+- One chart: typically "Sessions & Conversions by Channel" or YoY revenue trend.
+- Tracking integrity call-out from Pull 4 — one line if events look broken, skipped otherwise.
+
+**APPENDIX (reference-only, not in body):**
+- Full Pull 1 channel attribution table.
+- Pull 2 source/medium detail.
+- Pull 3 device performance (desktop / mobile / tablet).
+- Pull 4 event tracking validation table.
+- Landing-page / geo splits if pulled.
+
+**CUT entirely:**
+- Raw sessions without a downstream conversion.
+- Bounce rate reported without engagement context.
+- Sources contributing <1% of sessions (noise).
+- Any metric without a YoY comparison or action tied to it.
+
+The narrative for this platform in the report body must be ≤ 200 words. Detailed tables go in the appendix.
+
+---
+
 ## Deep-Dive Pulls
 
 ### Pull 1: Channel Attribution (THE Key Pull) (RED: always | YELLOW: always)

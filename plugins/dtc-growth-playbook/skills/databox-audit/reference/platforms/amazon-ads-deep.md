@@ -7,6 +7,33 @@ Triage has already pulled account totals (Spend, Sales, ACOS, ROAS, Impressions,
 
 ---
 
+## Report Inclusion Rules
+
+Not every metric this deep-dive produces belongs in the report body. Apply these rules when synthesizing:
+
+**BODY (scorecard + diagnosis, 1 chart):**
+- Top-line efficiency: spend, sales, ACoS, TACoS — with YoY deltas.
+- Top 3 and bottom 3 campaigns by spend from Pull 1.
+- One chart: typically "Spend vs ACoS by Campaign" or "ACoS trend".
+- Buy Box % / Featured Offer headline from seller data — one line if it's a flag.
+
+**APPENDIX (reference-only, not in body):**
+- Full Pull 1 campaign structure table.
+- Pull 2 keyword-level performance.
+- Pull 3 wasted-spend / search-term list.
+- Pull 4 product-level (ASIN) seller data.
+- Match-type and targeting-type splits if pulled.
+
+**CUT entirely:**
+- Raw impressions without clicks or purchases.
+- CTR reported without CVR context.
+- Campaigns contributing <1% of spend (noise).
+- Any metric that can't be tied to a decision.
+
+The narrative for this platform in the report body must be ≤ 200 words. Detailed tables go in the appendix.
+
+---
+
 ## Deep-Dive Pulls
 
 ### Pull 1: Campaign Structure (RED: always | YELLOW: always)

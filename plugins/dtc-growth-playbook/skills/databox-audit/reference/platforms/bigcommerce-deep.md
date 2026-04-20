@@ -2,6 +2,33 @@
 
 Loaded when BigCommerce scores RED or YELLOW at triage. Structurally similar to Shopify — BigCommerce is the financial anchor for non-Shopify stores.
 
+## Report Inclusion Rules
+
+Not every metric this deep-dive produces belongs in the report body. Apply these rules when synthesizing:
+
+**BODY (scorecard + diagnosis, 1 chart):**
+- Top-line store efficiency: net sales, orders, AOV, gross margin — with YoY deltas.
+- Top 5 products by revenue from Pull 1 (and any outlier returns/margin issues).
+- New-vs-returning customer split headline from Pull 3.
+- One chart: typically "Revenue trend YoY" or "Top 5 products by revenue".
+
+**APPENDIX (reference-only, not in body):**
+- Full Pull 1 product performance table (SKU-level).
+- Pull 2 channel + traffic attribution breakdown.
+- Pull 3 full customer split detail.
+- Pull 4 monthly trend series.
+- Discount / return detail if pulled.
+
+**CUT entirely:**
+- Long-tail SKUs contributing <1% of revenue.
+- Sessions reported alone without orders.
+- Any metric without a YoY comparison.
+- Raw item counts with no revenue or margin context.
+
+The narrative for this platform in the report body must be ≤ 200 words. Detailed tables go in the appendix.
+
+---
+
 ## Context from Triage
 
 - High return/refund rate → Focus on product performance

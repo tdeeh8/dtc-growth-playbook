@@ -5,6 +5,34 @@ Loaded when Meta Ads scores RED or YELLOW at triage.
 **Also load:** `reference/playbook/benchmarks.md` for Floor/Healthy/Strong thresholds.
 **Conditional:** If workspace playbook available, also load `andromeda.md` (algorithm behavior, creative diversity, fatigue). If creative is flagged, also `creative-testing.md` and `scaling-frequency.md`.
 
+## Report Inclusion Rules
+
+Not every metric this deep-dive produces belongs in the report body. Apply these rules when synthesizing:
+
+**BODY (scorecard + diagnosis, 1 chart):**
+- Top-line efficiency from Pull 1: total spend, ROAS, purchases, CPA — with YoY deltas.
+- Top 3 and bottom 3 campaigns / ad sets by spend (Pull 1).
+- One chart: typically "CPA trend" or "ROAS by campaign".
+- Frequency / creative-fatigue signal from Pull 3/4 — one line if it's a flag.
+
+**APPENDIX (reference-only, not in body):**
+- Full Pull 1 campaign breakdown.
+- Pull 2 funnel metrics (CTR, LP views, add-to-cart, purchase).
+- Pull 3 creative-level performance.
+- Pull 4 creative quality signals (quality/engagement/conversion rankings).
+- Pull 5 demographic breakdown.
+- Placement / device splits if pulled.
+
+**CUT entirely:**
+- Raw impressions with no downstream metric.
+- CTR without CVR context.
+- Ad sets contributing <1% of spend (noise).
+- Any metric that can't be tied to a decision.
+
+The narrative for this platform in the report body must be ≤ 200 words. Detailed tables go in the appendix.
+
+---
+
 ## Context from Triage
 
 - ROAS below target → Focus on campaign structure + audience quality

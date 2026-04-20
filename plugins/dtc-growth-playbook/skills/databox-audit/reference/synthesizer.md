@@ -1,6 +1,54 @@
-# Audit Synthesizer — Ads-Audit
+# Audit Synthesizer — Databox-Audit
 
 Generates the final cross-channel report. The opening sections are structured as a **Marketing Director Overview** — a one-scroll answer to "where is the account, where's the money going, what's at risk, what do I do next." Platform deep-dives come after as reference material.
+
+> **Default output is DOCX.** Markdown is only produced on explicit user request. Chart generation via `scripts/generate_charts.py` is **required**, not optional — every audit ships with the prescribed chart set embedded in the docx.
+
+---
+
+## Chart Set (always generate these 5 charts)
+
+The chart generator produces a fixed set of 5 charts. Build the chart spec, then invoke the generator **before** producing the docx so images can be embedded.
+
+| Chart | Purpose | Include when |
+|---|---|---|
+| `spend_roas_bubble` | Bubble plot of spend (x) vs ROAS (y), bubble size = revenue, per campaign | Any paid channel was deep-dived |
+| `channel_mix_yoy` | Stacked bar of revenue by channel group, current vs prior year | Always include if GA4 was pulled |
+| `attribution_gap` | Bar chart: platform-claimed revenue vs GA4-attributed vs Shopify net sales | Combined paid-claimed revenue >40% of Shopify net sales |
+| `cvr_bounce_yoy` | Dual-axis line: session-to-purchase CVR and bounce rate YoY | GA4 scored RED or YELLOW |
+| `frequency_by_campaign` | Bar of average frequency per Meta campaign with spend overlay | Meta was deep-dived |
+
+### Generation workflow
+
+1. Assemble the chart spec JSON — one entry per chart to include, with the metrics/values pulled from evidence JSONs.
+2. Write the spec to `{evidence_dir}/charts/chart_spec.json`.
+3. Run: `python scripts/generate_charts.py --spec {evidence_dir}/charts/chart_spec.json --out {evidence_dir}/charts/`
+4. Reference the resulting PNGs from the docx-template flow.
+
+If a chart's inclusion criteria aren't met, omit that entry from the spec — don't render a blank chart.
+
+---
+
+## Metric keep/cut rules
+
+What goes in the BODY of the report vs. the APPENDIX vs. cut entirely. Keep the body tight; the appendix is where detail lives.
+
+| Surface | Shopify | Google Ads | Meta | GA4 |
+|---|---|---|---|---|
+| **BODY** | Net sales, AOV, orders, return rate, contribution margin (when COGS available), YoY deltas on each | ROAS, CPA vs BE, top 5 + bottom 3 campaigns by spend, YoY ROAS trend, attribution ratio vs Shopify orders | ROAS (platform AND GA4-attributed), CPA, frequency per campaign, attribution gap %, spend allocation | Session-to-purchase CVR, channel group table (sessions/revenue/CVR), revenue gap vs Shopify, bounce rate YoY |
+
+**APPENDIX (always):** full campaign tables, detailed source/medium breakdowns, device splits, event tracking, search query data.
+
+**CUT (never include):** raw impressions, blended CTR without CVR context, reach without frequency context, POS-only metrics, low-volume campaigns with <1% of spend.
+
+---
+
+## Concision rules (hard limits)
+
+- **Executive summary:** ONE paragraph, **4 sentences max** — YoY trajectory, cause, bright spot, biggest risk.
+- **Body sections:** one page per channel. Each page = scorecard row + one chart + 3-bullet diagnosis + 3-bullet actions. No repeated narrative between exec summary and body.
+- **Every number in the body** must either be visualized (chart) or appear in exactly ONE place (chart OR table, not both).
+- **Target total word count: 1,200 words for the body** (excluding appendix).
 
 ---
 
@@ -42,11 +90,20 @@ For each evidence JSON:
 
 ## Step 2: Marketing Director Overview (Core Output)
 
-This is the core deliverable. Generate these seven components in order.
+This is the core deliverable. Generate these **eight** components in order.
+
+1. **Executive Summary** — 1 paragraph, 4 sentences
+2. **Account Scorecard** — existing 6-dimension table
+3. **Cross-Channel Overview** — 1 chart (`channel_mix_yoy`) + attribution reconciliation table
+4. **Priority Actions** — 3-6 actions ordered by impact, before per-channel detail
+5. **Per-Channel Pages** — one per channel deep-dived, each with chart + 3-bullet diagnosis + 3-bullet actions
+6. **Tracking & Attribution Notes**
+7. **Methodology + Data Sources**
+8. **Appendix** — detailed tables
 
 ### 2.1 Executive Summary
 
-One paragraph, 3-4 sentences. Answer:
+One paragraph, **4 sentences max**:
 - Is the account growing, holding, or declining? (lead with the YoY revenue number)
 - What's actually causing that trajectory? (media vs lifecycle vs tracking vs unit economics)
 - What's the bright spot?
@@ -72,82 +129,74 @@ Six dimensions, each scored RED / YELLOW / GREEN with a one-line signal and a on
 - YELLOW = below target or concerning trend
 - GREEN = at or above target
 
-### 2.3 Channel Role vs Reality
+### 2.3 Cross-Channel Overview
 
-A matrix of every active channel, what its job should be, and whether it's doing it.
+One chart (`channel_mix_yoy`) plus a short attribution reconciliation table:
 
-Columns: **Channel · Role · Status · Notes**
+| Source | Claimed Revenue | % of Shopify Net Sales |
+|---|---|---|
+| Google Ads | ... | ... |
+| Meta Ads | ... | ... |
+| GA4 (Paid) | ... | ... |
+| Shopify (Net Sales) | ... | 100% |
 
-Status values (color-coded in the docx):
-- `Delivering` — meeting or exceeding role expectations (GREEN)
-- `Organic` — emerging / not formally managed but producing (GREEN)
-- `Leaking` — spending but underperforming (YELLOW)
-- `Fatiguing` — creative saturation, rising CPM (YELLOW)
-- `Misaligned` — wrong optimization event or wrong audience (YELLOW)
-- `Too early` — not enough data yet (GRAY)
-- `Too-small-to-matter` — spend <1% of total (GRAY)
-- `Broken` — fundamentally misconfigured (RED)
-- `Collapsed` — YoY decline >50% where it shouldn't (RED)
-- `Unmeasurable` — can't diagnose due to tracking issue (RED)
+If combined paid-claimed revenue exceeds 40% of Shopify net sales, also include the `attribution_gap` chart here. Two-sentence read-out: what the mix looks like vs prior year, and whether claimed attribution is plausible.
 
-Always include owned channels (Email, SMS, Affiliate, Organic Search) even though they aren't "audited" in the paid sense — they're part of the portfolio and the YoY deltas matter.
+### 2.4 Priority Actions
 
-### 2.4 Paid Media Allocation — Confidence Tier
+**3-6 actions ordered by impact.** Each item: one-line action, expected lift or risk reduction, owner. This sits BEFORE the per-channel detail so the reader can scan it in isolation.
 
-Segment the total paid spend into four tiers:
+Candidate sources for priority actions (pick from the ones actually supported by evidence):
+- Owned channel collapse (if Email/SMS YoY revenue down >50%)
+- Attribution blindness (Meta UTM fragmentation, Google conv duplication)
+- Over-concentration (one campaign >40% of spend OR one channel >60%)
+- Unit economics drift (AOV declining, return rate rising, discount creep)
+- Missing financial anchor (no Shopify/BC connected)
+- Platform-specific saturation (Meta freq >4, Google IS budget lost >30%)
+- Paid reallocation (shift % of underperforming tier into working tier)
 
-| Tier | Criteria |
-|---|---|
-| Working — above target | ROAS ≥ target OR scaling with stable margin |
-| Acceptable — near target | ROAS 70-99% of target OR acceptable with monitoring |
-| Underperforming — at-risk | ROAS <70% of target OR tracking-broken but spending |
-| Wasted / Diagnostic | 0 conversions, wrong optimization event, or known waste |
+### 2.5 Per-Channel Pages
 
-For each tier: dollar amount, % of paid spend, campaign list.
+One page per deep-dived channel. Each page:
 
-Then a one-line takeaway: *"≈X% of paid budget ($Xk/mo) is either underperforming or wasted. Reallocating half into [top performing campaigns] would deliver net lift."*
+1. Scorecard row (status + headline metrics from the keep/cut table above)
+2. One chart (from the prescribed chart set — pick the one that best fits this channel)
+3. **Diagnosis — 3 bullets.** What's happening and why.
+4. **Actions — 3 bullets.** What to do, in priority order.
 
-### 2.5 Top Risks
+No repeated narrative between exec summary and this section. No restating numbers that appear in the chart.
 
-Ranked 1-6. Each item: name, one-line severity, what to do about it.
+### 2.6 Tracking & Attribution Notes
 
-Standard candidates to consider:
-1. Owned channel collapse (if Email/SMS YoY revenue down >50%)
-2. Attribution blindness (Meta UTM fragmentation, Google conv duplication)
-3. Over-concentration (one campaign >40% of spend OR one channel >60%)
-4. Unit economics drift (AOV declining, return rate rising, discount creep)
-5. Missing financial anchor (no Shopify/BC connected)
-6. Platform-specific saturation (Meta freq >4, Google IS budget lost >30%)
+Short section. UTM health, conversion duplication, GA4↔platform reconciliation, device-level funnel sanity check. Call out the YoY rate swings that are almost certainly tracking artifacts.
 
-### 2.6 30 / 60 / 90 Plan
+### 2.7 Methodology + Data Sources
 
-Three buckets. Each bucket: 3-5 bullet actions, specific.
+Brief. Data sources, date ranges (current + YoY comparison), triage scoring rules, caveats (margin assumption if no Shopify, single-period limitations, etc.).
 
-- **30 days** — tracking + triage. Fix the measurement stack first. Pause known waste. Triage any broken flows.
-- **60 days** — reallocation + rebuild. Scale proven winners. Rebuild broken lifecycle channels. Fresh creative where fatigued.
-- **90 days** — optimization + strategy. CRO, unit-economics diagnostics, net-new channel tests, formalize emerging channels.
+### 2.8 Appendix
 
-### 2.7 Weekly KPIs to Watch
+Everything relegated from the body under the keep/cut rules, plus:
 
-A short table: metric, current value, target or watch-threshold. 6-10 metrics.
+- **Channel Role vs Reality matrix.** Columns: **Channel · Role · Status · Notes**. Status values (color-coded in docx): `Delivering`, `Organic`, `Leaking`, `Fatiguing`, `Misaligned`, `Too early`, `Too-small-to-matter`, `Broken`, `Collapsed`, `Unmeasurable`. Always include owned channels (Email, SMS, Affiliate, Organic Search).
+- **Paid Media Allocation — Confidence Tier table.** Segment total paid spend into four tiers:
 
-Standard set:
-- Blended MER
-- Google Ads ROAS
-- Meta Ads ROAS
-- Email + SMS weekly revenue (trend)
-- % of Meta sessions attributed in GA4 (the UTM health metric)
-- PMax spend share (watch for cannibalization at >50%)
-- New vs returning revenue mix (if Shopify connected)
-- Mobile CVR (if mobile is a material share)
+  | Tier | Criteria |
+  |---|---|
+  | Working — above target | ROAS ≥ target OR scaling with stable margin |
+  | Acceptable — near target | ROAS 70-99% of target OR acceptable with monitoring |
+  | Underperforming — at-risk | ROAS <70% of target OR tracking-broken but spending |
+  | Wasted / Diagnostic | 0 conversions, wrong optimization event, or known waste |
 
-### 2.8 Data Gaps to Close
+  For each tier: dollar amount, % of paid spend, campaign list.
 
-What's missing that would make next audit sharper. Typical:
-- Shopify connected to Databox
-- CRM/attribution platform for multi-touch
-- LTV by channel
-- Creative performance tracked over 60-90 day cycles
+- **30 / 60 / 90 Plan.** Three buckets, each 3-5 specific bullets.
+  - 30 days — tracking + triage.
+  - 60 days — reallocation + rebuild.
+  - 90 days — optimization + strategy.
+- **Weekly KPIs to Watch.** 6-10 metrics: Blended MER, Google Ads ROAS, Meta Ads ROAS, Email + SMS weekly revenue, % of Meta sessions attributed in GA4, PMax spend share, new vs returning revenue mix, mobile CVR.
+- **Data Gaps to Close.** Typical: Shopify connected to Databox, CRM/attribution platform for multi-touch, LTV by channel, creative performance tracked over 60-90 day cycles.
+- Full campaign tables, detailed source/medium breakdowns, device splits, event tracking, search query data.
 
 ---
 
@@ -221,7 +270,7 @@ Save to `{department}/reports/{Client-Name}/{Client}_audit_report_{date}.docx`
 
 ### DOCX generation
 
-Use `reference/docx-template.md` for the color-coded status helpers. Status values in Channel Role, Scorecard, and Triage Summary tables auto-render with RED/YELLOW/GREEN/GRAY fills based on cell content. After generation, validate with `scripts/office/validate.py` if available.
+Use `reference/docx-template.md` for the color-coded status helpers. Status values in Channel Role, Scorecard, and Triage Summary tables auto-render with RED/YELLOW/GREEN/GRAY fills based on cell content. Charts generated via `scripts/generate_charts.py` are embedded per the template. After generation, validate with `scripts/office/validate.py` if available.
 
 ### Writing Rules
 - Direct language. No hedging. No corporate fluff.
