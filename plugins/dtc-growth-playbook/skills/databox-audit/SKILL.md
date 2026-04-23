@@ -239,7 +239,7 @@ For a structurally-upgraded YELLOW, the deep-dive in Step 1.5 runs ONLY Pull 6 (
 - The manifest is your checkpoint — nothing is lost by breaking
 - Pull 0 (Step 1.4.5) has a fixed ~5-8% context cost — budget for it in every Google Ads audit.
 
-### Step 1.6: Generate Report
+### Step 1.6: Generate DOCX Report
 
 Default deliverable: DOCX (never markdown unless user asks). The report follows the 8-component Marketing Director Overview defined in `reference/synthesizer.md`.
 
@@ -265,7 +265,7 @@ When the user names a specific platform. Skips triage — goes straight to deep-
 5. Read the platform's deep-dive file
 6. Execute full deep-dive
 7. Write evidence JSON, update manifest
-8. Offer to generate single-platform report — if user says yes, always produce `.docx` via the built-in docx skill (see Step 1.6)
+8. Offer to generate single-platform report — if user says yes, produce the `.docx` (via the built-in docx skill, see Step 1.6).
 
 **Platform routing:**
 | User says | Deep-dive file |

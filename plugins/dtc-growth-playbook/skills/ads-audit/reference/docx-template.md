@@ -2,6 +2,34 @@
 
 Use this template when generating a Word version of the ads-audit report. Includes reusable status-color helpers so tables auto-render RED/YELLOW/GREEN/GRAY cells based on the Status value.
 
+---
+
+## Content Budget (hard rules)
+
+The report MUST stay concise. Enforce these limits during synthesis and again at build time:
+
+- **Executive summary:** exactly 1 paragraph (no bullets, no sub-headers).
+- **Each channel page:** ≤ 200 words of prose (scorecard row + diagnosis + actions combined). Campaign tables and detailed breakdowns go in the appendix.
+- **Every number is visualized OR tabled — never both.** If a metric appears in a chart, do not also list it in a table on the same page. If it lives in a table, don't chart it.
+- **Body = decisions.** Appendix = supporting detail. If a reader can't act on it, move it to the appendix or cut it.
+
+---
+
+## Chart file locations
+
+Charts are generated BEFORE the docx build and embedded via the `chartImage()` helper.
+
+- **Chart directory:** `{evidence_dir}/charts/`
+- **File naming:** `{chart_key}.png` (e.g., `google_spend_roas.png`, `meta_cpa_trend.png`)
+- **Spec file:** `{evidence_dir}/charts/chart_spec.json` — lists every chart the report needs
+
+**Generate charts first:**
+```bash
+python scripts/generate_charts.py --spec {evidence_dir}/charts/chart_spec.json --out {evidence_dir}/charts/
+```
+
+Only after charts exist on disk should you run `node build_report.js` — the template reads PNGs synchronously at build time and will throw if a referenced chart is missing.
+
 **Prerequisites:**
 - `npm install -g docx` (the docx-js package)
 - The docx skill (read `anthropic-skills:docx` first for general docx best practices)
@@ -23,7 +51,7 @@ const fs = require('fs');
 const {
   Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
   AlignmentType, PageOrientation, LevelFormat, HeadingLevel,
-  BorderStyle, WidthType, ShadingType, PageBreak
+  BorderStyle, WidthType, ShadingType, PageBreak, ImageRun
 } = require('docx');
 
 // ==== Theme ====
@@ -96,6 +124,22 @@ function numbered(runs, level = 0) {
     numbering: { reference: "numbers", level },
     spacing: { after: 80 },
     children,
+  });
+}
+
+function chartImage(chartPath, widthDxa = 8640) {
+  // widthDxa 8640 = 6 inches; matches one-column page content
+  const fs = require('fs');
+  const { ImageRun, Paragraph, AlignmentType } = require('docx');
+  return new Paragraph({
+    alignment: AlignmentType.CENTER,
+    spacing: { before: 200, after: 200 },
+    children: [new ImageRun({
+      type: "png",
+      data: fs.readFileSync(chartPath),
+      transformation: { width: 540, height: 320 },
+      altText: { title: "Chart", description: "Audit chart", name: "chart" },
+    })],
   });
 }
 
@@ -252,7 +296,24 @@ children.push(table(
 ));
 
 // --- 5. Platform Deep Dives (reference material) ---
-// Per RED/YELLOW platform: h1 + campaign table + conversion action table + findings + fix list
+// Per RED/YELLOW platform: chart (from evidence_dir/charts/) + scorecard row + diagnosis bullets + actions
+// Detailed campaign tables / conversion-action tables / source-medium breakdowns go in the Appendix.
+//
+// Example usage — Google Ads section:
+//   h2("Google Ads"),
+//   chartImage(`${evidenceDir}/charts/google_spend_roas.png`),
+//   scorecardRow("Google Ads", "YELLOW", "ROAS 2.74× (up 31% YoY), $3k/mo wasted on <1× campaigns"),
+//   p("Diagnosis:"),
+//   bullet("38% of spend is on sub-1× ROAS campaigns"),
+//   bullet("Conversion action change obscures YoY comparison"),
+//   bullet("Branded PMax likely cannibalizing branded search"),
+//   p("Actions:"),
+//   bullet("Pause 4 underperforming campaigns (~$3k/mo reclaim)"),
+//   bullet("Reallocate to PMax - Best Sellers and PMax - High AOV"),
+//   bullet("Run 2-week branded holdout test"),
+//
+// `evidenceDir` is the audit's evidence directory; `scorecardRow()` is an app-specific wrapper
+// returning a single colored Table row (or Paragraph) that summarizes the platform score.
 
 // --- 6. Cross-Channel Patterns (if detected) ---
 

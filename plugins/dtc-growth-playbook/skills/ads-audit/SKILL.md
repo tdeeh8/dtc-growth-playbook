@@ -27,6 +27,21 @@ Traditional audits go max-depth on every platform equally. That wastes 60-80% of
 
 ---
 
+## Report Hard Rules
+
+- **DOCX is the default deliverable** — never markdown alone. Save a parallel `.md` source alongside for grep-ability.
+- **Every audit with ≥ 1 deep-dived paid channel MUST include charts.** Generated via `scripts/generate_charts.py`.
+- **Body word count target: 1,200 words.** Anything longer gets trimmed or moved to appendix.
+- **Every number in the body must be visualized OR tabled, never both.**
+- **Executive summary is one paragraph, four sentences max.**
+
+### Troubleshooting
+
+- If matplotlib is not installed, run `pip install matplotlib --break-system-packages` in the shell sandbox before running the chart generator.
+- If `node` / `docx` is missing, run `npm install -g docx`.
+
+---
+
 ## Step 0: Detect Mode
 
 1. Check user message for client name and platform mentions
@@ -163,6 +178,36 @@ If a platform returns an auth error (e.g., `invalid_grant`, `403`, `token expire
 
 **Auto-proceed — do NOT pause for approval.** Present the triage table as a status update, then immediately continue to Step 1.5 and begin deep-diving the RED/YELLOW platforms. The user can interrupt if they want to change course, but the default is to keep moving. Only stop and ask if the triage found something so unexpected it changes the scope (e.g., every platform is ERROR, or the user's stated focus area doesn't match any flagged platform).
 
+### Step 1.4.5: Structural Health Check (Google Ads Only)
+
+**Runs regardless of Google Ads triage score.** Catches hygiene issues invisible at account totals. Can UPGRADE a GREEN-scored Google Ads platform to YELLOW.
+
+**When it runs:** If Google Ads passed the connection health check in Step 1.3.5 AND is included in the platforms being audited — regardless of triage score (GREEN, YELLOW, or RED).
+
+**What it does:** Runs Pull 0 from `reference/platforms/google-ads-deep.md`. Four cheap checks:
+1. Ad Strength distribution (% of RSAs at Poor/Average)
+2. Extensions coverage (sitelinks/callouts/snippets per campaign)
+3. Enhanced Conversions status
+4. Shared negative keyword list presence
+
+**Upgrade rule:** If Google Ads scored GREEN at triage AND Pull 0 finds any of:
+- >30% of RSAs rated Poor/Average, OR
+- Majority of campaigns with <3 sitelinks, OR
+- Enhanced Conversions definitively OFF
+
+→ Upgrade the platform to YELLOW. Note the trigger in the manifest as "GREEN→YELLOW structural upgrade: {specific check}".
+
+For a structurally-upgraded YELLOW, the deep-dive in Step 1.5 runs ONLY Pull 6 (Ad + Extensions Depth) — skip Pulls 1-5 unless other triage signals also flag the account.
+
+**Cost target:** <8% of context budget per audit. If Pull 0 completes in under 5 `retrieve_reporting_data` calls, you're on target.
+
+**Evidence:** Always write Pull 0 findings to the Google Ads evidence JSON under `structural_health_check`, regardless of whether they triggered an upgrade. This gives the final report a clean hygiene section even for healthy accounts.
+
+**Skip conditions:**
+- Google Ads was not in the audit scope → skip
+- Google Ads connection failed the health check in Step 1.3.5 → skip (already scored ⚠️ ERROR)
+- Pull 0 Adzviser calls fail → log DATA_NOT_AVAILABLE per check, continue with other checks, do not abort
+
 ### Step 1.5: Deep-Dive Flagged Platforms
 
 **For each RED or YELLOW platform:**
@@ -180,26 +225,29 @@ If a platform returns an auth error (e.g., `invalid_grant`, `403`, `token expire
 5. Write evidence JSON
 6. Update manifest
 
-**RED platforms:** Run full deep-dive (all pulls in the platform file)
-**YELLOW platforms:** Run targeted deep-dive (2-3 pulls focused on the flagged signal)
-
-**GREEN platforms:** No deep-dive. Write a brief evidence JSON with triage metrics only. Note: "Platform scored GREEN at triage. No deep-dive performed."
+**RED platforms:** Run full deep-dive (all pulls in the platform file).
+**YELLOW platforms (from triage signals):** Run targeted deep-dive (2-3 pulls focused on the flagged signal) per the YELLOW Mode routing in the platform file.
+**YELLOW platforms (from Pull 0 structural upgrade, Google Ads only):** Run Pull 6 (Ad + Extensions Depth) only — skip Pulls 1-5 unless triage signals ALSO flag the account.
+**GREEN platforms:** No deep-dive. Write a brief evidence JSON with triage + Pull 0 findings (Google Ads only). Note: "Platform scored GREEN at triage. Structural health check completed. No deep-dive performed."
 
 **Context window management:**
 - After each deep-dive, self-check: "Am I still producing detailed analysis or starting to abbreviate?"
 - If you've completed 2 deep-dives and there's a 3rd RED platform, recommend a session break
 - The manifest is your checkpoint — nothing is lost by breaking
+- Pull 0 (Step 1.4.5) has a fixed ~5-8% context cost — budget for it in every Google Ads audit.
 
 ### Step 1.6: Generate Report
 
-After all deep-dives complete (or user says "just give me the report"):
+Default deliverable: DOCX (never markdown unless user asks). The report follows the 8-component Marketing Director Overview defined in `reference/synthesizer.md`.
 
-1. Read `reference/synthesizer.md` AND `reference/docx-template.md`
-2. **ALWAYS invoke the `docx` skill** to produce the final report — invoke the built-in `docx` skill (via the Skill tool, e.g. `Skill: docx` or `anthropic-skills:docx`) and follow its instructions before creating the file. The audit report is ALWAYS a `.docx` deliverable, never markdown. Do not ask the user which format — just output `.docx`.
-3. Follow the synthesizer instructions for content; follow the docx-template for structure and styling.
-4. Report emphasizes the RED/YELLOW platforms with detailed findings; GREEN platforms get a 1-paragraph health summary.
-5. Save the `.docx` to the client report directory (same parent as `evidence/`), update manifest with the file path.
-6. Optionally save a parallel `.md` copy only if the user explicitly asks for one.
+Execution order:
+1. Read `reference/synthesizer.md` — follow the 8-component structure.
+2. Read `reference/playbook/benchmarks.md` — for scoring context.
+3. Build the chart spec JSON at `{evidence_dir}/charts/chart_spec.json` using the schema documented in `scripts/generate_charts.py`. Only include the charts appropriate to this audit (see synthesizer's "Chart Set" section for inclusion rules).
+4. Run: `python scripts/generate_charts.py --spec {evidence_dir}/charts/chart_spec.json --out {evidence_dir}/charts/`
+5. Read `reference/docx-template.md` — use the `chartImage()` helper to embed the generated PNGs.
+6. Write `build_report.js` to the outputs dir, run `node build_report.js {output-path}`, validate with `python scripts/office/validate.py`.
+7. Save the docx to the client's reports folder. Also save the markdown source alongside for grep-ability.
 
 ---
 
@@ -283,12 +331,14 @@ When the user names a specific platform. Skips triage — goes straight to deep-
 | File | When to load |
 |---|---|
 | `reference/triage-pulls.md` | Always — at triage step (Step 1.4). Includes YoY default protocol. |
+| `reference/platforms/google-ads-deep.md` (Pull 0 section only) | Always — at Step 1.4.5, for Google Ads |
 | `reference/playbook/benchmarks.md` | At triage scoring AND any deep-dive — contains Floor/Healthy/Strong thresholds per platform |
 | `reference/adzviser-data-layer.md` | Before any deep-dive |
-| `reference/platforms/*.md` | Only for RED/YELLOW platforms |
+| `reference/platforms/*.md` (full file) | Only for RED/YELLOW platforms — loaded at Step 1.5 |
 | `reference/diagnostic-patterns.md` | At synthesizer step AND any deep-dive — codified patterns for UTM fragmentation, conversion duplication, owned-channel collapse, etc. |
-| `reference/synthesizer.md` | At report generation — includes Marketing Director Overview structure |
-| `reference/docx-template.md` | When generating a Word-doc report (Agency / Prospect deliverables) — status-color helpers and full template |
+| `reference/synthesizer.md` | At report generation — defines the 8-component Marketing Director Overview and chart inclusion rules |
+| `reference/docx-template.md` | At report generation — DOCX structure/styling, status-color helpers, and `chartImage()` helper for embedding chart PNGs |
+| `scripts/generate_charts.py` | Always — at the chart-generation step in report building |
 
 ### Playbook References (conditional, from workspace)
 
