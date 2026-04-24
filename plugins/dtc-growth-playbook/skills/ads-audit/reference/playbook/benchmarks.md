@@ -85,16 +85,25 @@ GA4 platform median is ~52 sec. High-AOV traffic should beat that materially.
 | Premium home / furniture | <0.5% | 0.8-1.5% | >1.5% |
 | Premium apparel / lifestyle | <0.8% | 1.2-2.5% | >2.5% |
 
-**Decision tree (CPVC, CPATC, Engaged Time, PDP→ATC):**
+**Decision tree — columns grouped by data source (Meta first, GA4 second):**
 
-| CPVC | CPATC | Engaged Time | PDP→ATC | Diagnosis |
+**Label key:** CPVC/CPATC: `Cheap` = below Healthy band (suspect for high-AOV) · `Healthy` = in band · `Expensive` = above Healthy but below Floor · `Floor` = at/above Floor (problem). Engaged Time: `Healthy` ≥45s, `Low` <30s. PDP→ATC: `Healthy` in band, `Low` below Floor.
+
+| Meta: CPVC | Meta: CPATC | GA4: Engaged | GA4: PDP→ATC | Diagnosis |
 |---|---|---|---|---|
 | Healthy | Healthy | Healthy | Healthy | Channel working — judge total program by MER + email/CRM close rate |
-| Cheap | High | Low | Low | Wrong audience — clicks but not buyers |
-| Healthy | High | Healthy | Low | PDP / product-market fit problem — audit site, not Meta |
+| Cheap | Floor | Low | Low | Wrong audience — clicks but not buyers |
+| Healthy | Floor | Healthy | Low | PDP / product-market fit problem — audit site, not Meta |
 | Healthy | Healthy | Low | Healthy | Bot/accidental traffic — check Audience Network, pixel dedupe |
-| Expensive | Expensive | Healthy | Healthy | Audience saturated/narrow — broaden, refresh creative |
+| Floor | Floor | Healthy | Healthy | Audience saturated/narrow — broaden, refresh creative |
 | Cheap | Cheap | Low | Low | Engagement-bait creative — accidental clicks |
+| Healthy | Healthy | Healthy | Low | PDP problem isolated — good ad + audience, audit site |
+| Floor | Healthy | Healthy | Healthy | Expensive but quality — narrow audience kept quality up. Test new audiences. |
+
+**Default rule — when no row matches exactly:**
+1. **Tracking validation first** — confirm Meta Pull 4 + GA4 Pull 4 events fire correctly. Broken tracking looks identical to bad performance.
+2. **Score by worst metric** — that metric is the constraint. CPVC = creative/targeting; CPATC = audience quality; Engaged Time = traffic quality/placement; PDP→ATC = site/product fit.
+3. **Cross-channel sanity** — pull GA4 Pull 5 and compare Meta vs Google/organic. Meta-only weakness = Meta-specific. All paid weak = site/PDP.
 
 **Set-up requirements (data has to be collectable for this framework):**
 1. Pixel + CAPI must fire ViewContent and AddToCart with deduplication

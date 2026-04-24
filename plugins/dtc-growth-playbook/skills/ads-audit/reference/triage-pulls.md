@@ -247,6 +247,10 @@ If Shopify/BigCommerce triage shows AOV ≥ $200 (or user stated buying cycle �
 6. **Note in the manifest:** "Meta scored using High-AOV Traffic Quality Framework (AOV $X, cycle Y days). Standard ROAS scoring deferred per playbook tof-strategy.md."
 7. **Auto-RED triggers (high-AOV mode):** CPATC >2× the Floor for the category, OR CPVC >2× the Floor, OR Frequency >5.0. Standard ROAS auto-RED does NOT apply in this mode.
 
+**Score authority — important:** When High-AOV Mode is active, the **quality framework score IS the Meta score** (RED/YELLOW/GREEN). Standard ROAS/CPA scoring is informational only — capture it in the appendix for context, but do NOT use it to determine the platform's triage score.
+
+Worked example: A jewelry brand has standard ROAS scoring of RED (1.4× ROAS vs 2.5× target) but quality framework readings of GREEN (CPVC $1.43, CPATC $28, engaged time 52s, PDP→ATC 4.5%). The Meta score is **GREEN**. The implicit assumption is that revenue is closing outside Meta's 7-day window via email, retargeting, branded search, or CRM. The body narrative should explain this — don't show a GREEN Meta score next to a 1.4× ROAS without context, or the client will think you're hiding the ball.
+
 If neither Shopify/BigCommerce data is available AND the user hasn't given AOV: ask AOV before scoring Meta. Do not default to standard scoring on unknown AOV — over half of agency clients are above the $200 threshold.
 
 ---
