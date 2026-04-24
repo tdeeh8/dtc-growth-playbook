@@ -34,6 +34,78 @@ If the client's economics require a 4x ROAS but the channel averages 1.9x, the p
 
 ## Current Playbook [Valid Q2 2026 — review July 2026]
 
+### High-AOV Traffic Quality Benchmarks (AOV $200+, Cold Prospecting)
+
+**When to use these instead of (not in addition to) standard Meta benchmarks:** AOV ≥ $200, OR stated buying cycle ≥ 14 days, OR Meta purchase optimization can't exit learning. Applies to Meta + any cold prospecting channel (TikTok, Pinterest, Snap). Does NOT apply to retargeting or branded search.
+
+**Why:** 7-day attribution windows miss high-AOV purchases. Judging cold traffic by 7-day ROAS in this scenario is structurally broken — switch evaluation to traffic quality. See playbook `tof-strategy.md` "High-AOV Traffic Quality Framework" for full methodology.
+
+**Cost per ViewContent (Meta cold prospecting, AOV $200+):**
+
+| Category | Floor | Healthy | Strong |
+|---|---|---|---|
+| Fine jewelry / luxury ($500+ AOV) | >$4.00 | $1.50-3.00 | <$1.50 |
+| Premium home / furniture ($300-1,000 AOV) | >$3.00 | $1.00-2.50 | <$1.00 |
+| Premium apparel / lifestyle ($200-500 AOV) | >$2.50 | $0.80-2.00 | <$0.80 |
+| High-ticket B2B / services ($1,000+ LTV) | >$6.00 | $2.00-5.00 | <$2.00 |
+
+**Cost per Add-to-Cart (Meta cold prospecting, AOV $200+):**
+
+| Category | Floor | Healthy | Strong |
+|---|---|---|---|
+| Fine jewelry / luxury ($500+ AOV) | >$80 | $25-60 | <$25 |
+| Premium home / furniture ($300-1,000 AOV) | >$60 | $20-50 | <$20 |
+| Premium apparel / lifestyle ($200-500 AOV) | >$45 | $12-35 | <$12 |
+| High-ticket B2B / services | >$120 | $40-90 | <$40 |
+
+**GA4 Average Engaged Session Time (paid social → site):**
+
+| Tier | Time per Session | Read |
+|---|---|---|
+| Floor | <30 sec | Wrong audience or broken landing experience |
+| Concerning | 30-45 sec | Moderate match — likely creative/landing mismatch |
+| Healthy | 45-90 sec | Real consideration happening |
+| Strong | >90 sec | High-intent research — algo + creative working |
+
+GA4 platform median is ~52 sec. High-AOV traffic should beat that materially.
+
+**PDP → ATC Rate (GA4 view_item → add_to_cart funnel):**
+
+| Category | Floor | Healthy | Strong |
+|---|---|---|---|
+| Fine jewelry / luxury | <1.5% | 2.0-3.5% | >3.5% |
+| Premium home / furniture | <2.0% | 3.5-5.0% | >5.0% |
+| Premium apparel / lifestyle | <2.5% | 4.0-6.0% | >6.0% |
+
+**PDP → Purchase Rate (GA4 view_item → purchase, 30-90 day lookback):**
+
+| Category | Floor | Healthy | Strong |
+|---|---|---|---|
+| Fine jewelry / luxury ($500+) | <0.4% | 0.7-1.2% | >1.2% |
+| Premium home / furniture | <0.5% | 0.8-1.5% | >1.5% |
+| Premium apparel / lifestyle | <0.8% | 1.2-2.5% | >2.5% |
+
+**Decision tree (CPVC, CPATC, Engaged Time, PDP→ATC):**
+
+| CPVC | CPATC | Engaged Time | PDP→ATC | Diagnosis |
+|---|---|---|---|---|
+| Healthy | Healthy | Healthy | Healthy | Channel working — judge total program by MER + email/CRM close rate |
+| Cheap | High | Low | Low | Wrong audience — clicks but not buyers |
+| Healthy | High | Healthy | Low | PDP / product-market fit problem — audit site, not Meta |
+| Healthy | Healthy | Low | Healthy | Bot/accidental traffic — check Audience Network, pixel dedupe |
+| Expensive | Expensive | Healthy | Healthy | Audience saturated/narrow — broaden, refresh creative |
+| Cheap | Cheap | Low | Low | Engagement-bait creative — accidental clicks |
+
+**Set-up requirements (data has to be collectable for this framework):**
+1. Pixel + CAPI must fire ViewContent and AddToCart with deduplication
+2. GA4 must have UTM tagging on Meta ads (Source/Medium = `facebook / cpc` etc.)
+3. GA4 enhanced ecommerce events (view_item, add_to_cart, purchase) implemented
+4. 30-day minimum lookback for PDP→Purchase rate
+
+If the data layer isn't there, fix it before declaring traffic "low quality" — broken pixel looks identical to bad creative.
+
+---
+
 ### Meta Ads
 
 | Metric | Floor | Healthy | Strong | Notes |

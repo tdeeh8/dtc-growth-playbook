@@ -111,6 +111,38 @@ The narrative for this platform in the report body must be ≤ 200 words. Detail
 
 ---
 
+### Pull 5: High-AOV Channel Quality (RED/YELLOW: when triggered by Meta High-AOV Mode)
+
+**Run only when Meta deep-dive flagged High-AOV Mode** (AOV ≥ $200 or stated cycle ≥ 14 days). This pull provides the GA4 half of the High-AOV Traffic Quality Framework — engaged time and PDP funnel rates by channel.
+
+**Request key:** `ga4_request`. Two sub-pulls:
+
+**Pull 5A — Engagement by Channel:**
+- Metrics: `Sessions`, `Average engagement time per session`, `Engaged sessions`, `Bounce rate`
+- Breakdowns: `Session source / medium` (or `Session default channel group` if source/medium too noisy)
+
+**Pull 5B — PDP Funnel by Channel (if available):**
+- Metrics: `Event count` (filtered to `view_item`, `add_to_cart`, `purchase`)
+- Breakdowns: `Session source / medium`
+- If GA4 Funnel Exploration via Adzviser isn't accessible, compute from event counts + segment manually.
+
+**Lookback override:** Pull 5B should run on a 30-90 day lookback (not the audit's standard period) to capture the full consideration cycle on PDP→Purchase. Note the longer window in evidence.
+
+**Calculate (filter to Meta source/medium = `facebook / cpc`, `fb / cpc`, `meta / paid`, etc. — confirm UTM convention with user):**
+- Avg engaged time (Meta) — score against High-AOV benchmark in `playbook/benchmarks.md`
+- PDP→ATC rate (Meta) = Meta-attributed `add_to_cart` events ÷ Meta-attributed `view_item` events
+- PDP→Purchase rate (Meta) = Meta-attributed `purchase` events ÷ Meta-attributed `view_item` events (use 30-90 day window)
+- Compare Meta to other paid channels (Google, TikTok if present) — relative engagement quality matters as much as absolute
+
+**Diagnostic:**
+- Engaged time <30s on Meta but >60s on Google → Meta is sending lower-quality traffic, not a site problem
+- PDP→ATC healthy but PDP→Purchase very low → consideration cycle longer than your lookback (extend to 90 days) OR retargeting/email isn't closing
+- Both PDP rates very low across all channels → site/PDP problem, not Meta-specific
+
+**Evidence:** Add `high_aov_channel_quality` block to GA4 evidence JSON with per-channel engaged time + PDP funnel rates. Cross-reference with Meta evidence's CPVC/CPATC for the full 5-metric picture.
+
+---
+
 ## YELLOW Mode Routing
 
 **Revenue gap concern (GA4 vs platform claims misaligned >15%):**
@@ -124,6 +156,10 @@ The narrative for this platform in the report body must be ≤ 200 words. Detail
 **Tracking integrity concern (events firing inconsistently):**
 - Pulls: 1 + 4
 - Focus: Event tracking validation, purchase event completeness, custom event baseline
+
+**High-AOV Mode triggered by Meta deep-dive:**
+- Pulls: 1 + 4 + 5 (1 for channel context, 4 to validate events fire, 5 for the quality framework metrics)
+- Focus: Engaged time + PDP funnel by channel, Meta vs other paid channels comparison
 
 ---
 

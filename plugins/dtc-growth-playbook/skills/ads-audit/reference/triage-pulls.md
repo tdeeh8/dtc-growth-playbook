@@ -228,6 +228,27 @@ metrics: ["Spend", "Purchase Conversion Value", "Return On Ad Spend (ROAS)", "To
 
 **Auto-RED triggers:** ROAS <1.0×, frequency >5.0, CPA >2× break-even
 
+**HIGH-AOV MODE — switch Meta scoring when AOV ≥ $200:**
+
+If Shopify/BigCommerce triage shows AOV ≥ $200 (or user stated buying cycle ≥ 14 days, or Meta is stuck in learning phase with <50 purchases/week), the standard ROAS/CPA scoring above is structurally broken — Meta's 7-day attribution window misses high-AOV purchases. Use the High-AOV Traffic Quality Framework instead:
+
+1. **Skip the standard ROAS/CPA scoring** — it will always look bad and won't reflect channel reality.
+2. **Add this triage pull:**
+   ```
+   fb_ads_request:
+     metrics: ["Spend", "Total Content Views", "Total Adds To Cart"]
+   ```
+   3 additional metrics beyond the 8 above, no breakdowns.
+3. **Compute traffic quality metrics:**
+   - Cost per ViewContent (CPVC) = Spend ÷ Total Content Views
+   - Cost per Add-to-Cart (CPATC) = Spend ÷ Total Adds To Cart
+4. **Score against High-AOV benchmarks in `reference/playbook/benchmarks.md`** (use the AOV tier matching the client: jewelry, home/furniture, apparel/lifestyle, B2B services). Frequency, CPM trend, and attribution ratio scoring still apply unchanged.
+5. **Flag GA4 for the engaged-time + PDP funnel pulls** in deep-dive (see `reference/platforms/ga4-deep.md` Pull 5 — High-AOV Channel Quality). This is the third and fourth quality metrics; without GA4 you only get 2 of 5.
+6. **Note in the manifest:** "Meta scored using High-AOV Traffic Quality Framework (AOV $X, cycle Y days). Standard ROAS scoring deferred per playbook tof-strategy.md."
+7. **Auto-RED triggers (high-AOV mode):** CPATC >2× the Floor for the category, OR CPVC >2× the Floor, OR Frequency >5.0. Standard ROAS auto-RED does NOT apply in this mode.
+
+If neither Shopify/BigCommerce data is available AND the user hasn't given AOV: ask AOV before scoring Meta. Do not default to standard scoring on unknown AOV — over half of agency clients are above the $200 threshold.
+
 ---
 
 ### Amazon Ads
