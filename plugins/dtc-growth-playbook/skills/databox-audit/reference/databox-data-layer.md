@@ -22,7 +22,7 @@ Account (one per client/organization)
 
 Before any data pull you need the `account_id` and the correct `data_source_id` for each platform. Use the local cache instead of calling `list_accounts` + `list_data_sources` on every audit:
 
-1. Read `databox_account_cache.md` from the user's workspace root — a slim table of all accounts, their data sources, and the resolved `data_source_id` per platform (generated on first run, user-specific).
+1. Read `clients/_system/databox_account_cache.md` — a slim table of all accounts, their data sources, and the resolved `data_source_id` per platform (generated on first run, user-specific). *(v4 location — moved from the workspace root in v3.)*
 2. Search for client name → get `account_id` and the `data_source_id` map for each platform connected.
 3. **Cache miss?** Call `list_accounts`, then `list_data_sources(account_id)` for the target account, parse via bash, update the cache file, then proceed.
 4. **Platform mismatch?** (user says a platform is connected but cache doesn't show it) → re-pull `list_data_sources` and update the cache.

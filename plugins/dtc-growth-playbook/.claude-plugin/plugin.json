@@ -1,6 +1,6 @@
 {
   "name": "dtc-growth-playbook",
-  "version": "6.3.2",
+  "version": "6.4.0",
   "description": "Triage-first marketing audit via Adzviser MCP. Scans connected ad platforms with lightweight diagnostic pulls, scores RED/YELLOW/GREEN, then deep-dives only where problems exist. Covers Google Ads, Meta Ads, Amazon Ads, GA4, Shopify, BigCommerce.",
   "author": {
     "name": "Tanner Hill"

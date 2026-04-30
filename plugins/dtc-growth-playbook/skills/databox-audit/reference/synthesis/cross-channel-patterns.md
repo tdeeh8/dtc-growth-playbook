@@ -331,6 +331,271 @@ Products perform differently across sales channels. A bestseller on Shopify DTC 
 
 ---
 
+## 8. Owned-Channel Collapse
+
+### What It Is
+Email/SMS revenue has collapsed (>40% YoY decline) or owned channels are contributing less than 15% of total revenue. Paid acquisition is masking a broken retention engine — every customer paid traffic acquires is one the lifecycle program should have re-activated for free. Cutting paid before the retention engine is fixed will crater the account.
+
+### How to Detect
+
+**Requires:** Email/SMS evidence (Klaviyo, ideally) + Shopify or BigCommerce evidence for total revenue. If Klaviyo evidence isn't available, flag as a data gap — pattern can still be inferred from Shopify returning-customer ratio, but at lower confidence.
+
+1. **Compare email + SMS attributed revenue YoY.** Pull current-period email + SMS revenue from Klaviyo evidence; compare to prior-year same period.
+2. **Compute owned-channel revenue share of total:**
+   - `Owned % = (Email revenue + SMS revenue) / Total Shopify (or BigCommerce) revenue`
+3. **Cross-check retention signals from Shopify:** returning-customer ratio, repeat purchase rate. Low retention metrics + low owned-channel share = strong corroboration.
+
+**Detection thresholds:**
+- Email + SMS YoY revenue down >40% → Severe collapse
+- Owned-channel revenue <15% of total → Structural under-investment
+- Both triggered → strongest signal
+- Either triggered alone → still a pattern, lower confidence
+
+**Confidence levels:**
+- HIGH: Klaviyo evidence + ecommerce evidence both present, both detection thresholds met.
+- MEDIUM: Only one threshold met, OR only one of the two evidence sources is present.
+- LOW: Neither Klaviyo nor client confirmation; pattern inferred from Shopify returning-customer ratio alone.
+
+### What to Recommend
+- Audit the lifecycle program — welcome, abandoned cart, and post-purchase flows are the priority three. Most owned-channel collapse traces to broken or aging core flows, not campaign cadence.
+- Do NOT cut paid spend before the retention engine is fixed. Paid is masking the bleed; cutting it with weak retention will crater the account.
+- Cross-reference: recommend the `/audit` skill for a Klaviyo lifecycle deep-dive, then re-run audit synthesis once retention metrics are repaired.
+- Body lead reframing: "Your retention engine is broken. Paid is masking it by acquiring customers you should already own."
+
+---
+
+## 9. TOF-Underfunded
+
+### What It Is
+Top-of-funnel spend share has fallen at or below the Floor of the dynamic target (per the brand's stage × AOV tier), AND nROAS is declining over the lookback. The funnel is starving — the closer-stage audience pool will saturate in 30-60 days and the cliff hits next.
+
+### How to Detect
+
+**Requires:** 2+ platform evidence files with funnel-stage classification (from v2 Channel Role Classification, Step 1.4). Manifest must include brand stage and AOV tier for the dynamic target lookup.
+
+1. **Compute cross-platform TOF spend share** from v2 Step 1.4 outputs:
+   - `TOF Share = TOF Spend (all platforms) / Total Paid Spend (all platforms)`
+2. **Look up the dynamic TOF target Floor** in `reference/full-funnel-framework.md` Section 4 — the canonical 12-cell dynamic TOF target table (3 brand stages × 4 AOV tiers), with modifier rules (returning customer %, MER trend, total spend) in Section 4.3. (Note: `reference/playbook/benchmarks.md` does NOT contain this table — it has the AOV tier benchmarks for TOF *quality* metrics like CPATC/CPVC, not the spend-share targets.)
+3. **Compute nROAS trend** across the audit window — current period vs. prior period, same lookback length.
+
+**Detection thresholds:**
+- TOF share at or below the Floor of the dynamic target band → underfunded
+- nROAS declining (>5% drop over the lookback) → funnel pressure confirmed
+- Both triggered → strongest signal — saturation cliff is imminent
+- TOF share below Floor but nROAS flat → early signal, not yet pressure-tested
+
+**Confidence levels:**
+- HIGH: Both signals trigger AND brand stage + AOV tier are confirmed in manifest.
+- MEDIUM: Only one signal triggers, OR brand stage / AOV tier is inferred rather than confirmed.
+- LOW: Funnel-stage classification is uncertain (Pull 7 audience parsing flagged DATA_QUALITY_SUSPECT) — the TOF share calculation isn't reliable enough to lead with.
+
+### What to Recommend
+- Refund TOF — target the Healthy band of the dynamic target, not just the Floor. The Floor is bare-minimum breakeven; sustainable growth lives in Healthy.
+- Plan creative production now — refunding TOF without new creative just accelerates fatigue on existing assets. Brief and produce 30-60 days of TOF assets before the spend increase lands.
+- Expect lifecycle/retention pressure 30-60 days out as the closer-stage audience saturates. Pre-empt by warming the email/SMS program for the incoming wave of new customers.
+- Cross-reference: `reference/full-funnel-framework.md` Section 4 for the dynamic TOF target derivation AND the lookup table (12 cells). `reference/playbook/benchmarks.md` separately for TOF *quality* metric benchmarks (CPATC, CPVC, engaged time) by AOV tier — those are different concepts and live in different files.
+- Body lead reframing: "Your funnel is starving. Expect a cliff in 30-60 days as your closer-stage audience saturates."
+
+---
+
+## 10. Profitability Trap
+
+### What It Is
+Platform-reported metrics look healthy (ROAS at or above the minimum required for the brand's gross margin) but the business isn't actually making money. MER is below minimum, OR CM3 is negative despite the green ROAS. The platform numbers may be technically honest — the trap is everything they don't capture: returns, discount stacking, fulfillment, payment processing, agency and tool overhead.
+
+**This pattern is NOT a duplicate of Attribution Overlap (Pattern 1).** Attribution Overlap is "platforms claim 2× the conversions they actually drove" — platform numbers are inflated. Profitability Trap is "platform numbers may be honest, but the business is still losing money after all costs are loaded." Both can fire simultaneously — they are orthogonal diagnoses.
+
+### How to Detect
+
+**Requires:** Cross-Platform Anchor outputs from v2 Step 1.6 (platform ROAS, MER, CM2, CM3 if calculable). Shopify or BigCommerce evidence required for honest revenue. Gross margin or COGS estimate required (use vertical estimate per `profitability-framework.md` if client COGS unavailable).
+
+1. **Compare platform ROAS vs. MER** from the Cross-Platform Anchor.
+2. **Compute the minimum ROAS threshold:** `Minimum ROAS = 1 / Gross Margin %`. This is the absolute floor — below it, the business loses money on ad spend alone before any other costs (per `reference/synthesis/profitability-framework.md`).
+3. **Run the trap detection comparisons:**
+   - Platform ROAS ≥ minimum AND MER < minimum → Profitability Trap candidate
+   - CM3 < 0 (if calculable) → Profitability Trap confirmed
+4. **Run the 5-check "Good ROAS but Bad Profit" detection** per `profitability-framework.md` Section "Good ROAS but Bad Profit Detection":
+   - Check 1: Return rate impact (vertical-adjusted if data unavailable)
+   - Check 2: Discount stacking
+   - Check 3: Fulfillment cost allocation
+   - Check 4: Payment processing
+   - Check 5: Agency and tool overhead
+
+**Detection thresholds:**
+- Platform ROAS ≥ minimum AND MER < minimum → trap signal present
+- CM3 < 0 → trap confirmed
+- ≥2 of the 5 hidden-cost checks failing → trap mechanism identified
+
+**Confidence levels:**
+- HIGH: All canonical inputs OBSERVED/CALCULATED (revenue, spend, COGS, return rate). Minimum ROAS, MER, and CM3 all calculable. Trap signal present in BOTH MER and CM3.
+- MEDIUM: COGS or return rate is ASSUMPTION-labeled (vertical estimate), but other inputs are firm. Trap signal present in MER OR CM3 (not both).
+- LOW: COGS unavailable AND return rate unavailable — trap is suggested but not verifiable from the evidence.
+
+### What to Recommend
+- Lead the body with the CM3 waterfall — it's the headline diagnostic. Visualize where each dollar of revenue goes: COGS → fulfillment → marketing → processing → returns → CM3.
+- Identify which hidden cost is the leak. Usually it's one or two of the five checks — returns (apparel), discount stacking (consumables), or fulfillment (heavy/bulky goods) are the most common culprits.
+- Recalibrate target ROAS: `Break-even CPA × 0.65` with the actual fully-loaded cost structure. The platform-side target ROAS is wrong if it was set against a thin definition of cost.
+- Cross-reference: `reference/synthesis/profitability-framework.md` for the canonical CM2/CM3/MER thresholds, the full 5-check "Good ROAS but Bad Profit" detection, and the COGS estimation logic when client COGS is unavailable.
+- Body lead reframing: "Platform metrics look fine but you're not making money. Here's why your ROAS is lying."
+
+---
+
+## 11. Healthy / Optimization
+
+### What It Is
+The absence-of-pattern pattern. None of Patterns 1-10 trigger with HIGH confidence, AND the v3 Account Scorecard shows Healthy or above on every framework dimension. The account is fundamentally working — the audit shifts from triage mode to upside mode.
+
+### How to Detect
+
+**Requires:** All other pattern detections complete. v3 Account Scorecard with framework-dimension scores.
+
+1. **Run all other pattern detections** (Patterns 1-10) per their detection rules.
+2. **Verify no pattern triggered HIGH confidence.** A single HIGH-confidence pattern disqualifies Healthy.
+3. **Open the v3 Account Scorecard.** Verify every framework dimension scores Healthy or above (no Critical, no At Risk).
+4. **If both conditions hold** → Healthy / Optimization is the dominant pattern.
+
+**Detection thresholds:**
+- Zero patterns at HIGH confidence AND zero scorecard dimensions below Healthy → Healthy / Optimization fires
+- One MEDIUM-confidence pattern AND scorecard fully Healthy → still Healthy / Optimization, but surface the secondary pattern in Priority Actions
+- Any HIGH-confidence pattern OR any scorecard dimension below Healthy → does NOT trigger; another pattern is dominant
+
+**Confidence levels:**
+- HIGH: No HIGH-confidence pattern present, scorecard fully Healthy or better, key inputs (revenue, spend, MER, CM3) all OBSERVED/CALCULATED.
+- MEDIUM: One MEDIUM-confidence secondary pattern present but scorecard fully Healthy.
+- LOW: Not applicable — Healthy / Optimization is the fallthrough. If the data is too thin to evaluate the other patterns, the dominant pattern is Tracking-Broken (data integrity gates trust), not Healthy.
+
+### What to Recommend
+- Shift the report from triage mode to upside mode. The Priority Actions are about "what would unlock the next level," not "what's broken."
+- Testing roadmap: prioritize 2-3 high-leverage tests (creative concept tests, audience expansion, landing page tests).
+- Retention deepening: lifecycle program improvements (segmentation, post-purchase journey, win-back) — even if email is healthy now, marginal lift is high-leverage at this stage.
+- Channel expansion: explore the next channel given the brand's stage (TikTok if Meta is saturated, retail media if DTC is saturated, CTV if budget supports it).
+- Cross-reference: `reference/full-funnel-framework.md` for the framework dimensions definitions. `reference/synthesizer.md` Section 2.2 for the Account Scorecard structure — adaptive 8-row (when nROAS data available) or 7-row (degraded). "All Healthy" detection means every row in the rendered scorecard scores GREEN; if any row is RED or YELLOW, the Healthy pattern does NOT trigger.
+- Body lead reframing: "Account is fundamentally healthy. Here's what would unlock the next level."
+
+---
+
+## Pattern Naming Map (v3 ↔ existing)
+
+The 7 v3 dominant patterns in `v3-quality-framework.md` Section 2.3 map to patterns in this file. Some are renames (same detection logic, different label); some are NEW (added in Wave 3.5 specifically to support v3 pattern-led report templates). The mapping:
+
+| v3 Dominant Pattern | This file's Pattern | Status |
+|---|---|---|
+| Tracking-Broken | #6 Tracking Disconnects | Renamed (same detection logic) |
+| Owned-Channel Collapse | #8 Owned-Channel Collapse | NEW (added Wave 3.5) |
+| TOF-Underfunded | #9 TOF-Underfunded | NEW (added Wave 3.5) |
+| Profitability Trap | #10 Profitability Trap | NEW (added Wave 3.5) |
+| Cannibalization | #3 Cannibalization | Same |
+| Allocation Imbalance | #4 Budget Imbalance | Renamed (same detection logic) |
+| Healthy / Optimization | #11 Healthy / Optimization | NEW (added Wave 3.5) |
+
+**Patterns in THIS file NOT used as v3 dominant patterns:**
+- #1 Attribution Overlap — orthogonal cross-channel pattern, used in Priority Actions / cross-channel synthesis but not the report's body lead
+- #2 Halo Effects — orthogonal, same
+- #5 Funnel Gaps — orthogonal, same (some sub-patterns may inform TOF-Underfunded or Profitability Trap as secondary findings)
+- #7 Cross-Channel Product Performance — orthogonal, same
+
+**Note:** The synthesizer should always run all 11 detections. The 7 v3 dominant patterns drive the body's lead and money chart; the other 4 contribute to Priority Actions and per-channel pages but don't drive the report's narrative shape.
+
+---
+
+## Dominant Pattern Selection (v3)
+
+### Purpose
+
+When 2+ patterns trigger with HIGH or MEDIUM confidence, the synthesizer must pick **one** as the report lead. The chosen lead — the **dominant pattern** — determines:
+
+- The body opener (the single-paragraph verdict at the top of the report).
+- The "money chart" (the headline visualization on Page 1).
+- The default first-2 Priority Actions (the lead pattern's Action Contracts come first).
+- Per-channel page framing (each channel page is interpreted in light of the dominant pattern, not in isolation).
+
+Other triggered patterns become **secondary patterns** — they still get recommendations folded into Priority Actions, but they don't drive the body lead.
+
+This section formalizes the selection logic so the synthesizer (and any reviewer) can audit the decision.
+
+### Precedence Ranking
+
+Verbatim from `v3-quality-framework.md` Section 2.3 (with cross-references to this file's pattern numbers — see **Pattern Naming Map (v3 ↔ existing)** above for the full mapping):
+
+1. **Tracking-Broken** (#6 Tracking Disconnects) — always wins; gates trust in everything else
+2. **Profitability Trap** (#10)
+3. **Owned-Channel Collapse** (#8)
+4. **TOF-Underfunded** (#9)
+5. **Cannibalization** (#3)
+6. **Allocation Imbalance** (#4 Budget Imbalance)
+7. **Healthy / Optimization** (#11)
+
+Tracking-Broken always wins because no other diagnosis is trustworthy until measurement is reliable. The remaining order goes by business-impact severity: profitability before growth, retention before acquisition, structural funnel issues before efficiency tuning, with Healthy as the fallthrough.
+
+Patterns 1, 2, 5, and 7 in this file (Attribution Overlap, Halo Effects, Funnel Gaps, Cross-Channel Product Performance) are NOT in this ranking — they are orthogonal cross-channel patterns that contribute to Priority Actions and per-channel pages but never drive the body lead. See the Pattern Naming Map for details.
+
+### Selection Algorithm
+
+```
+1. Run pattern detection across all 7 patterns (per detection rules above + v3 framework §2.3).
+2. Filter: keep only patterns flagged HIGH or MEDIUM confidence. Drop LOW confidence.
+3. If filtered set is empty → dominant_pattern = "healthy-optimization" (see edge case below).
+4. Otherwise → dominant_pattern = the highest-precedence pattern in the filtered set
+   (i.e., walk the precedence list top-down, pick the first pattern present).
+5. secondary_patterns = all other patterns in the filtered set, sorted by precedence.
+6. Write all three to the manifest (see Manifest Output below).
+```
+
+The synthesizer must run this algorithm explicitly before drafting the body — no implicit "pick whichever pattern feels biggest" judgement calls. The precedence list is the spec.
+
+### Detection Threshold (restated from v3 framework)
+
+| Confidence | Criteria | Participates in selection? |
+|---|---|---|
+| **HIGH** | Detection signal hits all required evidence with **no** `DATA_QUALITY_SUSPECT` flags. | Yes |
+| **MEDIUM** | Detection signal hits with **one** source missing OR **one** `DATA_QUALITY_SUSPECT` flag. Pattern still triggers but is labeled MEDIUM. | Yes |
+| **LOW** | Detection signal hits with **multiple** data quality issues. Pattern is flagged for the appendix as "worth investigating" but does NOT participate in dominant-pattern selection. | No |
+
+Rationale: leading the body with a LOW-confidence pattern risks framing the entire audit around a finding that doesn't survive scrutiny. LOW patterns are still surfaced — just not as the lead.
+
+### Edge Case — Multiple Patterns at the Same Precedence Level
+
+Cannot happen. The precedence ranking above is a **strict total order** — each of the 7 patterns occupies exactly one rank. If two pattern signals both fire (e.g., Tracking-Broken AND TOF-Underfunded), they are at different ranks by definition, so the algorithm always returns a unique dominant pattern.
+
+Document this explicitly so future maintainers don't add tie-breaker logic that isn't needed.
+
+### Edge Case — No Patterns Trigger
+
+If the filtered (HIGH/MEDIUM) set is empty, dominant_pattern falls through to **Healthy / Optimization** (rank 7). Healthy always passes — it's the fallthrough case, not a detected pattern. The body lead shifts from triage to upside (testing roadmap, retention deepening, channel expansion) per the v3 framework.
+
+### Manifest Output
+
+The synthesizer writes these three keys to the audit manifest before drafting the body:
+
+```yaml
+dominant_pattern: "tracking-broken"   # one slug from the 7 patterns
+secondary_patterns:                    # any other triggered patterns, in precedence order
+  - "profitability-trap"
+  - "tof-underfunded"
+pattern_confidence:                    # per-pattern confidence labels for ALL detected patterns
+  tracking-broken: "HIGH"
+  profitability-trap: "MEDIUM"
+  tof-underfunded: "MEDIUM"
+  cannibalization: "LOW"               # LOW patterns appear here but not in secondary_patterns
+```
+
+**Pattern slugs** (canonical, kebab-case):
+- `tracking-broken`
+- `profitability-trap`
+- `owned-channel-collapse`
+- `tof-underfunded`
+- `cannibalization`
+- `allocation-imbalance`
+- `healthy-optimization`
+
+The Pre-Delivery Quality Gate (v3 framework §2.4) verifies that the body opener matches `manifest.dominant_pattern`. Mismatch → regenerate body.
+
+### Cross-Reference to Templates
+
+The dominant pattern slug determines which template file to load from `reference/synthesis/templates/{slug}.md` — see Agent F's Wave 3 output for the 7 template files. The template provides the body opener, the recommended money chart, the default first-2 Priority Action skeletons, and the per-channel framing for that pattern.
+
+---
+
 ## Pattern Interaction Matrix
 
 Some patterns reinforce or mask each other. Check for these combinations:
@@ -345,6 +610,9 @@ Some patterns reinforce or mask each other. Check for these combinations:
 | Attribution Overlap | Halo Effects | Some of what looks like "overlap" may actually be a real halo effect. Without incrementality testing, you can't fully separate the two. Note both patterns and recommend testing. |
 | Cross-Channel Products | Budget Imbalance | Product getting heavy ad spend on one channel but underperforming on the other = misallocated spend or listing quality issue |
 | Cross-Channel Products | Funnel Gaps | Product with high traffic on both channels but low CVR on one = channel-specific conversion problem (listing quality, pricing, trust) |
+| Profitability Trap | Attribution Overlap | Both can fire orthogonally — they describe different failure modes. Trap = real costs (returns, fulfillment, agency overhead) under-counted in ROAS denominator. Overlap = conversions over-counted in ROAS numerator. Both inflate platform ROAS but in opposite directions; CM3 + MER reconciliation surface both. Flag both patterns when both trigger; the Profitability Trap fix (cost loading) and the Overlap fix (deduplication / MER for budget decisions) compose without conflict. |
+| Profitability Trap | TOF-Underfunded | Often co-occur in mature accounts: weak unit economics force budget toward "safe" capture channels (branded, retargeting), starving TOF, which propagates back to deeper unit-economics decay 60-90 days later. Fix order: profitability anchor first (so reinvestment math is honest), then TOF refunding (so the funnel doesn't collapse). |
+| Owned-Channel Collapse | Healthy / Optimization | Can NOT both fire — Owned-Channel Collapse triggers a non-Healthy scorecard dimension by definition (Owned channel health row goes RED), so the Healthy pattern's "all dimensions ≥ Healthy" gate prevents both from being dominant. If they appear to both fire, the dominant pattern is always Owned-Channel Collapse. |
 
 ---
 

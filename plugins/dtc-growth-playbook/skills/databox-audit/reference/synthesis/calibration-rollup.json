@@ -1,0 +1,12 @@
+{
+  "calibration_rollup": {
+    "audits_with_outcomes": 4,
+    "predictions_total": 18,
+    "predictions_hit_within_20pct": 13,
+    "predictions_partial": 3,
+    "predictions_missed": 2,
+    "hit_rate_within_20pct": 0.722,
+    "dollar_weighted_hit_rate": 0.78,
+    "last_aggregation_date": "2026-04-25"
+  }
+}

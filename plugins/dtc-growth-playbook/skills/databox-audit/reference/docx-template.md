@@ -1,6 +1,22 @@
 # DOCX Report Template — Databox Audit
 
-Use this template to generate the audit report. **DOCX is the default delivery format for every audit** — markdown output is only used if the user explicitly asks for it. Includes reusable status-color helpers so tables auto-render RED/YELLOW/GREEN/GRAY cells based on the Status value.
+> ⚠️ **DEPRECATED in v4-cowork-memory (April 2026).** PDF is now the default deliverable. New audits should not load this file. Use `reference/pdf-template.md` and `scripts/build_audit_pdf.js` instead. This file is retained for one version cycle so anyone with v3 muscle memory has a clear pointer; it will be removed in v5.
+>
+> If you reached this file by reflex (e.g., habit from v3), STOP and route to `pdf-template.md`. The PDF pipeline accepts the same evidence-JSON shape and produces a 15-page deliverable that maps onto the v3 DOCX structure 1:1.
+
+---
+
+Use this template to generate the audit report. **DOCX was the default delivery format in v3** — kept here for legacy reference only. Includes reusable status-color helpers so tables auto-render RED/YELLOW/GREEN/GRAY cells based on the Status value.
+
+## v3-money-page changes (April 2026)
+
+- NEW: `moneyPageBlock()` helper renders the Page 1 Money Page (headline + One Thing + 5-day week).
+- NEW: `headlineScorecard()` helper renders the 3-row Page 2 scorecard.
+- RENAMED: existing 8-row scorecard helper becomes `detailedScorecard()`, rendered in appendix only.
+- CHANGED: Findings Matrix Impact cells render as dollar strings with Severity-row-inherited fill (no more $/$$/$$$ bands).
+- REMOVED: `findings_matrix_heatmap` chart rendering (chart cut from spec).
+
+> **Earlier framework note:** v3 (Wave 1, April 2026) extended STATUS_STYLES with Confidence (HIGH/MEDIUM/LOW) entries. Wave 3 (this update) replaces the Impact band entries with row-context dollar-string rendering — see the helper spec and `tr()` notes below.
 
 ---
 
@@ -63,6 +79,22 @@ const altFill = "F2F2F2";
 
 // ==== Status Color Map (the key feature) ====
 // Auto-applied to any cell whose text exactly matches a key below.
+// STATUS_STYLES is consumed by tableCell() to auto-render color-coded cells.
+// Three families of values are recognized:
+//   1. Triage RAG: "RED" / "YELLOW" / "GREEN" — used in scorecard cells
+//   2. Channel Role status: "Delivering" / "Organic" / "Leaking" / "Fatiguing" /
+//      "Misaligned" / "Too early" / "Too-small-to-matter" / "Broken" / "Collapsed" /
+//      "Unmeasurable" — used in Channel Role vs Reality matrix
+//   3. v3 Findings Matrix: "HIGH" / "MEDIUM" / "LOW" (Confidence) — Confidence
+//      values render as their own colored cells. The Impact column is NOT in
+//      this map — Impact cells are dollar-string text (e.g. "~$22k/mo",
+//      "~$8-15k/mo", "directional") and inherit fill from the row's Severity
+//      cell via row-context in tr() (see helper note below). The old
+//      "$$$" / "$$" / "$" entries are GONE in v3-money-page.
+//      Spec source: reference/synthesis/findings-matrix.md (column schema,
+//      sort order, and worked examples). docx-template.md owns the JS
+//      object; findings-matrix.md owns the design contract.
+// All three coexist; cell content is matched by exact string.
 const STATUS_STYLES = {
   // Traffic light
   "RED":                  { fill: "C0392B", color: "FFFFFF", bold: true },
@@ -79,6 +111,13 @@ const STATUS_STYLES = {
   "Broken":               { fill: "C0392B", color: "FFFFFF", bold: true },
   "Collapsed":            { fill: "C0392B", color: "FFFFFF", bold: true },
   "Unmeasurable":         { fill: "C0392B", color: "FFFFFF", bold: true },
+  // v3 Findings Matrix — Confidence values
+  "HIGH":                 { fill: "229954", color: "FFFFFF", bold: true },
+  "MEDIUM":               { fill: "D68910", color: "FFFFFF", bold: true },
+  "LOW":                  { fill: "7F8C8D", color: "FFFFFF", italic: true },
+  // NOTE: Impact band entries ("$$$" / "$$" / "$") were REMOVED in
+  // v3-money-page. Impact cells now carry dollar-string text and inherit
+  // fill from the row's Severity color via row-context in tr().
 };
 
 // ==== Helpers ====
@@ -144,7 +183,7 @@ function chartImage(chartPath, widthDxa = 8640) {
 }
 
 function tr(cells, opts = {}) {
-  const { header = false, alt = false, widths } = opts;
+  const { header = false, alt = false, widths, context = null } = opts;
   return new TableRow({
     tableHeader: header,
     children: cells.map((c, i) => {
@@ -193,7 +232,20 @@ function table(headers, rows, columnWidths) {
   });
 }
 
-// ==== Document Body ====
+// ==== Document Body (v3-money-page page sequence) ====
+//
+// v3 page order — see "Worked example: v3 page sequence" markdown section below
+// the JS block for the canonical mapping. The sequence is:
+//   Page 1     — Money Page                       (moneyPageBlock)
+//   Page 2     — Executive Summary + Headline Scorecard  (h1 + p + headlineScorecard)
+//   Page 3     — Cross-Channel Overview + Findings Matrix
+//   Page 4     — Funnel Health
+//   Page 5     — Priority Actions
+//   Page 6+    — Per-Channel Pages
+//   Page N-2   — Tracking & Attribution Notes
+//   Page N-1   — Methodology + Predictions Calibration callout
+//   Page N     — Appendix (detailedScorecard + full Triage Summary + tables)
+//
 const children = [];
 
 // Title block
@@ -203,105 +255,82 @@ children.push(new Paragraph({
 }));
 // ... replace {CLIENT}, {DATE}, {LOOKBACK}, etc. with audit-specific values
 
-// --- 1. Executive Summary ---
+// --- Page 1: Money Page (NEW in v3) ---
+// Single page, 200-word hard cap. See moneyPageBlock() spec below the JS block.
+children.push(moneyPageBlock({
+  headline:       "{≤25 words: ~$X/mo at risk OR recoverable. Confidence: HIGH|MEDIUM.}",
+  patternFraming: "{≤30 words: dominant-pattern interpretation per the loaded adaptive template}",
+  theOneThing:    { /* full 7-field Action Contract — WHAT/WHY/HOW/WHEN/WHO/EXPECTED IMPACT/MEASUREMENT */ },
+  theWeek:        ["Mon: …", "Tue: …", "Wed: …", "Thu: …", "Fri: …"],
+  footer:         "Detailed scorecard, full findings matrix, and per-channel diagnostics begin on Page 2.",
+}));
+
+// --- Page 2: Executive Summary + Headline Scorecard ---
 children.push(h1("Executive Summary"));
-children.push(p("{One-paragraph story: YoY trajectory, what's actually driving it, bright spot, biggest red flag}"));
+children.push(p("{1 paragraph, 3 sentences max — YoY trajectory, cause, bright spot}"));
 
-// --- 2. Marketing Director Overview ---
-children.push(h1("Marketing Director Overview"));
-children.push(p("What a marketing director would look at first to decide what to do next.",
-  { run: { italics: true, size: 20 } }));
+children.push(h2("Headline Scorecard"));
+children.push(headlineScorecard({
+  profit:   { status: "RED",    subLines: [
+    { label: "MER",         value: "{value vs target — derivation method}" },
+    { label: "nROAS",       value: "{value vs minimum — confidence label}" },
+    { label: "MER trend",   value: "{spend Δ vs revenue Δ — verdict}" },
+  ]},
+  roles:    { status: "YELLOW", subLines: [
+    { label: "TOF spend share", value: "{actual % vs dynamic target band}" },
+    { label: "TOF quality",     value: "{CPATC/CPVC/engaged time vs AOV-tier benchmark}" },
+    { label: "MOF/BOF",         value: "{retargeting freq + ATC→CO; branded ROAS + attribution ratio}" },
+  ]},
+  tracking: { status: "RED",    subLines: [
+    { label: "UTM hygiene",     value: "{% paid sessions tagged}" },
+    { label: "GA4 vs Shopify",  value: "{revenue gap %}" },
+    { label: "Duplicate convs", value: "{count + flagged platforms}" },
+    { label: "Owned-channel YoY", value: "{Email + SMS revenue delta}" },
+  ]},
+}));
 
-// 2.1 Scorecard
-children.push(h3("Account Scorecard"));
-children.push(table(
-  ["Dimension", "Status", "Signal", "What it means"],
-  [
-    ["Paid media efficiency", "YELLOW", "{signal}", "{interpretation}"],
-    ["Owned channel health", "RED", "{signal}", "{interpretation}"],
-    ["Tracking integrity", "RED", "{signal}", "{interpretation}"],
-    ["Growth trajectory", "YELLOW", "{signal}", "{interpretation}"],
-    ["Unit economics (AOV)", "YELLOW", "{signal}", "{interpretation}"],
-    ["Financial measurement", "RED", "{signal}", "{interpretation}"],
-  ],
-  [2500, 1200, 2900, 2760],
-));
-
-// 2.2 Channel Role vs Reality
-children.push(h3("Channel Role vs Reality"));
-children.push(table(
-  ["Channel", "Role", "Status", "Notes"],
-  [
-    // one row per channel — status auto-colored
-    // ["Google PMax", "Growth / harvest", "Delivering", "ROAS 4.36×"],
-    // ["Email (Attentive)", "Retention / LTV", "Collapsed", "-93% YoY"],
-  ],
-  [2800, 1800, 1400, 3360],
-));
-
-// 2.3 Paid Media Allocation
-children.push(h3("Paid Media Allocation — Where does the ${TOTAL} go?"));
-children.push(table(
-  ["Tier", "Spend", "% of Paid", "Campaigns"],
-  [
-    ["Working — above target", "$X", "X%", "..."],
-    ["Acceptable — near target", "$X", "X%", "..."],
-    ["Underperforming — at-risk", "$X", "X%", "..."],
-    ["Wasted / Diagnostic", "$X", "X%", "..."],
-  ],
-  [2800, 1400, 1400, 3760],
-));
-
-// 2.4 Top Risks — numbered list
-children.push(h3("Top Risks"));
-// numbered([new TextRun({ text: "Risk name. ", bold: true }), new TextRun("Explanation and action.")])
-
-// 2.5 30/60/90
-children.push(h3("30 / 60 / 90 Plan"));
-children.push(p("Next 30 days (tracking + triage)", { run: { bold: true, size: 22 } }));
-// bullet list of 30-day actions
-children.push(p("Next 60 days (reallocation + rebuild)", { run: { bold: true, size: 22 }, spacing: { before: 160 } }));
-// bullet list of 60-day actions
-children.push(p("Next 90 days (optimization + strategy)", { run: { bold: true, size: 22 }, spacing: { before: 160 } }));
-// bullet list of 90-day actions
-
-// 2.6 Weekly KPIs
-children.push(h3("Weekly KPIs to Watch"));
-children.push(table(
-  ["Metric", "Current", "Target / Watch"],
-  [
-    // ["Blended MER", "4.37×", "Hold ≥ 4.0×"],
-  ],
-  [3800, 1700, 3860],
-));
-
-// 2.7 Data Gaps
-children.push(h3("Data Gaps to Close"));
-// bullet list
-
-// --- 3. YoY Context (always included — YoY is default now) ---
+// --- Page 3: Cross-Channel Overview + Findings Matrix ---
 children.push(new Paragraph({ children: [new PageBreak()] }));
-children.push(h1("Year-over-Year Context"));
-// YoY totals table + channel breakdown table + 5-6 "what actually happened" numbered findings
+children.push(h1("Cross-Channel Overview"));
+children.push(chartImage(`${evidenceDir}/charts/channel_mix_yoy.png`));
+// attribution reconciliation table (Source / Claimed Revenue / % of Shopify Net Sales)
 
-// --- 4. Triage Summary (brief) ---
-children.push(h1("Triage Summary"));
-children.push(table(
-  ["Platform", "Score", "Headline Metric", "Root Issue"],
-  [
-    // ["Google Ads", "RED", "ROAS 2.53× vs 3.5× target", "Duplicate conversion actions"],
-    // Status column auto-colored
-  ],
-  [1700, 1100, 2800, 3760],
-));
+children.push(h2("Findings Matrix"));
+// Findings Matrix table — Impact column is dollar-string text with Severity-row-inherited fill.
+// Rows must be emitted with row-context so the renderer knows to apply Severity-color
+// fill to the Impact cell. See "Findings Matrix Impact rendering" spec below.
+//
+// Example row emission (pseudo — see helper spec):
+//   tr([
+//     "1", "RED", "HIGH", "~$22k/mo", "Quick",
+//     "Meta CAPI disconnected since Mar 12; conversion volume understated ~38% …",
+//     "Tracking-Broken"
+//   ], { context: "findings-matrix", severity: "RED", widths: [...] });
 
-// --- 5. Platform Deep Dives (reference material) ---
-// Per RED/YELLOW platform: chart (from evidence_dir/charts/) + scorecard row + diagnosis bullets + actions
-// Detailed campaign tables / conversion-action tables / source-medium breakdowns go in the Appendix.
+// --- Page 4: Funnel Health ---
+children.push(new Paragraph({ children: [new PageBreak()] }));
+children.push(h1("Funnel Health"));
+children.push(p("{~150 word diagnosis: TOF funded? TOF quality? MER trend ≥ spend trend?}"));
+children.push(chartImage(`${evidenceDir}/charts/funnel_stage_mix.png`));
+children.push(chartImage(`${evidenceDir}/charts/mer_vs_spend_trend.png`));
+children.push(chartImage(`${evidenceDir}/charts/priority_action_impact_effort.png`));
+
+// --- Page 5: Priority Actions ---
+children.push(new Paragraph({ children: [new PageBreak()] }));
+children.push(h1("Priority Actions"));
+// 3-6 actions, each rendered as a 7-field Action Contract table.
+// Action #1 is always the same finding the Money Page elaborates as The One Thing
+// (full operator-page version here; compact 3-column variant on Page 1).
+
+// --- Page 6+: Per-Channel Pages (role-aware, 1 chart each) ---
+// Per RED/YELLOW platform: opener line (role mix) + scorecard row + 1 role-aware chart
+//   + diagnosis bullets (role-appropriate KPIs only) + 3 actions.
+// GREEN platforms: one-line summary only.
 //
 // Example usage — Google Ads section:
 //   h2("Google Ads"),
-//   chartImage(`${evidenceDir}/charts/google_spend_roas.png`),
+//   p("Role mix: TOF 18% / MOF 12% / BOF 70%."),
+//   chartImage(`${evidenceDir}/charts/google_spend_roas.png`),    // BOF-dominant → spend_roas_bubble
 //   scorecardRow("Google Ads", "YELLOW", "ROAS 2.74× (up 31% YoY), $3k/mo wasted on <1× campaigns"),
 //   p("Diagnosis:"),
 //   bullet("38% of spend is on sub-1× ROAS campaigns"),
@@ -315,9 +344,16 @@ children.push(table(
 // `evidenceDir` is the audit's evidence directory; `scorecardRow()` is an app-specific wrapper
 // returning a single colored Table row (or Paragraph) that summarizes the platform score.
 
-// --- 6. Cross-Channel Patterns (if detected) ---
-
-// --- 7. Methodology ---
+// --- Page N-2: Tracking & Attribution Notes ---
+// --- Page N-1: Methodology + Predictions Calibration callout ---
+//   children.push(h1("Methodology + Data Sources"));
+//   children.push(p("{calibration callout per outcomes-loop-template.md §5.3}"));
+// --- Page N: Appendix ---
+//   children.push(new Paragraph({ children: [new PageBreak()] }));
+//   children.push(h1("Appendix"));
+//   children.push(h2("Detailed Scorecard"));
+//   children.push(detailedScorecard({ /* full 8-row Standard or 7-row Degraded variant */ }));
+//   // + platform-level Triage Summary (moved out of body in v3) + full campaign tables, etc.
 
 // ==== Build ====
 const doc = new Document({
@@ -388,6 +424,183 @@ Packer.toBuffer(doc).then(buf => {
 | `Unmeasurable` | `#C0392B` | white | Can't diagnose due to tracking |
 
 Any cell whose text exactly matches one of these keys auto-applies the fill, text color, bold, and center-alignment. Works across the Scorecard, Channel Role, and Triage Summary tables.
+
+**v3 Confidence cell additions (still in `STATUS_STYLES`):**
+
+| Value | Fill | Text | Meaning |
+|---|---|---|---|
+| `HIGH` | `#229954` | white, bold | High-confidence finding (Findings Matrix Confidence column) |
+| `MEDIUM` | `#D68910` | white, bold | Medium-confidence finding |
+| `LOW` | `#7F8C8D` | white, italic | Low-confidence finding (de-emphasized; italic, not bold) |
+
+**Impact column (Findings Matrix) — NO map entry.** Impact cells render dollar-string text (`~$22k/mo`, `~$8-15k/mo`, `directional`) and inherit fill from the row's Severity color via row-context in `tr()`. See "Findings Matrix Impact rendering" below.
+
+---
+
+## v3 Helper Specifications
+
+These are the new top-level docx helpers introduced in v3-money-page. The implementation is in `scripts/build_report.js`; this section is the contract the implementation follows.
+
+### `moneyPageBlock({ headline, patternFraming, theOneThing, theWeek, footer })`
+
+Emits the full Page 1 Money Page in a single call. The Money Page MUST fit on one docx page — the helper appends a `PageBreak` after `footer` so subsequent content starts on Page 2.
+
+```
+moneyPageBlock({
+  headline:        string,                  // ≤25 words. H1, large font. Dollar amount rendered
+                                            //   bold + RED if "at risk", bold + GREEN if "recoverable"
+                                            //   (parsed from the headline text — keyword match on "at risk"
+                                            //   vs "recoverable"; default to neutral dark-blue if neither).
+  patternFraming:  string,                  // ≤30 words. Subtitle / lead paragraph immediately under headline.
+                                            //   Italic, slightly muted color (#444 / size 22).
+  theOneThing:     ActionContract,          // 7-field Action Contract object. Rendered as a styled action box —
+                                            //   bordered (1pt #1F3864) with a shaded background (#F2F4F8) so the
+                                            //   block is visually separated from the rest of Page 1. Compact
+                                            //   3-column variant (WHAT / WHEN / EXPECTED IMPACT prominent),
+                                            //   with the remaining 4 fields (WHY / HOW / WHO / MEASUREMENT)
+                                            //   rendered as a compact key-value sidebar/footer that fits inside
+                                            //   the same page.
+  theWeek:         string[5],               // Mon–Fri. Rendered as a 5-row, 2-column table — left col is the
+                                            //   day label (bold), right col is the task. Column widths roughly
+                                            //   1100 / 7540 dxa. No row coloring; thin gray borders.
+  footer:          string,                  // Cross-reference footer. Italic, small (size 18), light gray.
+                                            //   Default value: "Detailed scorecard, full findings matrix, and
+                                            //   per-channel diagnostics begin on Page 2."
+})
+```
+
+**ActionContract shape** (from `reference/synthesis/action-contract.md` Section 2):
+
+```
+{
+  what:            string,
+  why:             string,
+  how:             string,
+  when:            string,
+  who:             string,
+  expectedImpact:  string,    // dollar string per dollar-impact-methodology.md;
+                              //   Page 1 variant renders this prominently (bold, larger size,
+                              //   matching the headline color cue — RED if "at risk", GREEN if
+                              //   "recoverable").
+  measurement:     string,
+}
+```
+
+**Headline color-parse rule (deterministic):**
+
+```
+if headline.includes("at risk")     → dollar amount = bold, color "C0392B" (RED)
+else if headline.includes("recoverable") → dollar amount = bold, color "229954" (GREEN)
+else                                → dollar amount = bold, color "1F3864" (neutral)
+```
+
+The helper extracts the first `~$X/mo` or `~$X-Y/mo` pattern from `headline` and applies the color treatment to that token only; surrounding words stay in the default H1 styling.
+
+**Page-fit guarantee:** the helper budgets 200 words of content + ~120 dxa of vertical padding; if `headline + patternFraming + theOneThing + theWeek + footer` would overflow a single US Letter page (margin 1080 each side), the helper logs a warning to stderr but still emits — the synthesizer's word-budget gate (synthesizer.md §2.0) is the upstream check.
+
+### `headlineScorecard({ profit, roles, tracking })`
+
+Emits the new 3-row Page 2 scorecard. Each row is a 2-column block: a status-colored cell on the left (single color, full row height), and a stacked list of sub-lines on the right (each sub-line is one row of `label / value`).
+
+```
+headlineScorecard({
+  profit:    ScorecardRow,    // see shape below
+  roles:     ScorecardRow,
+  tracking:  ScorecardRow,
+})
+
+ScorecardRow = {
+  status:   "RED" | "YELLOW" | "GREEN",     // the WORST severity among the row's sub-dimensions —
+                                            //   computed by the synthesizer per synthesizer.md §2.2.
+                                            //   The renderer just receives the resolved color value
+                                            //   and applies it to the left cell.
+  subLines: Array<{ label: string, value: string }>,   // 3 entries for Profit and Roles; 4 for Tracking.
+                                                       //   Renderer does NOT enforce count — synthesizer owns it.
+}
+```
+
+**Layout:**
+
+| Left cell (status fill) | Right cell (sub-lines stacked) |
+|---|---|
+| Status keyword centered, white text, bold (e.g. "RED"). Cell width ≈ 1400 dxa, full row height. | One paragraph per sub-line: `**{label}:** {value}` with size 20, spacing.after = 60. Cell width ≈ 7240 dxa. |
+
+The renderer pulls the status fill from `STATUS_STYLES[status]` (so RED/YELLOW/GREEN reuse the existing palette) and applies `bold: true, color: "FFFFFF", center-aligned` to the left cell text. Right cell uses the standard body font with the label rendered bold and the value plain.
+
+Three rows total (one per dimension); each row uses the layout above. Row spacing: 80 dxa above and below.
+
+### `detailedScorecard({ rows, variant })`
+
+Renders the full 8-row Standard / 7-row Degraded scorecard moved out of the body in v3. **Appendix-only — never include this in the body.**
+
+```
+detailedScorecard({
+  rows:    Array<{ dimension: string, status: "RED"|"YELLOW"|"GREEN", signal: string, meaning: string }>,
+  variant: "standard" | "degraded",   // standard = 8 rows; degraded = 7 rows (Profit rows 1-3
+                                      //   collapse to a single MER + MER-trend row, plus a Data Gaps row).
+})
+```
+
+This helper is the renamed v2 scorecard renderer (formerly the inline `table(["Dimension","Status","Signal","What it means"], [...])` call in the v2 body). The internal implementation is unchanged from v2 — it's the same 4-column color-coded table; the rename clarifies that it now belongs to the appendix. Status column auto-colors via the existing `STATUS_STYLES` map; no row-context needed.
+
+Column widths: `[2500, 1200, 2900, 2760]` (matches v2). Header row: `["Dimension", "Status", "Signal", "What it means"]`.
+
+---
+
+## Findings Matrix Impact rendering — row-context spec
+
+The Findings Matrix is the only table in the report that needs `tr()` to know which table it's emitting a row for. Impact cells in a Findings Matrix row render as dollar-string text with a fill that matches the row's Severity color — not via a `STATUS_STYLES` lookup.
+
+**Calling convention:**
+
+```
+tr(cells, {
+  widths:    [...],
+  context:   "findings-matrix",
+  severity:  "RED" | "YELLOW" | "GREEN",   // the row's Severity value — used by the
+                                           //   renderer to look up the Impact-cell fill
+})
+```
+
+**Renderer behavior when `context === "findings-matrix"`:**
+
+For each cell, the renderer detects whether the cell is the Impact column (column index 3 under the canonical schema in `reference/synthesis/findings-matrix.md` §1: `# / Severity / Confidence / Impact / Effort / Finding / Pattern tag`). When emitting the Impact cell:
+
+```
+fill   = STATUS_STYLES[severity].fill   // "C0392B" for RED, "D68910" for YELLOW, "229954" for GREEN
+color  = "FFFFFF"
+bold   = false                          // weight uniform across magnitudes — text carries the magnitude
+text   = the dollar string itself       // e.g. "~$22k/mo", "~$8-15k/mo", "directional"
+align  = AlignmentType.CENTER
+```
+
+For all OTHER cells in the row, the existing auto-detect logic runs unchanged — the Severity cell hits `STATUS_STYLES["RED"]`, the Confidence cell hits `STATUS_STYLES["HIGH"]`, etc. The Effort and Pattern tag cells render as plain text per `findings-matrix.md` §3.
+
+**Why row-context (vs string-match):** the Impact text is a free-form dollar string (different value on every row), so `STATUS_STYLES` can't cover it via the existing exact-match auto-detect. Passing `severity` through the row-context lets the renderer apply the row's RAG color to the Impact cell without a per-row lookup table. Implementation detail — the synthesizer or a wrapper helper (`findingsMatrixRow(...)`) is the natural place to call `tr()` with `context: "findings-matrix"` set.
+
+**Other tables (`scorecard`, `Channel Role vs Reality`, `Triage Summary`, `detailedScorecard`):** call `tr()` without `context` — existing string-match behavior applies.
+
+---
+
+## v3 page sequence (worked example)
+
+The v3 body sequence from synthesizer.md §2 maps to the docx as follows:
+
+| Page | Section(s) | Helpers called |
+|---|---|---|
+| **Page 1** | 2.0 Money Page | `moneyPageBlock(...)` |
+| **Page 2** | 2.1 Executive Summary + 2.2 Headline Scorecard | `h1` + `p` + `h2` + `headlineScorecard(...)` |
+| **Page 3** | 2.3 Cross-Channel Overview + 2.4 Findings Matrix | `h1` + `chartImage(channel_mix_yoy)` + reconciliation `table(...)` + `h2` + Findings Matrix `table(...)` (rows emitted with `context: "findings-matrix"`) |
+| **Page 4** | 2.5 Funnel Health | `h1` + `p` + `chartImage(funnel_stage_mix)` + `chartImage(mer_vs_spend_trend)` + `chartImage(priority_action_impact_effort)` |
+| **Page 5** | 2.6 Priority Actions | `h1` + 3-6 Action Contract `table(...)` calls (full 7-field operator-page variant) |
+| **Page 6+** | 2.7 Per-Channel Pages | `h2` + role-mix `p` + `chartImage(...)` (1 chart, role-aware) + diagnosis bullets + actions bullets, one section per RED/YELLOW platform |
+| **Page N-2** | 2.8 Tracking & Attribution Notes | `h1` + `p` + bullets |
+| **Page N-1** | 2.9 Methodology + Predictions Calibration callout | `h1` + `p` (calibration callout per outcomes-loop-template.md §5.3) + adaptive-template note |
+| **Page N** | 2.10 Appendix | `h1` + `h2("Detailed Scorecard")` + `detailedScorecard(...)` + Channel Role vs Reality `table(...)` + Triage Summary `table(...)` + 30/60/90 + Weekly KPIs + full campaign tables |
+
+Page breaks are inserted via `new Paragraph({ children: [new PageBreak()] })` between pages where the natural section break wouldn't already produce one — Page 1 → 2, Page 2 → 3, Page 5 → 6 (before Per-Channel Pages), and N-1 → N (before Appendix) are the explicit ones.
+
+**Chart placement (per synthesizer.md §"Chart layering rules"):** Money Page carries `mer_vs_spend_trend` only as the single anchor chart; Page 2 carries `channel_mix_yoy`; Page 4 carries the 3-chart Funnel Health stack; per-channel pages get 1 chart each, role-aware. The cut `findings_matrix_heatmap` chart is GONE — the Findings Matrix table itself replaces it. Charts not surfaced in the body still ship in the appendix per the synthesizer's chart layering rules.
 
 ---
 

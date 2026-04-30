@@ -1,0 +1,14 @@
+{
+  "name": "databox-audit-pdf-renderer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PDF renderer for /databox-audit v4. Run `npm install` once, then `node build_audit_pdf.js --input spec.json --output out.pdf`.",
+  "main": "build_audit_pdf.js",
+  "scripts": {
+    "build": "node build_audit_pdf.js",
+    "test":  "node test_pdf_render.js"
+  },
+  "dependencies": {
+    "pptxgenjs": "^3.12.0"
+  }
+}

@@ -96,7 +96,76 @@ When a sanity check fires, note it in the manifest and in the triage presentatio
 
 ---
 
-## Platform Triage Pulls
+## Step 1.4 — Channel Role Classification
+
+**Goal:** Before deep-dive, classify every paid campaign across the v2 ad platforms into a funnel role (TOF / MOF / BOF) so role-appropriate scoring can be applied. This pull also feeds the headline "Roles" verdict in the report and is the trigger for TOF Mode in the Meta Ads section below.
+
+**Position:** Runs after Step 1.3.5 (Connection Health Check) and before Step 1.5 (Platform Triage Pulls). Skip any platform that failed health check.
+
+**Scope (v2):** Meta Ads, Google Ads, YouTube / Demand Gen. TikTok Ads, Pinterest, Snap appear in the audit if connected but are NOT classified or scored under role logic — note in manifest: "v2 covers Meta + Google + YouTube only — other platforms appear unclassified."
+
+### Per-platform pulls
+
+**Meta Ads** (`data_source_id=meta_ads_ds_id`):
+```
+load_metric_data(metric_key="Spend", dimension="Campaign Objective", ...)
+load_metric_data(metric_key="Spend", dimension="Campaign Name", ...)
+```
+Two `load_metric_data` calls. Use Campaign Objective to anchor the role (Reach / Awareness / Video Views → TOF; Conversions/Sales → could be TOF or MOF depending on audience; Catalog Sales → typically MOF). Use Campaign Name for naming heuristics ("TOF", "Prospecting", "BOF", "Retargeting", "RT" — common conventions). Audience composition (custom audience vs broad/lookalike) is the third signal but is gathered in the deep-dive Role Compliance pull, not at triage.
+
+**Google Ads** (`data_source_id=google_ads_ds_id`):
+```
+load_metric_data(metric_key="Cost", dimension="Campaign Type", ...)
+load_metric_data(metric_key="Cost", dimension="Campaign Name", ...)
+```
+Two calls. Campaign Type is the strongest signal: Search-Branded → BOF, Search-Non-Branded → BOF if intent terms / MOF otherwise, Standard Shopping → BOF, Performance Max → TOF unless audience signals indicate retargeting, Display → MOF, Demand Gen → TOF. If a "Brand vs Non-brand" dimension or label exists in the account, prefer that over name parsing for the BOF/MOF split inside Search.
+
+**YouTube / Demand Gen** (data_source filtered to YouTube/Video campaign types within Google Ads, OR standalone YouTube data_source if separate):
+```
+load_metric_data(metric_key="Cost", dimension="Campaign Objective", ...)
+```
+One call. View campaigns / Demand Gen / awareness objectives → TOF. Remarketing lists → MOF. Action campaigns with broad reach → TOF; with retargeting signals → MOF.
+
+### Classification
+
+For each campaign, classify TOF / MOF / BOF using the Canonical Mapping table in `reference/full-funnel-framework.md` Section 1. When two of three signals (Objective, naming, audience type) disagree, flag as ambiguous and surface in the manifest. Audience composition wins over labeling — see Section 2 of `reference/full-funnel-framework.md` for the role compliance rules and structural mismatch verdicts.
+
+### Outputs (record in manifest)
+
+For each platform that ran:
+- Spend share by role: `TOF_share_pct, MOF_share_pct, BOF_share_pct, Unclassified_share_pct`
+- List of ambiguous campaigns (name + label + best-guess role + reason)
+- Any structural mismatches detected via naming alone (full audience-composition mismatch detection happens in deep-dive)
+
+Cross-platform aggregate (across Meta + Google + YouTube only — out-of-scope platforms excluded from the share calculation):
+- Total paid spend
+- Aggregated TOF share, MOF share, BOF share
+
+**TOF Mode trigger:** If Meta TOF share > 0% (any TOF spend at all on Meta), set `TOF_MODE = ON` for the Meta Ads section of Step 1.5. The Meta triage will then run quality-metric pulls in addition to the standard 8 metrics, and the Meta platform score becomes a TOF-quality + MOF/BOF-ROAS weighted blend.
+
+**Out of scope (v2):** TikTok / Pinterest / Snap spend is reported but unclassified — flag in manifest as "v2 unclassified — role logic deferred to v3", do not include in cross-platform role share calculations. Their spend is still included in the Step 1.6 MER denominator (real money out the door).
+
+---
+
+## COGS Prompting Rule
+
+If Shopify or BigCommerce triage (Step 1.5) returns COGS = $0 or null, **immediately ask the user via AskUserQuestion** before proceeding to the MER target derivation in Step 1.6. Do NOT silently fall back to a vertical estimate — the formula path `(1 ÷ CM2%) × 1.4-1.6` produces a target dramatically different from the flat 3.0× threshold for any client whose margins aren't ~33%.
+
+**Question template:**
+
+> Shopify isn't returning COGS for this account. To set the right MER target, what's the gross margin (CM2%) for this client? If you don't know the exact number, what's the vertical (apparel, beauty, supplements, home goods, electronics, food/consumables) — I'll use the playbook's vertical estimate as a labeled assumption.
+
+**Fallback order:**
+
+1. **Primary** — User provides CM2% directly. Use formula: `Target MER = (1 ÷ CM2%) × 1.4-1.6` (per `reference/playbook/benchmarks.md` MER Target Derivation).
+2. **Secondary** — User provides vertical only. Use the COGS estimate from `synthesis/profitability-framework.md` (or the Contribution margin benchmarks table in `reference/playbook/benchmarks.md`). Label every downstream MER calculation as ASSUMPTION.
+3. **Last resort** — User can't or won't provide either. Use flat 3.0× threshold from `reference/playbook/benchmarks.md` (MER Target Derivation → Fallback). Flag prominently in the report: "MER target uses flat 3.0× fallback — flat bands misjudge any client whose CM2 is materially above or below ~33%."
+
+The MER target is the most leverage-bearing number in the headline scorecard. Don't let it default to a flat band silently.
+
+---
+
+## Step 1.5 — Platform Triage Pulls
 
 ### Shopify (Financial Anchor)
 
@@ -233,29 +302,35 @@ For a structurally-upgraded YELLOW, run ONLY Pull 6 (Ad + Extensions Depth) as t
 
 **Auto-RED triggers:** ROAS <1.0×, frequency >5.0, CPA >2× break-even
 
-**HIGH-AOV MODE — switch Meta scoring when AOV ≥ $200:**
+**TOF MODE — switch scoring of TOF-classified Meta campaigns to quality metrics:**
 
-If Shopify/BigCommerce triage shows AOV ≥ $200 (or user stated buying cycle ≥ 14 days, or Meta is stuck in learning phase with <50 purchases/week), the standard ROAS/CPA scoring above is structurally broken — Meta's 7-day attribution window misses high-AOV purchases. Use the High-AOV Traffic Quality Framework instead:
+TOF Mode triggers when **ANY** Meta spend is classified as TOF in Step 1.4 (Channel Role Classification). No threshold — there's no good reason to grade prospecting by 7-day in-channel ROAS even when prospecting is a small share of Meta spend. The dynamic TOF spend share target (Section 4 of `reference/full-funnel-framework.md`) is a separate, account-level health check; TOF Mode is a per-campaign-bucket scoring switch.
 
-1. **Skip the standard ROAS/CPA scoring** — it will always look bad and won't reflect channel reality.
+1. **TOF-classified Meta spend gets quality scoring, not ROAS scoring.** Standard ROAS/CPA scoring continues to apply unchanged to MOF and BOF Meta campaigns.
 2. **Add these triage pulls** (one `load_metric_data` call per metric, no breakdowns):
    ```
    Meta: ["Spend", "Total Content Views", "Total Adds To Cart"]
    ```
-   3 additional metric pulls beyond the 8 above.
-3. **Compute traffic quality metrics:**
+   3 additional metric pulls beyond the 8 above. (Account-level totals — GA4 deep-dive Pull 5 supplies per-source/medium engaged-time + PDP funnel rates for full TOF quality scoring in deep-dive.)
+3. **Compute traffic quality metrics** for the TOF portion of Meta spend:
    - Cost per ViewContent (CPVC) = Spend ÷ Total Content Views
    - Cost per Add-to-Cart (CPATC) = Spend ÷ Total Adds To Cart
-4. **Score against High-AOV benchmarks in `reference/playbook/benchmarks.md`** (use the AOV tier matching the client: jewelry, home/furniture, apparel/lifestyle, B2B services). Frequency, CPM trend, and attribution ratio scoring still apply unchanged.
-5. **Flag GA4 for the engaged-time + PDP funnel pulls** in deep-dive (see `reference/platforms/ga4-deep.md` Pull 5 — High-AOV Channel Quality). This is the third and fourth quality metrics; without GA4 you only get 2 of 5.
-6. **Note in the manifest:** "Meta scored using High-AOV Traffic Quality Framework (AOV $X, cycle Y days). Standard ROAS scoring deferred per playbook tof-strategy.md."
-7. **Auto-RED triggers (high-AOV mode):** CPATC >2× the Floor for the category, OR CPVC >2× the Floor, OR Frequency >5.0. Standard ROAS auto-RED does NOT apply in this mode.
+4. **Score against the four-tier TOF Quality Benchmarks in `reference/playbook/benchmarks.md`** (TOF Traffic Quality Benchmarks by AOV Tier). Use the AOV tier matching the client — Mass-AOV (<$50), Standard-AOV ($50-$200), Premium-AOV ($200-$1,000), or Luxury / High-Ticket ($1,000+). The Premium-AOV tier preserves the legacy jewelry / home / apparel sub-rows. Frequency, CPM trend, and attribution ratio scoring still apply unchanged to Meta as a whole.
+5. **Flag GA4 for the engaged-time + PDP funnel pulls** in deep-dive (see `reference/platforms/ga4-deep.md` Pull 5 — Channel Quality / Engaged Time + PDP Funnel). Without GA4 you only get 2 of 4-5 quality metrics.
+6. **Note in the manifest:** "TOF Mode active for Meta — TOF spend share = X% (per Step 1.4). TOF-classified spend scored under the four-tier quality framework; MOF/BOF Meta scored under standard ROAS framework. AOV tier: {Mass | Standard | Premium | Luxury}."
+7. **Auto-RED triggers (TOF Mode, applied to TOF portion only):** CPATC >2× the Floor for the AOV tier, OR CPVC >2× the Floor, OR Frequency >5.0. Standard ROAS auto-RED on TOF campaigns becomes **informational** rather than score-driving.
 
-**Score authority — important:** When High-AOV Mode is active, the **quality framework score IS the Meta score** (RED/YELLOW/GREEN). Standard ROAS/CPA scoring is informational only — capture it in the appendix for context, but do NOT use it to determine the platform's triage score.
+**Score authority — important:** When TOF Mode is active, the **platform-level Meta score is a weighted blend**, not a single verdict:
 
-Worked example: A jewelry brand has standard ROAS scoring of RED (1.4× ROAS vs 2.5× target) but quality framework readings of GREEN (CPVC $1.43, CPATC $28, engaged time 52s, PDP→ATC 4.5%). The Meta score is **GREEN**. The implicit assumption is that revenue is closing outside Meta's 7-day window via email, retargeting, branded search, or CRM. The body narrative should explain this — don't show a GREEN Meta score next to a 1.4× ROAS without context, or the client will think you're hiding the ball.
+```
+Meta score = (TOF-quality verdict × TOF spend share) + (MOF/BOF ROAS verdict × MOF/BOF spend share)
+```
 
-If neither Shopify/BigCommerce data is available AND the user hasn't given AOV: ask AOV before scoring Meta. Do not default to standard scoring on unknown AOV — over half of agency clients are above the $200 threshold.
+The TOF-quality verdict (RED/YELLOW/GREEN per the four-tier benchmarks) drives scoring of the TOF portion only. ROAS-based RED triggers on TOF campaigns become **informational** — capture them in the appendix for context, but they do NOT determine the TOF-portion score. MOF and BOF Meta campaigns continue to be scored on ROAS/CPA per the table above.
+
+Worked example: A Standard-AOV apparel brand has 60% of Meta spend in TOF (broad prospecting) and 40% in MOF (retargeting). TOF quality reads GREEN (CPVC $1.10, CPATC $22, engaged time 58s, PDP→ATC 5.2% — all in Standard-AOV Healthy bands). MOF ROAS reads YELLOW (3.5× ROAS vs 4.0× target). Platform Meta score = (GREEN × 60%) + (YELLOW × 40%) → Platform = **YELLOW** (TOF is healthy but the spend-weighted MOF is below target). The body narrative explains the split — TOF is doing its job; retargeting needs work — instead of judging Meta on a single in-channel ROAS number that conflates the two roles.
+
+If Shopify/BigCommerce data is unavailable AND the user hasn't given AOV: ask AOV before scoring Meta. The AOV tier determines which benchmark row TOF-quality scoring uses; defaulting to a single tier across all clients will misjudge most accounts.
 
 ---
 
@@ -330,17 +405,133 @@ If neither Shopify/BigCommerce data is available AND the user hasn't given AOV: 
 
 ---
 
+## Step 1.6 — Cross-Platform Anchor Scoring
+
+After per-platform triage (Step 1.5) completes, compute four account-level scores. These become the headline rows in the synthesizer scorecard — they are the layer that answers "is the business making more money because of marketing?" rather than "what's the ROAS on each channel?"
+
+### 1.6.1 — MER (Marketing Efficiency Ratio)
+
+**Formula:**
+```
+MER = Net Sales (Shopify/BigCommerce) ÷ Sum of paid spend across all in-scope platforms
+```
+
+In-scope platforms for the denominator: Meta + Google Ads + YouTube + Amazon Ads (if connected). TikTok / Pinterest / Snap spend is included in the MER denominator if connected — even though they're unclassified for role logic in v2, they're real money out the door.
+
+### 1.6.2 — MER Target Derivation
+
+**Primary path (always prefer):** `Target MER = (1 ÷ CM2%) × 1.4-1.6`. Requires CM2% from Shopify COGS, OR from user response per the COGS Prompting Rule above. See `reference/playbook/benchmarks.md` MER Target Derivation for worked examples.
+
+**Secondary path:** Use the vertical-based COGS estimate from `synthesis/profitability-framework.md` (or the Contribution margin benchmarks table in `reference/playbook/benchmarks.md`). Label as ASSUMPTION. This is the path taken when the user provides a vertical but not an exact CM2%.
+
+**Last resort:** Flat 3.0× threshold from `reference/playbook/benchmarks.md` (MER Target Derivation → Fallback). Use only when the user explicitly can't or won't provide CM2 OR vertical.
+
+**Score:**
+
+| MER vs Target | Score | Read |
+|---|---|---|
+| ≥ Target | 🟢 | Paid is profitable at the business level |
+| 70-99% of Target | 🟡 | Below target — investigate efficiency or mix |
+| <70% of Target | 🔴 | Paid is below break-even-plus-buffer — pause or restructure |
+
+### 1.6.3 — MER Trend vs Spend Trend (incrementality proxy)
+
+**Formula:**
+```
+Spend trend   = (Current period spend - Prior period spend) ÷ Prior period spend
+Revenue trend = (Current period revenue - Prior period revenue) ÷ Prior period revenue
+MER ratio     = Revenue trend ÷ Spend trend
+```
+
+Compute over 90-day vs prior-90-day where the manifest lookback supports it. Read against `reference/full-funnel-framework.md` Section 6.2 (MER Trend vs Spend Trend Interpretation) — that table is the canonical interpretation source; do not redefine here.
+
+**Score:**
+
+| MER trend vs spend trend | Score | Read |
+|---|---|---|
+| Revenue grew proportionally to spend (within ±5pts) OR efficiency improved | 🟢 | Paid is roughly incremental |
+| Revenue trend < 50% of spend trend (cannibalization signal) | 🟡 | Diminishing returns — investigate role mix |
+| Revenue flat/down while spend up >20%, OR sharp MER decline | 🔴 | Saturation or broken channel — re-examine TOF and audience |
+
+### 1.6.4 — nROAS (New-Customer ROAS)
+
+**Formula:**
+```
+nROAS = New-customer revenue ÷ Sum of paid spend (same denominator as MER)
+```
+
+**New-customer revenue source order (per `reference/full-funnel-framework.md` Section 5.2):**
+1. **Primary** — Shopify "First-time vs Returning customers" report → Net sales filtered to first-time. Same window as audit lookback (see `reference/platforms/shopify-deep.md` for the pull).
+2. **Degraded** — GA4 Pull 6 (`Sessions × Purchase revenue × New users` by Source/Medium — see `reference/platforms/ga4-deep.md`). Flag every nROAS number as `(GA4-approximated, no Shopify customer split)` and trigger the Data Gaps callout in the synthesizer.
+3. **Failed** — If neither source is available, omit nROAS from the scorecard and the synthesizer collapses to its degraded layout (per `reference/synthesizer.md` Section 2.2).
+
+**Score against `reference/full-funnel-framework.md` Section 5.3 (nROAS Interpretation Table):**
+
+| nROAS | Score | Read |
+|---|---|---|
+| ≥ 1.5× (with healthy MER) | 🟢 | Paid is acquiring real new revenue |
+| 1.0-1.5× | 🟡 | Marginal — verify cohort LTV / payback period |
+| <1.0× | 🔴 | Paid not breaking even on first-purchase contribution |
+
+### 1.6.5 — TOF Spend Share vs Dynamic Target
+
+**Compute target TOF share** using `reference/full-funnel-framework.md` Section 4.2 (Target Derivation Table — brand stage × AOV tier) and Section 4.3 (Modifier Rules — returning customer %, MER trend, total paid spend).
+
+**Inputs:**
+- Brand stage (Launch / Growth / Mature) — from manifest setup question
+- AOV tier (Mass / Standard / Premium / Luxury) — from Shopify triage
+- Returning customer % — from Shopify First-time vs Returning report
+- MER trend — from 1.6.3
+- Total paid spend — from 1.6.1 denominator
+
+**Compare:** Target TOF share band vs actual cross-platform TOF share (from Step 1.4 cross-platform aggregate, Meta + Google + YouTube only).
+
+**Score against `reference/full-funnel-framework.md` Section 4.4 (Scoring Actual vs Target):**
+
+| Actual TOF share vs target | Score |
+|---|---|
+| Within target band | 🟢 |
+| Above target by 5-15pts | 🟡 |
+| Above target by >15pts | 🟡 |
+| Below target band but above floor | 🟡 |
+| At or below floor | 🔴 |
+
+### Outputs (record in manifest)
+
+```markdown
+## Cross-Platform Anchor Scoring
+- MER: {value}× vs target {target}× — {🟢/🟡/🔴}
+- MER trend vs spend trend: {ratio} — {🟢/🟡/🔴}
+- nROAS: {value}× — {🟢/🟡/🔴} {(source: Shopify | GA4-approx | unavailable)}
+- TOF spend share: {actual}% vs target {target_band}% (floor {floor}%) — {🟢/🟡/🔴}
+```
+
+These four scores become rows 1-4 of the headline scorecard in the synthesizer report (see `reference/synthesizer.md` Section 2.2 — Scorecard Restructure).
+
+---
+
 ## Scoring Logic
 
 ### Per-platform score
 
 Each platform gets a composite score:
-1. Count RED signals, YELLOW signals, GREEN signals from the threshold table
-2. Apply auto-RED triggers (any single auto-RED = platform is RED regardless of other signals)
+1. Count RED signals, YELLOW signals, GREEN signals from the threshold table.
+2. Apply auto-RED triggers (any single auto-RED = platform is RED regardless of other signals).
 3. If no auto-RED:
    - Majority RED signals → Platform is 🔴 RED
    - Any RED signal OR majority YELLOW → Platform is 🟡 YELLOW
    - Majority GREEN and no RED → Platform is 🟢 GREEN
+4. **TOF Mode adjustment (Meta Ads only):** When TOF Mode is active for Meta (per Step 1.4), the platform score is a **weighted blend**, not a majority count:
+   - `Meta score = (TOF-quality verdict × TOF spend share) + (MOF/BOF ROAS verdict × MOF/BOF spend share)`
+   - TOF-quality verdict comes from the four-tier TOF Quality Benchmarks in `reference/playbook/benchmarks.md`, not from ROAS/CPA scoring.
+   - ROAS-based RED triggers on TOF campaigns become **informational** — they appear in the appendix but do not drive the platform score.
+   - MOF/BOF Meta campaigns continue to be scored on ROAS/CPA per the standard table above.
+
+### Account-level overrides (apply after per-platform scoring)
+
+5. **Role Compliance override:** If Step 1.4 (or the Meta deep-dive's audience-composition pull) detected a structural mismatch on a campaign worth >10% of platform spend (per `reference/full-funnel-framework.md` Section 2 — e.g., a campaign labeled TOF but with 70%+ spend on retargeting custom audiences), upgrade that platform's score to 🟡 YELLOW even if all other signals are GREEN. The mismatch surfaces in the synthesizer's Role Compliance row.
+
+6. **TOF Underfunding override (account-level):** If the cross-platform TOF spend share (from Step 1.4 aggregate, Meta + Google + YouTube only) is **at or below the dynamic target's Floor** (per `reference/full-funnel-framework.md` Section 4.2 table — varies by brand stage × AOV tier), flag the **account** as 🟡 YELLOW even if every individual platform scores 🟢 GREEN. Critical under-funding looks fine in the rear-view mirror and breaks the funnel 60-90 days out — the account-level YELLOW is the only place this surfaces.
 
 ### False negative protection
 

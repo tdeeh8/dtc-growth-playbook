@@ -33,6 +33,24 @@ The narrative for this platform in the report body must be ≤ 200 words. Detail
 
 ---
 
+## Triage-Level Metrics (pull at triage, before deep-dive runs)
+
+In addition to the standard financial overview metrics (Gross sales, Discounts, Returns, Net sales, Orders, Items, COGS, Gross profit), triage MUST also pull the new-customer split so MER and nROAS can be computed at the cross-platform anchor step.
+
+**Metrics to add at triage:**
+- `First-time customers` (or `First-time customer count` — confirm exact metric_key via `list_metrics(data_source_id=shopify_ds_id)`)
+- `Returning customers` (or `Returning customer count` — same caveat)
+- `First-time customer Net sales` (or `Net sales (first-time customers)` — Shopify Databox typically exposes a first-time-filterable Net sales variant)
+- `Returning customer Net sales` (or `Net sales (returning customers)`)
+
+**Calculation:**
+- **New customer revenue %** = First-time customer Net sales ÷ Total Net sales
+- This feeds **nROAS** = First-time customer Net sales ÷ Total paid spend, computed at the cross-platform anchor step in `triage-pulls.md` and surfaced as a dedicated scorecard row per `synthesizer.md`.
+
+**Fallback:** if Shopify doesn't expose a first-time-filterable Net sales variant, derive it from the Pull 3 "Is returning customer" breakdown using order counts × AOV per cohort. Flag as ESTIMATE in evidence.
+
+---
+
 ## Deep-Dive Pulls
 
 ### Pull 1: Product Performance (RED: always | YELLOW: margin or return concern)
@@ -110,6 +128,30 @@ The narrative for this platform in the report body must be ≤ 200 words. Detail
 - Volatility — High variance between months? Seasonal business or unstable demand?
 
 **Evidence:** Monthly summary table showing Sales, Orders, AOV, Discount %, Gross profit %, YoY/MoM change.
+
+---
+
+### Pull 5: New Customer Revenue by Acquisition Channel (conditional — runs when nROAS is being computed at synthesis time)
+
+**Trigger:** Run this pull whenever the synthesizer is computing per-channel nROAS as part of the cross-platform anchor scoring (i.e., whenever Shopify is connected and at least one paid platform was deep-dived). This is the cleanest "is this channel acquiring real new revenue?" diagnostic.
+
+**Data source:** Shopify (use `data_source_id` from cache). Call via `load_metric_data` — one call per metric.
+
+**Metrics:** First-time customer Net sales, First-time customer Orders (or whatever first-time-filterable variants exist in the Shopify Databox metric catalog — verify via `list_metrics(data_source_id=shopify_ds_id)` before pulling).
+
+**Breakdowns:** Marketing channel / UTM source if available; otherwise fall back to Sales channel.
+
+**Output:** per-channel new-customer revenue and per-channel new-customer order count. Combine with paid spend per channel from the cross-platform anchor to compute nROAS per channel:
+- **nROAS (per channel)** = First-time customer Net sales (channel) ÷ Paid spend (channel)
+
+**Evidence table:**
+| Channel / UTM Source | First-time Net Sales | First-time Orders | Paid Spend | nROAS | % of Total New Customer Revenue |
+|---|---|---|---|---|---|
+
+**Data Quality Caveat:**
+- This pull requires UTMs on Shopify orders to attribute new-customer revenue to acquisition channel. UTM hygiene is rarely perfect — accounts with `(direct)/(none)` >25% will produce noisy per-channel nROAS.
+- **Fallback:** if Shopify can't reliably split new-customer revenue by channel (UTM hygiene poor, or first-time-filterable Net sales not exposed by channel), use **GA4 Pull 6 (New vs Returning by Source/Medium)** as the nROAS denominator instead. Flag in evidence as `nroas_source: ga4_fallback`.
+- When neither Shopify nor GA4 can produce reliable per-channel new-customer revenue, report only **account-level nROAS** (total first-time Net sales ÷ total paid spend) and surface a Data Gaps row in the scorecard.
 
 ---
 
@@ -200,3 +242,13 @@ Build four tables:
 **Discount % rising, new customer orders climbing → Discounting to acquire, not profitably**
 - Pull 2 + 4: Discount % up month-over-month. Pull 3: New customer rate up. Are discounts driving acquisition?
 - Action: Test removing discounts or raising price. Calculate blended CPA vs break-even CPA (discount % may exceed margin).
+
+**New customer revenue % <15% of total → Retention is weak OR paid is over-driving repeat buyers**
+- Triage-level metric (First-time Net sales ÷ Total Net sales) shows <15%. Combined with healthy MER, this means paid is mostly capturing existing customers — retargeting + branded search are doing the heavy lifting and acquisition has stalled.
+- Cross-check: Pull 5 nROAS by channel — if every channel's nROAS is <1.0 while blended ROAS is healthy, paid is cannibalizing organic/repeat demand, not driving incremental growth.
+- Action: Shift spend toward TOF / acquisition campaigns. Audit retention engine separately (email/SMS LTV) to confirm whether the low new % is a retention success or an acquisition failure.
+
+**>85% of orders from new customers → Retention engine missing, audit email/SMS separately**
+- Triage-level metric (First-time customer Orders ÷ Total Orders) >85%. The brand is one-and-done — every dollar of growth requires a new dollar of acquisition spend, which caps scale.
+- Cross-check: Pull 3 repeat purchase rate, Pull 4 monthly trend on returning-customer revenue. If returning revenue is flat-to-declining MoM, retention is broken.
+- Action: Trigger a separate Klaviyo / SMS / loyalty audit. Don't try to fix this from the paid side — paid can't compensate for a missing retention engine, only mask the problem temporarily.

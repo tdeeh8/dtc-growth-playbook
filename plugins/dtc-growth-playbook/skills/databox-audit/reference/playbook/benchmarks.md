@@ -34,40 +34,68 @@ If the client's economics require a 4x ROAS but the channel averages 1.9x, the p
 
 ## Current Playbook [Valid Q2 2026 — review July 2026]
 
-### High-AOV Traffic Quality Benchmarks (AOV $200+, Cold Prospecting)
+### TOF Traffic Quality Benchmarks by AOV Tier (Cold Prospecting)
 
-**When to use these instead of (not in addition to) standard Meta benchmarks:** AOV ≥ $200, OR stated buying cycle ≥ 14 days, OR Meta purchase optimization can't exit learning. Applies to Meta + any cold prospecting channel (TikTok, Pinterest, Snap). Does NOT apply to retargeting or branded search.
+**When to use these instead of (not in addition to) standard Meta ROAS benchmarks:** ANY campaign in a TOF (cold prospecting) role, regardless of AOV. The audit's TOF Mode triggers as soon as any spend is classified as TOF — there's no good reason to grade prospecting by 7-day in-channel ROAS even when prospecting is a small share. Applies to Meta + any cold prospecting channel (TikTok, Pinterest, Snap, YouTube view / Demand Gen, broad PMax). Does NOT apply to retargeting or branded search.
 
-**Why:** 7-day attribution windows miss high-AOV purchases. Judging cold traffic by 7-day ROAS in this scenario is structurally broken — switch evaluation to traffic quality. See playbook `tof-strategy.md` "High-AOV Traffic Quality Framework" for full methodology.
+**Why:** 7-day attribution windows miss most TOF-driven purchases. Even at lower AOVs, iOS attribution loss + multi-touch reality make in-channel ROAS unreliable for cold traffic. Switch evaluation to traffic quality + downstream funnel rates. See playbook `tof-strategy.md` for full methodology.
 
-**Cost per ViewContent (Meta cold prospecting, AOV $200+):**
+**AOV tiers used throughout this section:**
 
-| Category | Floor | Healthy | Strong |
-|---|---|---|---|
-| Fine jewelry / luxury ($500+ AOV) | >$4.00 | $1.50-3.00 | <$1.50 |
-| Premium home / furniture ($300-1,000 AOV) | >$3.00 | $1.00-2.50 | <$1.00 |
-| Premium apparel / lifestyle ($200-500 AOV) | >$2.50 | $0.80-2.00 | <$0.80 |
-| High-ticket B2B / services ($1,000+ LTV) | >$6.00 | $2.00-5.00 | <$2.00 |
-
-**Cost per Add-to-Cart (Meta cold prospecting, AOV $200+):**
-
-| Category | Floor | Healthy | Strong |
-|---|---|---|---|
-| Fine jewelry / luxury ($500+ AOV) | >$80 | $25-60 | <$25 |
-| Premium home / furniture ($300-1,000 AOV) | >$60 | $20-50 | <$20 |
-| Premium apparel / lifestyle ($200-500 AOV) | >$45 | $12-35 | <$12 |
-| High-ticket B2B / services | >$120 | $40-90 | <$40 |
-
-**GA4 Average Engaged Session Time (paid social → site):**
-
-| Tier | Time per Session | Read |
+| Tier | AOV range | Notes |
 |---|---|---|
-| Floor | <30 sec | Wrong audience or broken landing experience |
-| Concerning | 30-45 sec | Moderate match — likely creative/landing mismatch |
-| Healthy | 45-90 sec | Real consideration happening |
-| Strong | >90 sec | High-intent research — algo + creative working |
+| Mass-AOV | <$50 | Consumables, fast-moving SKUs, short consideration cycle |
+| Standard-AOV | $50-$200 | Typical DTC range — most apparel, beauty, home goods, supplements |
+| Premium-AOV | $200-$1,000 | Premium apparel, mid-tier furniture, fine jewelry under $1K |
+| Luxury / High-Ticket | $1,000+ | Luxury jewelry, custom furniture, B2B with $1K+ first purchase / $5K+ LTV |
 
-GA4 platform median is ~52 sec. High-AOV traffic should beat that materially.
+---
+
+#### Mass-AOV (<$50) — TOF Quality Benchmarks
+
+Short cycle, low ticket. Cheaper micro-conversions are realistic; thresholds tighten accordingly.
+
+| Metric | Floor | Healthy | Strong |
+|---|---|---|---|
+| **Cost per ViewContent (CPVC)** | >$1.50 | $0.30-$1.00 | <$0.30 |
+| **Cost per Add-to-Cart (CPATC)** | >$20 | $5-$15 | <$5 |
+| **PDP → ATC rate** | <4% | 6-10% | >10% |
+| **PDP → Purchase rate (30-90d)** | <1.5% | 2.5-4% | >4% |
+
+---
+
+#### Standard-AOV ($50-$200) — TOF Quality Benchmarks
+
+The middle band — most DTC clients land here.
+
+| Metric | Floor | Healthy | Strong |
+|---|---|---|---|
+| **Cost per ViewContent (CPVC)** | >$2.00 | $0.60-$1.50 | <$0.60 |
+| **Cost per Add-to-Cart (CPATC)** | >$35 | $10-$25 | <$10 |
+| **PDP → ATC rate** | <3% | 4-7% | >7% |
+| **PDP → Purchase rate (30-90d)** | <1% | 1.5-3% | >3% |
+
+---
+
+#### Premium-AOV ($200-$1,000) — TOF Quality Benchmarks
+
+The existing high-AOV benchmarks, narrowed at the top end ($1K+ rolls up into Luxury). Sub-rows preserve vertical breakdown for jewelry / furniture / apparel — these matter at this tier because cycle length and creative format both vary materially by category.
+
+**Cost per ViewContent (CPVC):**
+
+| Category | Floor | Healthy | Strong |
+|---|---|---|---|
+| Fine jewelry / luxury ($500-$1,000 AOV) | >$4.00 | $1.50-3.00 | <$1.50 |
+| Premium home / furniture ($300-$1,000 AOV) | >$3.00 | $1.00-2.50 | <$1.00 |
+| Premium apparel / lifestyle ($200-$500 AOV) | >$2.50 | $0.80-2.00 | <$0.80 |
+
+**Cost per Add-to-Cart (CPATC):**
+
+| Category | Floor | Healthy | Strong |
+|---|---|---|---|
+| Fine jewelry / luxury ($500-$1,000 AOV) | >$80 | $25-60 | <$25 |
+| Premium home / furniture ($300-$1,000 AOV) | >$60 | $20-50 | <$20 |
+| Premium apparel / lifestyle ($200-$500 AOV) | >$45 | $12-35 | <$12 |
 
 **PDP → ATC Rate (GA4 view_item → add_to_cart funnel):**
 
@@ -81,13 +109,75 @@ GA4 platform median is ~52 sec. High-AOV traffic should beat that materially.
 
 | Category | Floor | Healthy | Strong |
 |---|---|---|---|
-| Fine jewelry / luxury ($500+) | <0.4% | 0.7-1.2% | >1.2% |
+| Fine jewelry / luxury ($500-$1,000) | <0.4% | 0.7-1.2% | >1.2% |
 | Premium home / furniture | <0.5% | 0.8-1.5% | >1.5% |
 | Premium apparel / lifestyle | <0.8% | 1.2-2.5% | >2.5% |
 
-**Decision tree — columns grouped by data source (Meta first, GA4 second):**
+---
 
-**Label key:** CPVC/CPATC: `Cheap` = below Healthy band (suspect for high-AOV) · `Healthy` = in band · `Expensive` = above Healthy but below Floor · `Floor` = at/above Floor (problem). Engaged Time: `Healthy` ≥45s, `Low` <30s. PDP→ATC: `Healthy` in band, `Low` below Floor.
+#### Luxury / High-Ticket ($1,000+) — TOF Quality Benchmarks
+
+Fundamentally different attribution and conversion windows. Consideration cycles routinely run 30-90+ days. Wider acceptable bands across the board — high per-touch costs and fewer micro-conversions per session are structural, not a problem.
+
+**DTC Luxury (consumer-purchase, $1,000+ AOV) — primary row:**
+
+| Metric | Floor | Healthy | Strong |
+|---|---|---|---|
+| **Cost per ViewContent (CPVC)** | >$8 | $2.50-$6 | <$2.50 |
+| **Cost per Add-to-Cart (CPATC)** | >$200 | $60-$150 | <$60 |
+| **GA4 engaged time per session** | <60s | 90-180s | >180s |
+| **PDP → ATC rate** | <1% | 1.5-3% | >3% |
+| **PDP → Purchase rate (30-90d)** | <0.2% | 0.5-1% | >1% |
+
+**B2B / High-Ticket Services ($1,000+ deal size, $5K+ LTV) — sub-row:**
+
+B2B has a different shape than DTC luxury: lead-based not purchase-based, sales-cycle-driven not consumption-driven, and a single deal often pays back many TOF impressions. Use these tighter thresholds for B2B specifically — DTC Luxury benchmarks above are too permissive when the conversion event is a qualified lead, not a $1K+ self-serve purchase.
+
+| Metric | Floor | Healthy | Strong | Notes |
+|---|---|---|---|---|
+| **Cost per ViewContent (CPVC)** | >$6 | $2.00-$5.00 | <$2.00 | Lead intent surfaces faster than commerce intent — CPVC should be cheaper than DTC luxury, not more expensive |
+| **Cost per Add-to-Cart (CPATC) / Cost per Lead** | >$120 | $40-$90 | <$40 | If conversion event is a lead form, treat lead cost as the CPATC equivalent |
+| **GA4 engaged time per session** | <90s | 120-240s | >240s | B2B research is more concentrated than DTC luxury — targets shift up |
+| **PDP / Solution-page → CTA rate** | <1.5% | 2-4% | >4% | Apply to whatever the primary conversion CTA is (demo, contact, trial) |
+| **Lead → SQL rate (30-90d)** | <10% | 15-25% | >25% | Replaces PDP → Purchase. Requires CRM data — if absent, omit and flag DATA_NOT_AVAILABLE |
+
+**Picking the right row:** if the primary conversion event is a self-serve purchase (luxury jewelry, custom furniture, single-payment course), use the DTC Luxury row. If the primary conversion event is a lead, demo request, contact form, or any sales-team-handoff, use the B2B sub-row regardless of nominal AOV.
+
+Engaged time targets are ~2x the cross-tier baseline because high-ticket browsers spend longer in research mode before any commerce action. A 0.3% PDP→Purchase rate at this tier may still be a profitable channel — judge by MER + nROAS, not micro-conversion volume.
+
+---
+
+#### GA4 Average Engaged Session Time (paid social → site, Mass / Standard / Premium tiers)
+
+Apply this baseline for Mass / Standard / Premium-AOV. Luxury uses the elevated targets in the Luxury table above.
+
+| Tier | Time per Session | Read |
+|---|---|---|
+| Floor | <30 sec | Wrong audience or broken landing experience |
+| Concerning | 30-45 sec | Moderate match — likely creative/landing mismatch |
+| Healthy | 45-90 sec | Real consideration happening |
+| Strong | >90 sec | High-intent research — algo + creative working |
+
+GA4 platform median is ~52 sec. TOF traffic should beat that materially when targeting + creative are right.
+
+---
+
+#### Hook Rate / Hold Rate (uniform across AOV tiers)
+
+These measure attention, not commerce intent — same bands regardless of AOV. Common Thread "ADA" framing: the first signal that a creative is working, before any downstream metric matters.
+
+| Metric | Floor | Healthy | Strong |
+|---|---|---|---|
+| **Hook rate** (3-sec views ÷ impressions) | <20% | 25-35% | >40% |
+| **Hold rate** (50% video completion) | <30% | 40-55% | >60% |
+
+If hook rate is below Floor, every downstream KPI is essentially noise — fix the first 3 seconds before judging anything else. Hook rate problem = thumbnail / first-frame / opening hook. Hold rate problem (good hook but they don't stay) = mid-creative pacing or message-market mismatch.
+
+---
+
+#### Standard Decision Tree (pattern-based, tier-agnostic)
+
+**Label key:** CPVC/CPATC: `Cheap` = below Healthy band (suspect for high-AOV) · `Healthy` = in band · `Expensive` = above Healthy but below Floor · `Floor` = at/above Floor (problem). Engaged Time: `Healthy` ≥45s, `Low` <30s (use Luxury thresholds for Luxury tier). PDP→ATC: `Healthy` in band, `Low` below Floor.
 
 | Meta: CPVC | Meta: CPATC | GA4: Engaged | GA4: PDP→ATC | Diagnosis |
 |---|---|---|---|---|
@@ -105,7 +195,86 @@ GA4 platform median is ~52 sec. High-AOV traffic should beat that materially.
 2. **Score by worst metric** — that metric is the constraint. CPVC = creative/targeting; CPATC = audience quality; Engaged Time = traffic quality/placement; PDP→ATC = site/product fit.
 3. **Cross-channel sanity** — pull GA4 Pull 5 and compare Meta vs Google/organic. Meta-only weakness = Meta-specific. All paid weak = site/PDP.
 
-**Set-up requirements (data has to be collectable for this framework):**
+---
+
+#### TOF Decision Tree by AOV Tier
+
+The decision tree above is **pattern-based** — the row patterns (Healthy/Cheap/Floor combinations) and the diagnoses are identical across all 4 AOV tiers. **What changes per tier is the absolute number that fires each label.** When scoring a TOF campaign, use the AOV tier's benchmark table to translate raw metrics → Floor/Healthy/Cheap labels, then apply the standard decision tree pattern unchanged.
+
+**Per-tier threshold reference card (CPVC + CPATC):**
+
+| Tier | CPVC Cheap (<X) | CPVC Healthy | CPVC Floor (>X) | CPATC Cheap (<X) | CPATC Healthy | CPATC Floor (>X) |
+|---|---|---|---|---|---|---|
+| Mass-AOV | <$0.30 | $0.30-$1.00 | >$1.50 | <$5 | $5-$15 | >$20 |
+| Standard-AOV | <$0.60 | $0.60-$1.50 | >$2.00 | <$10 | $10-$25 | >$35 |
+| Premium-AOV | <$0.80 | $0.80-$3.00 | >$2.50-$4.00 (vertical) | <$12 | $12-$60 | >$45-$80 (vertical) |
+| Luxury / High-Ticket | <$2.50 | $2.50-$6 | >$8 | <$60 | $60-$150 | >$200 |
+
+(Premium-AOV ranges depend on vertical — see the Premium-AOV sub-tables for Fine jewelry vs Premium home vs Premium apparel breakdowns.)
+
+**PDP → ATC threshold reference card:**
+
+| Tier | Floor (<X%) | Healthy | Strong (>X%) |
+|---|---|---|---|
+| Mass-AOV | <4% | 6-10% | >10% |
+| Standard-AOV | <3% | 4-7% | >7% |
+| Premium-AOV | <1.5-2.5% (vertical) | 2-6% | >3.5-6% |
+| Luxury / High-Ticket | <1% | 1.5-3% | >3% |
+
+**PDP → Purchase (30-90d) threshold reference card:**
+
+| Tier | Floor (<X%) | Healthy | Strong (>X%) |
+|---|---|---|---|
+| Mass-AOV | <1.5% | 2.5-4% | >4% |
+| Standard-AOV | <1% | 1.5-3% | >3% |
+| Premium-AOV | <0.4-0.8% (vertical) | 0.7-2.5% | >1.2-2.5% |
+| Luxury / High-Ticket | <0.2% | 0.5-1% | >1% |
+
+**Engaged time threshold reference card:**
+
+| Tier | Floor | Healthy | Strong |
+|---|---|---|---|
+| Mass / Standard / Premium | <30s | 45-90s | >90s |
+| Luxury / High-Ticket | <60s | 90-180s | >180s |
+
+After labeling, apply the Standard Decision Tree above unchanged. The diagnoses are universal — only the absolute thresholds shift by tier. The tier-aware version of the decision tree is **lookup → label → diagnose**, not a new tree per tier.
+
+---
+
+#### MER Target Derivation
+
+MER (Marketing Efficiency Ratio = Shopify revenue ÷ all paid spend) target should be **derived from the client's contribution margin**, not pulled from a flat industry benchmark. Two paths:
+
+**Primary — formula (always prefer this when CM2% is known):**
+
+```
+Break-Even MER = 1 ÷ CM2%
+Target MER     = Break-Even MER × 1.4-1.6  (buffer for fixed costs + profit)
+```
+
+Example: 60% CM2 → Break-Even MER = 1 ÷ 0.60 = 1.67×. Target ≈ 1.67 × 1.5 = **~2.5×**.
+Example: 35% CM2 → Break-Even MER = 1 ÷ 0.35 = 2.86×. Target ≈ 2.86 × 1.5 = **~4.3×**.
+
+The formula automatically handles vertical differences — a 70% CM2 supplements brand and a 25% CM2 electronics brand have very different MER targets, and the formula reflects that.
+
+**Always ask for COGS / CM2 first.** If Shopify returns COGS = $0/null at triage, the audit prompts via AskUserQuestion before scoring. Vertical-based COGS estimate (from the Profitability section's contribution margin table) is the second fallback, labeled ASSUMPTION. The flat fallback below is **only** used when the client refuses to provide COGS or vertical estimate.
+
+**Fallback — flat MER bands (use only when CM2% is unknown and unrecoverable):**
+
+| Blended MER | Rating | Action |
+|---|---|---|
+| <2.0× | Critical | Almost certainly losing money on paid — pause/cut deepest channels |
+| 2.0-3.0× | Struggling | Below most DTC margins — needs immediate efficiency work |
+| 3.0-5.0× | Healthy | Standard profitable range for typical DTC margins |
+| 5.0-8.0× | Strong | Well above margin requirements — room to scale TOF |
+| 8.0×+ | Excellent | Likely under-investing in growth — increase TOF spend |
+
+These flat bands are intentionally generic. **They will misjudge any client whose margins are materially above or below ~33% CM2.** A 70% CM2 supplements brand can run 1.7× MER and be profitable; a 20% CM2 electronics brand needs 5×+ to break even. **Use the formula whenever you can** — flat is a last resort, not a default.
+
+---
+
+#### Set-up requirements (data has to be collectable for this framework)
+
 1. Pixel + CAPI must fire ViewContent and AddToCart with deduplication
 2. GA4 must have UTM tagging on Meta ads (Source/Medium = `facebook / cpc` etc.)
 3. GA4 enhanced ecommerce events (view_item, add_to_cart, purchase) implemented
