@@ -69,6 +69,7 @@ If you find any of these legacy artifacts on first v4 run, surface them to the u
 
 ### Troubleshooting
 
+- **Preferred: run the preflight script.** `bash scripts/preflight.sh` checks all four runtime deps (node, pptxgenjs, LibreOffice, matplotlib) and prints exactly what's missing with the install command for each. `bash scripts/preflight.sh --fix` auto-installs pptxgenjs + matplotlib (LibreOffice is system-level and stays manual). This runs automatically at Step 0.5 of every audit, but you can run it standalone any time.
 - If matplotlib is not installed, run `pip install matplotlib --break-system-packages` in the shell sandbox before running the chart generator.
 - If `node` / `pptxgenjs` is missing, run `cd scripts && npm install` in the skill source.
 - If LibreOffice headless conversion fails on macOS, confirm `/Applications/LibreOffice.app/Contents/MacOS/soffice` exists; the bundled `scripts/render_pdf.sh` auto-detects this path.
@@ -85,6 +86,55 @@ If you find any of these legacy artifacts on first v4 run, surface them to the u
 - No client name → ask which client
 - Client name + manifest exists → Resume
 - "Amazon" in audit context → Amazon Ads (not website)
+
+---
+
+## Step 0.5: Preflight Renderer Dependency Check  *(runs every audit)*
+
+**Purpose: catch missing renderer dependencies BEFORE running the audit, so a broken environment fails in 2 seconds instead of producing a wrong-format PDF after 20 minutes of Databox pulls.** This step is the gatekeeper for Step 1.8 — if it fails, the whole audit stops here.
+
+**Why it matters.** The v4 PDF renderer requires four runtime deps: `node`, the `pptxgenjs` Node module, the LibreOffice headless binary, and Python `matplotlib`. The skill ships the *source* for all of these (`scripts/build_audit_pdf.js`, `scripts/render_pdf.sh`, `scripts/generate_charts.py`, `scripts/package.json`) but it does NOT ship `node_modules/`, LibreOffice, or matplotlib — those are runtime installs. If any are missing, `build_audit_pdf.js` throws and the audit ends up rendering through some fallback path (markdown→PDF), producing a body-text document instead of the proper slide deck. This check exists specifically to prevent that.
+
+**Run this BEFORE Step 1.0 (client folder resolution) on every audit.** Both Mode 1 (Full Triage) and Mode 2 (Channel Audit) start here. Resume mode (Mode 3) also runs preflight before continuing — a manifest can't be rendered to PDF if the renderer is broken.
+
+**Protocol:**
+
+1. **Run the preflight script** via bash:
+   ```bash
+   bash scripts/preflight.sh
+   ```
+   It checks all four deps and exits 0 if all pass, 1 if any fail. Output is a 4-line PASS/FAIL table plus (on failure) the exact remediation commands.
+
+2. **If exit 0 (all PASS)** → continue to Step 1.0. Do not narrate the preflight result to the user — silent pass is the expected case.
+
+3. **If exit 1 (one or more FAIL)** → STOP. Do not continue to Step 1.0. Surface the missing deps to the user using this exact framing:
+
+   > **Heads up — the PDF renderer can't run on your machine.** The audit needs these dependencies, and one or more is missing:
+   >
+   > {paste the FAIL lines from preflight output, including the remediation command for each}
+   >
+   > Without these, the audit would still produce content but the PDF would render in a fallback format (single-column body text, not the proper slide deck).
+   >
+   > **Two options:**
+   > - Say **"install deps"** and I'll run the installer for you (auto-installs pptxgenjs and matplotlib; LibreOffice is system-level so you'd still need to install it manually if it's flagged).
+   > - Or run the commands above yourself, then re-run the audit.
+
+4. **If the user says "install deps"** (or any clear go-ahead like "yes", "go", "do it"):
+   ```bash
+   bash scripts/preflight.sh --fix
+   ```
+   This calls `install_deps.sh` and then re-runs the four checks. After it finishes:
+   - All PASS → continue to Step 1.0.
+   - Still some FAIL (most commonly LibreOffice, which is not auto-installable) → tell the user which deps remain, give the install command, and STOP. Do not continue.
+
+5. **If the user declines or wants to fix manually** → STOP and wait. Do not start the audit. The user will re-run when ready.
+
+**Hard rules:**
+- Never proceed to Step 1.0 with a failing preflight. Even one missing dep means the final PDF will be wrong-format.
+- Never silently swap renderers. If the user asks "can you just render it as markdown then" — that's allowed only with explicit acknowledgment that the output won't be the v4 slide deck. Default behavior is to fix the deps, not work around them.
+- Always print the install commands to the user even if you also offer to auto-install. Some users want to run the commands themselves; print-and-offer respects both modes.
+
+**Cost target:** <2 seconds. Preflight makes no network calls and reads no files outside `scripts/`. If this step takes longer than 5 seconds, something else is wrong.
 
 ---
 
@@ -431,6 +481,39 @@ Execution order:
 8. Save the markdown source alongside the PDF: `{run_dir}/{Client-Slug}_audit_{YYYY-MM-DD}.md`. The .md is what's grep-able for cross-audit searches; the PDF is what's shared with the client.
 9. Validate: confirm the PDF is >100 KB (rendered correctly), that all 15 pages exist, and that the brand-theming block was applied (cover slide background should match the CLAUDE.md `dark` color).
 
+**No-fallback guard (HARD RULE):**
+
+If `node scripts/build_audit_pdf.js` fails for any reason — missing module, LibreOffice not found, JSON parse error, render crash, non-zero exit — **STOP**. Do not attempt to render the audit through any alternative path. Specifically forbidden:
+
+- Do NOT convert the markdown body to PDF via pandoc, weasyprint, wkhtmltopdf, or any other markdown→PDF tool.
+- Do NOT route through the `docx` skill or use the deprecated `reference/docx-template.md` path.
+- Do NOT print the markdown to a generic styled PDF.
+- Do NOT invent a substitute deliverable ("here's a Word doc instead", "I made an HTML version").
+
+The output format is a contract: the v4 slide deck rendered by `build_audit_pdf.js`, or nothing. Falling back to another renderer produces a body-text document that looks superficially correct but breaks every visual rule in `pdf-template.md` — cover slide, scorecard tiles, KPI cards, sparklines, the editorial typography. Users have been burned by silent fallbacks; this rule exists to make it impossible.
+
+If the renderer fails:
+1. Capture the full stderr of the `node` command.
+2. Re-run preflight to catch deps that may have broken between Step 0.5 and Step 1.8 (rare, but possible if the user uninstalled something mid-audit):
+   ```bash
+   bash scripts/preflight.sh
+   ```
+3. Surface the failure to the user with this exact framing:
+
+   > **PDF render failed.** The audit content is complete (markdown saved at `{run_dir}/{Client-Slug}_audit_{YYYY-MM-DD}.md`), but the slide-deck renderer hit an error and I'm not going to fall back to a different format because that produces the wrong-looking output.
+   >
+   > Renderer error:
+   > ```
+   > {paste captured stderr}
+   > ```
+   >
+   > Preflight after failure:
+   > {paste preflight output}
+   >
+   > Once you fix the underlying issue (commands above if preflight flagged anything), re-run the audit in Resume mode and it'll re-attempt Step 1.8 only.
+
+4. Update the manifest: `status: render_failed`. Do not advance to Step 1.9 or Step 1.10. The CLAUDE.md update only happens after a successful render — a failed render is not a completed audit.
+
 ### Step 1.9: Stub Outcomes Template
 
 After the PDF is finalized, drop the outcomes-tracking stub into the same run folder so the 30 / 60 / 90-day check-ins are pre-formatted and ready to fill.
@@ -515,6 +598,8 @@ When the user names a specific platform. Skips triage — goes straight to deep-
 
 ## Mode 3: Resume
 
+**Step 0.5 (preflight) still applies — run it before reading the manifest.** If the renderer is broken, resuming and producing a wrong-format PDF is worse than stopping early. Same flow as Mode 1: pass → continue, fail → surface deps + commands and stop.
+
 1. Find the latest `manifest.md` under `clients/{Client-Slug}/runs/{date}[-rN]/`. (If multiple recent runs, prefer the most recent that isn't marked complete.)
 2. Read it. Report status: what's done, what's remaining, triage scores.
 3. If deep-dives remain → continue next flagged platform.
@@ -527,6 +612,8 @@ When the user names a specific platform. Skips triage — goes straight to deep-
 ---
 
 ## Mode 4: Report
+
+**Step 0.5 (preflight) still applies — run it before reading evidence.** A report-only re-render still hits Step 1.8's renderer; failing preflight here means the same wrong-format PDF risk as a full audit.
 
 1. Resolve client folder via Step 1.0 (so the CLAUDE.md is loaded for theming).
 2. Find `*_evidence.json` files under the latest `clients/{Client-Slug}/runs/{date}[-rN]/evidence/`.
@@ -588,6 +675,8 @@ When the user names a specific platform. Skips triage — goes straight to deep-
 | `reference/synthesis/calibration-rollup.json` | At audit start (Methodology callout). Generated by the aggregation procedure in `outcomes-loop-template.md`. |
 | `reference/pdf-template.md` | At report generation — PDF input JSON contract + 15-slide structure + theme hooks. v4 default. |
 | `reference/docx-template.md` | **DEPRECATED in v4 — kept for one version cycle.** Old DOCX path. New audits should not load this; if loaded by accident, follow the deprecation banner pointer to `pdf-template.md`. |
+| `scripts/preflight.sh` | Always — at Step 0.5 (every audit) to verify renderer dependencies before any work begins. Supports `--fix` to auto-install pptxgenjs + matplotlib, and `--json` for machine-readable output. |
+| `scripts/install_deps.sh` | Called by `preflight.sh --fix` (or runnable standalone). Installs pptxgenjs via `npm install` and matplotlib via pip. LibreOffice is system-level and not auto-installed — the script prints manual install instructions if it's missing. |
 | `scripts/build_audit_pdf.js` | At report generation — pptxgenjs renderer that consumes the PDF input JSON and outputs the final PDF. |
 | `scripts/render_pdf.sh` | Called by `build_audit_pdf.js` for LibreOffice headless `.pptx` → `.pdf` conversion. |
 | `scripts/generate_charts.py` | Always — at the chart-generation step in report building. |
